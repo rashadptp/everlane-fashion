@@ -8,3 +8,4 @@ class CustomUser(AbstractUser):
         verbose_name = 'Custom User'
         verbose_name_plural = 'Custom Users'
 
+
