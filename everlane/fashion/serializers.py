@@ -40,6 +40,28 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+#login
+
+from rest_framework import serializers
+from django.contrib.auth import authenticate
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+
+    def validate(self, data):
+        username = data.get('username')
+        password = data.get('password')
+
+        user = authenticate(username=username, password=password)
+        if user is None:
+            raise serializers.ValidationError("Invalid username or password.")
+
+        data['user'] = user
+        return data
+
+
+
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
