@@ -25,8 +25,28 @@ class AddToCartView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
+        product_id = self.request.data.get('product')
+        
+        # Retrieve or create the cart item
+        cart_item, created = CartItem.objects.get_or_create(
+            user=self.request.user,
+            product_id=product_id,
+            defaults={'quantity': 1}
+        )
+        
+        if not created:
+            # If the item already exists, increment the quantity by 1
+            cart_item.quantity += 1
+            cart_item.save()
+        
+        # Serialize the updated cart item
+        serializer = CartItemSerializer(cart_item)
+        return Response({
+            'status': 'success',
+            'message': 'Item added to cart successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
 
 from rest_framework.views import APIView
 
@@ -67,3 +87,52 @@ class RemoveFromWishlistView(generics.DestroyAPIView):
 
     def get_queryset(self):
         return WishlistItem.objects.filter(user=self.request.user)
+
+    def get_object(self):
+        # Assuming the item ID is passed in the URL
+        return WishlistItem.objects.get(pk=self.kwargs['pk'], user=self.request.user)
+
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response({
+            'status': 'success',
+            'message': 'Item removed from wishlist successfully.',
+            'response_code': status.HTTP_204_NO_CONTENT,  # 204 indicates successful deletion with no content
+            'data': None  # No data to return after deletion
+        })
+
+
+class CartView(generics.ListAPIView):
+    serializer_class = CartItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return CartItem.objects.filter(user=self.request.user)
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            'status': 'success',
+            'message': 'Cart items retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        })
+    
+
+class RemoveFromCartView(generics.DestroyAPIView):
+    serializer_class = CartItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        # Assuming the item ID is passed in the URL
+        return CartItem.objects.get(pk=self.kwargs['pk'], user=self.request.user)
+
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
+        return Response({
+            'status': 'success',
+            'message': 'Item removed from cart successfully.',
+            'response_code': status.HTTP_204_NO_CONTENT,
+        })
