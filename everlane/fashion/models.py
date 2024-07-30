@@ -8,7 +8,4 @@ class CustomUser(AbstractUser):
         verbose_name = 'Custom User'
         verbose_name_plural = 'Custom Users'
 
-<<<<<<< HEAD
-# Create your models here.
-=======
->>>>>>> bf058002dd74e9957049c46f595a36a81cfb08e8
+
