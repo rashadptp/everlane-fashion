@@ -136,3 +136,30 @@ class RemoveFromCartView(generics.DestroyAPIView):
             'message': 'Item removed from cart successfully.',
             'response_code': status.HTTP_204_NO_CONTENT,
         })
+    
+class IncrementCartItemView(APIView):
+    
+    def post(self, request, *args, **kwargs):
+        cart_item_id = request.data.get('cart_item_id')
+        increment_value = request.data.get('increment_value', 1)  # Default to increment by 1 if not provided
+        
+        try:
+            cart_item = CartItem.objects.get(id=cart_item_id, user=request.user)
+        except CartItem.DoesNotExist:
+            return Response({
+                "status": "error",
+                "message": "Cart item not found.",
+                "response_code": status.HTTP_404_NOT_FOUND,
+                "data": None
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        cart_item.quantity += int(increment_value)
+        cart_item.save()
+        
+        serializer = CartItemSerializer(cart_item)
+        return Response({
+            "status": "success",
+            "message": "Cart item quantity updated successfully.",
+            "response_code": status.HTTP_200_OK,
+            "data": serializer.data
+        }, status=status.HTTP_200_OK)
