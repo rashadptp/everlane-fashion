@@ -5,6 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from .models import *
 from .serializers import *
 
+#register view
+
 class RegisterUserView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
 
