@@ -44,9 +44,6 @@ class LoginView(generics.GenericAPIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
-
 from rest_framework import generics
 from .models import User, Product, Order, Category, Subcategory
 from .serializers import *
