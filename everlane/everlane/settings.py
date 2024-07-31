@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'everlane.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fashion_db',
+        'NAME': 'everlane_db',
         'USER': 'postgres',
         'PASSWORD': 'rashad123',
         'HOST': 'localhost',  # Set to the address of your PostgreSQL server

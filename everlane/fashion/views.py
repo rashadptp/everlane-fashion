@@ -76,9 +76,18 @@ class CategoryListView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
-class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
+    def get(self, request, *args, **kwargs):
+        categories = self.get_queryset()
+        serializer = self.get_serializer(categories, many=True)
+        response_data = {
+            'status': 'success',
+            'message': 'Categories retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }
+        return Response(response_data)
+
+
 
 class SubcategoryListView(generics.ListCreateAPIView):
     queryset = Subcategory.objects.all()
