@@ -68,7 +68,7 @@ class UserSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name']
+        fields = ['id', 'name','image']
 
 class SubcategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -78,7 +78,7 @@ class SubcategorySerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'subcategory']
+        fields = ['id', 'name', 'description', 'price', 'subcategory','image']
 
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
