@@ -5,13 +5,14 @@ from django.contrib import admin
 from django.contrib import admin
 from .models import *
 
-@admin.register(Product)
-class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'price', 'stock', 'category')
-    search_fields = ('name', 'category')
+from django.contrib import admin
+from .models import *
 
-@admin.register(CartItem)
-class CartItemAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'product', 'quantity')
-    list_filter = ('user', 'product')
-    search_fields = ('user__username', 'product__name')
+admin.site.register(User)
+admin.site.register(Product)
+admin.site.register(Order)
+admin.site.register(Category)
+admin.site.register(Subcategory)
+admin.site.register(Wishlist)
+admin.site.register(Cart)
+admin.site.register(CartItem)
