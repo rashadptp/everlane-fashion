@@ -139,3 +139,12 @@ class AddToCartView(APIView):
             cart_item.save()
 
         return Response({'status': 'success', 'message': 'Item added to cart'}, status=status.HTTP_200_OK)
+
+
+from rest_framework import viewsets
+from .models import Banner
+from .serializers import BannerSerializer
+
+class BannerViewSet(viewsets.ModelViewSet):
+    queryset = Banner.objects.all()
+    serializer_class = BannerSerializer
