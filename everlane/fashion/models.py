@@ -69,6 +69,10 @@ class Product(models.Model):
     subcategory = models.ForeignKey(Subcategory, related_name='products', on_delete=models.CASCADE)
     image =models.ImageField(upload_to='products/')
     is_trending=models.BooleanField(default='False')
+    summer=models.BooleanField(default='False')
+    winter=models.BooleanField(default='False')
+    rainy=models.BooleanField(default='False')
+    autumn=models.BooleanField(default='False')
 
     def __str__(self):
         return self.name
@@ -115,4 +119,9 @@ class Banner(models.Model):
 
     def __str__(self):
         return self.image.url
+
+
+
+
+
 
