@@ -20,7 +20,18 @@ class RegisterUserView(generics.CreateAPIView):
                 "message": "User registered successfully."
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class RegisterAdminView(generics.CreateAPIView):
+    serializer_class = AdminRegistrationSerializer
 
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({
+                "user": AdminRegistrationSerializer(user).data,
+                "message": "Admin registered successfully."
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 #Login view
 
 from rest_framework import generics, status
