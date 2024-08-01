@@ -40,6 +40,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+class AdminRegistrationSerializer(UserRegistrationSerializer):
+    class Meta(UserRegistrationSerializer.Meta):
+        fields = UserRegistrationSerializer.Meta.fields + ('is_admin',)
+    
+    def create(self, validated_data):
+        validated_data['is_admin'] = True
+        return super().create(validated_data)
+
 #login
 
 from rest_framework import serializers
