@@ -78,17 +78,18 @@ WSGI_APPLICATION = 'everlane.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'everlane_db',
         'USER': 'postgres',
         'PASSWORD': 'rashad123',
-        'HOST': 'localhost',  # Set to the address of your PostgreSQL server
-        'PORT': '5432',      # Default port for PostgreSQL
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+
+
 
 
 # Password validation
