@@ -157,10 +157,25 @@ class AddToCartView(APIView):
         return Response({'status': 'success', 'message': 'Item added to cart'}, status=status.HTTP_200_OK)
 
 
-from rest_framework import viewsets
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import Banner
 from .serializers import BannerSerializer
+from django.http import Http404
 
-class BannerViewSet(viewsets.ModelViewSet):
-    queryset = Banner.objects.all()
-    serializer_class = BannerSerializer
+class BannerList(APIView):
+    def get(self, request, format=None):
+        banners = Banner.objects.all()
+        serializer = BannerSerializer(banners, many=True)
+        return Response({
+            'status': "success",
+            'message': 'Banners retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        })
+
+
+
+
+
