@@ -27,6 +27,11 @@ urlpatterns = [
     path('carts/<int:pk>/', CartDetailView.as_view(), name='cart-detail'),
     path('add-to-cart/', AddToCartView.as_view(), name='add-to-cart'),
     path('banners/', BannerListView.as_view(), name='banner-list'),
+    path('products/trending/', TrendingProductsView.as_view(), name='trending-products'),
+    path('products/summer/', SeasonalProductsView.as_view(), {'season': 'summer'}, name='summer-products'),
+    path('products/winter/', SeasonalProductsView.as_view(), {'season': 'winter'}, name='winter-products'),
+    path('products/rainy/', SeasonalProductsView.as_view(), {'season': 'rainy'}, name='rainy-products'),
+    path('products/autumn/', SeasonalProductsView.as_view(), {'season': 'autumn'}, name='autumn-products'),
     
     
 ]

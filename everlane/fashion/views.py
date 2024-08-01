@@ -61,28 +61,7 @@ class LoginView(generics.GenericAPIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
-# from rest_framework import generics, status
-# from rest_framework.response import Response
-# from rest_framework.authtoken.models import Token
-# from .serializers import LoginSerializer
 
-# class LoginView(generics.GenericAPIView):
-#     serializer_class = LoginSerializer
-
-#     def post(self, request, *args, **kwargs):
-#         serializer = self.get_serializer(data=request.data)
-#         if serializer.is_valid():
-#             user = serializer.validated_data['user']
-#             # Generate or get an existing token for the user
-
-
-            
-#         return Response({
-#             'status': "failed",
-#             'message': 'Invalid username or password.',
-#             'response_code': status.HTTP_400_BAD_REQUEST,
-#             'data': serializer.errors
-#         }, status=status.HTTP_400_BAD_REQUEST)
 
 
 from rest_framework import generics
@@ -279,6 +258,85 @@ class BannerListView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         })
+
+#Trending images listing api
+
+from rest_framework import generics, status
+from rest_framework.response import Response
+from .models import Product
+from .serializers import ProductSerializer
+
+class TrendingProductsView(generics.ListAPIView):
+    serializer_class = ProductSerializer
+
+    def get_queryset(self):
+        return Product.objects.filter(is_trending=True)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+
+        if queryset.exists():
+            return Response({
+                'status': "success",
+                'message': 'Trending products retrieved successfully.',
+                'response_code': status.HTTP_200_OK,
+                'data': serializer.data
+            }, status=status.HTTP_200_OK)
+
+        return Response({
+            'status': "failed",
+            'message': 'No trending products found.',
+            'response_code': status.HTTP_404_NOT_FOUND,
+            'data': []
+        }, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+#seasons filteration api
+
+
+from rest_framework import generics, status
+from rest_framework.response import Response
+from .models import Product
+from .serializers import ProductSerializer
+
+class SeasonalProductsView(generics.ListAPIView):
+    serializer_class = ProductSerializer
+
+    def get_queryset(self):
+        season = self.kwargs.get('season')
+        filter_kwargs = {season: True}
+        return Product.objects.filter(**filter_kwargs)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if not queryset.exists():
+            return Response({
+                'status': "failed",
+                'message': f'No {self.kwargs.get("season")} products found.',
+                'response_code': status.HTTP_404_NOT_FOUND,
+                'data': []
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            'status': "success",
+            'message': f'{self.kwargs.get("season").capitalize()} products retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
 
 
 
