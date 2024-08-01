@@ -16,4 +16,7 @@ admin.site.register(Subcategory)
 admin.site.register(Wishlist)
 admin.site.register(Cart)
 admin.site.register(CartItem)
+admin.site.register(Banner)
+
+
 
