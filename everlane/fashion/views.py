@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from .serializers import UserRegistrationSerializer
 from rest_framework.permissions import IsAuthenticated
 from .models import *
+from .permissions import IsAdminUser
 from .serializers import *
 
 #register view
@@ -56,13 +57,76 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-class ProductListView(generics.ListCreateAPIView):
+class ProductListView(generics.ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        data = serializer.data
+        return Response({
+            'status': "success",
+            'message': "Products retrieved successfully.",
+            'response_code': status.HTTP_200_OK,
+            'data': data
+        })
 
 class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+
+class ProductCreateView(generics.CreateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        data = serializer.data
+        return Response({
+            'status': "success",
+            'message': "Product created successfully.",
+            'response_code': status.HTTP_201_CREATED,
+            'data': data
+        }, status=status.HTTP_201_CREATED)
+
+class ProductUpdateView(generics.UpdateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        data = serializer.data
+        return Response({
+            'status': "success",
+            'message': "Product updated successfully.",
+            'response_code': status.HTTP_200_OK,
+            'data': data
+        })
+
+class ProductDeleteView(generics.DestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({
+            'status': "success",
+            'message': "Product deleted successfully.",
+            'response_code': status.HTTP_204_NO_CONTENT,
+            'data': None
+        }, status=status.HTTP_204_NO_CONTENT)
+    
 
 class OrderListView(generics.ListCreateAPIView):
     queryset = Order.objects.all()

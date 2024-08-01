@@ -41,6 +41,7 @@ class User(AbstractUser):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True, blank=True)
     preferred_season = models.CharField(max_length=10, choices=SEASON_CHOICES, null=True, blank=True)
     usage_of_dress = models.CharField(max_length=10, choices=USAGE_CHOICES, null=True, blank=True)
+    is_admin=models.BooleanField(default='False')
 
     def __str__(self):
         return self.username
