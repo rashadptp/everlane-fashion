@@ -35,14 +35,43 @@ class LoginView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.validated_data['user']
-            # Generate or get an existing token for the user
-            
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({
+                "token": token.key,
+                "user_id": user.pk,
+                "username": user.username,
+                "message": "Login successful."
+            }, status=status.HTTP_200_OK)
         return Response({
             'status': "failed",
             'message': 'Invalid username or password.',
             'response_code': status.HTTP_400_BAD_REQUEST,
             'data': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# from rest_framework import generics, status
+# from rest_framework.response import Response
+# from rest_framework.authtoken.models import Token
+# from .serializers import LoginSerializer
+
+# class LoginView(generics.GenericAPIView):
+#     serializer_class = LoginSerializer
+
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+#         if serializer.is_valid():
+#             user = serializer.validated_data['user']
+#             # Generate or get an existing token for the user
+
+
+            
+#         return Response({
+#             'status': "failed",
+#             'message': 'Invalid username or password.',
+#             'response_code': status.HTTP_400_BAD_REQUEST,
+#             'data': serializer.errors
+#         }, status=status.HTTP_400_BAD_REQUEST)
 
 
 from rest_framework import generics
@@ -219,16 +248,15 @@ class AddToCartView(APIView):
             cart_item.save()
 
         return Response({'status': 'success', 'message': 'Item added to cart'}, status=status.HTTP_200_OK)
-
+#Banner views
 
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Banner
 from .serializers import BannerSerializer
-from django.http import Http404
 
-class BannerList(APIView):
+class BannerListView(APIView):
     def get(self, request, format=None):
         banners = Banner.objects.all()
         serializer = BannerSerializer(banners, many=True)
@@ -238,6 +266,11 @@ class BannerList(APIView):
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         })
+
+
+
+    
+        
 
 
 
