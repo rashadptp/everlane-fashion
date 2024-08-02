@@ -67,7 +67,7 @@ class Product(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     subcategory = models.ForeignKey(Subcategory, related_name='products', on_delete=models.CASCADE)
-    image =models.ImageField(upload_to='products/')
+    image =models.ImageField(upload_to='products/',null=True)
     is_trending=models.BooleanField(default='False')
     summer=models.BooleanField(default='False')
     winter=models.BooleanField(default='False')
