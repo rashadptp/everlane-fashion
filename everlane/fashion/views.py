@@ -365,7 +365,7 @@ from .serializers import BannerSerializer
 
 class BannerListAngularView(APIView):
     def get(self, request, format=None):
-        banners = Banner.objects.filter(is_deleted=False, is_active=True, which='angular')
+        banners = Banner.objects.filter(is_deleted=False, is_active=True, which='A')
         serializer = BannerSerializer(banners, many=True)
         return Response({
             'status': "success",
@@ -376,7 +376,7 @@ class BannerListAngularView(APIView):
 
 class BannerListFlutterView(APIView):
     def get(self, request, format=None):
-        banners = Banner.objects.filter(is_deleted=False, is_active=True, which='flutter')
+        banners = Banner.objects.filter(is_deleted=False, is_active=True, which='F')
         serializer = BannerSerializer(banners, many=True)
         return Response({
             'status': "success",
