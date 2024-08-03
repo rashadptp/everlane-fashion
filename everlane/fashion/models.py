@@ -139,6 +139,8 @@ class Banner(models.Model):
     is_activity = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
+    
+
 
     def __str__(self):
         return self.image.url

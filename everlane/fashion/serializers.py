@@ -76,40 +76,40 @@ class UserSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name','image']
+        fields = ['id', 'name','image','is_activity','is_deleted','created_on']
 
 class SubcategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Subcategory
-        fields = ['id', 'name', 'category','image']
+        fields = ['id', 'name', 'category','image','is_activity','is_deleted','created_on']
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'subcategory','image',"is_trending","summer","winter","rainy","autumn"]
+        fields = ['id', 'name', 'description', 'price', 'subcategory','image',"is_trending","summer","winter","rainy","autumn",'is_activity','is_deleted','created_on']
 
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ['id', 'user', 'product', 'created_at', 'total_amount']
+        fields = ['id', 'user', 'product', 'created_at', 'total_amount','is_activity','is_deleted','created_on']
 
 class WishlistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wishlist
-        fields = ['id', 'user', 'product', 'added_at']
+        fields = ['id', 'user', 'product', 'added_at','is_activity','is_deleted','created_on']
 
 
 class CartItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
-        fields = ['id', 'product', 'quantity', 'added_at']
+        fields = ['id', 'product', 'quantity', 'added_at','is_activity','is_deleted','created_on']
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = Cart
-        fields = ['id', 'user', 'created_at', 'items']
+        fields = ['id', 'user', 'created_at', 'items','is_activity','is_deleted','created_on']
 
 #for banner
 from rest_framework import serializers
@@ -118,4 +118,4 @@ from .models import Banner
 class BannerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Banner
-        fields = ['image']  
+        fields = ['image','is_activity','is_deleted','created_on']  
