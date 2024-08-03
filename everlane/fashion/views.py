@@ -261,6 +261,19 @@ class BannerListView(APIView):
             'data': serializer.data
         })
 
+
+
+class BannerListAngularView(APIView):
+    def get(self, request, format=None):
+        banners = Banner.objects.all()
+        serializer = BannerSerializer(banners, many=True)
+        return Response({
+            'status': "success",
+            'message': 'Banners retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        })
+
 #Trending images listing api
 
 from rest_framework import generics, status
