@@ -150,10 +150,15 @@ class CartItem(models.Model):
 from django.db import models
 
 class Banner(models.Model):
+    VIEW = [
+        ('A', 'Angular'),
+        ('F', 'Flutter'),
+    ]
     image = models.ImageField(upload_to='banners/')
     is_active = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
+    which = models.CharField(max_length=2, choices=VIEW)
     
 
     def __str__(self):

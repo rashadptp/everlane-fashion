@@ -85,14 +85,21 @@ class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        data = serializer.data
+        products = self.get_queryset()
+        product_data = []
+        for product in products:
+            product_serializer = self.get_serializer(product)
+            items = ProductItem.objects.filter(product=product)
+            item_serializer = ProductItemSerializer(items, many=True)
+            product_data.append({
+                'product': product_serializer.data,
+                'items': item_serializer.data
+            })
         return Response({
             'status': "success",
             'message': "Products retrieved successfully.",
             'response_code': status.HTTP_200_OK,
-            'data': data
+            'data': product_data
         })
 
 class ProductDetailView(generics.RetrieveAPIView):
@@ -102,28 +109,36 @@ class ProductDetailView(generics.RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         product = self.get_object()
-        serializer = self.get_serializer(product)
+        product_serializer = self.get_serializer(product)
+        items = ProductItem.objects.filter(product=product)
+        item_serializer = ProductItemSerializer(items, many=True)
         return Response({
             'status': 'success',
             'message': 'Product details retrieved successfully.',
             'response_code': 200,
-            'data': serializer.data
+            'data': {
+                'product': product_serializer.data,
+                'items': item_serializer.data
+            }
         })
+
 class ProductCreateView(generics.CreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated,IsAdminUser]
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        data = serializer.data
+        product = serializer.save()
+        items_data = request.data.get('items', [])
+        for item_data in items_data:
+            ProductItem.objects.create(product=product, **item_data)
         return Response({
             'status': "success",
             'message': "Product created successfully.",
             'response_code': status.HTTP_201_CREATED,
-            'data': data
+            'data': serializer.data
         }, status=status.HTTP_201_CREATED)
 
 class ProductUpdateView(generics.UpdateAPIView):
@@ -136,13 +151,24 @@ class ProductUpdateView(generics.UpdateAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        data = serializer.data
+        product = serializer.save()
+
+        items_data = request.data.get('items', [])
+        for item_data in items_data:
+            item_id = item_data.get('id')
+            if item_id:
+                item = ProductItem.objects.get(id=item_id, product=product)
+                item.size = item_data.get('size', item.size)
+                item.stock = item_data.get('stock', item.stock)
+                item.save()
+            else:
+                ProductItem.objects.create(product=product, **item_data)
+
         return Response({
             'status': "success",
             'message': "Product updated successfully.",
             'response_code': status.HTTP_200_OK,
-            'data': data
+            'data': serializer.data
         })
 
 class ProductDeleteView(generics.DestroyAPIView):
@@ -159,7 +185,6 @@ class ProductDeleteView(generics.DestroyAPIView):
             'response_code': status.HTTP_204_NO_CONTENT,
             'data': None
         }, status=status.HTTP_204_NO_CONTENT)
-    
 
 class OrderListView(generics.ListCreateAPIView):
     queryset = Order.objects.all()
