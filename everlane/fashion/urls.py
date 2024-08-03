@@ -26,6 +26,8 @@ urlpatterns = [
     path('carts/', CartListView.as_view(), name='cart-list'),
     path('carts/<int:pk>/', CartDetailView.as_view(), name='cart-detail'),
     path('add-to-cart/', AddToCartView.as_view(), name='add-to-cart'),
+    path('update-cart-item-quantity/', UpdateCartItemQuantityView.as_view(), name='update-cart-item-quantity'),
+
     path('banners/', BannerListView.as_view(), name='banner-list'),
     path('products/trending/', TrendingProductsView.as_view(), name='trending-products'),
     path('products/summer/', SeasonalProductsView.as_view(), {'season': 'summer'}, name='summer-products'),

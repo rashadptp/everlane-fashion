@@ -95,10 +95,20 @@ class ProductListView(generics.ListAPIView):
             'data': data
         })
 
-class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
+class ProductDetailView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request, *args, **kwargs):
+        product = self.get_object()
+        serializer = self.get_serializer(product)
+        return Response({
+            'status': 'success',
+            'message': 'Product details retrieved successfully.',
+            'response_code': 200,
+            'data': serializer.data
+        })
 class ProductCreateView(generics.CreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -218,30 +228,105 @@ from rest_framework.views import APIView
 class CartListView(generics.ListCreateAPIView):
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
+    permission_classes = [IsAuthenticated]  # Ensure only authenticated users can access
+
+    def get(self, request, *args, **kwargs):
+        carts = self.get_queryset()
+        serializer = self.get_serializer(carts, many=True)
+        return Response({
+            'status': 'success',
+            'message': 'Cart list retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        })
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            cart = serializer.save()
+            return Response({
+                'status': 'success',
+                'message': 'Cart created successfully.',
+                'response_code': status.HTTP_201_CREATED,
+                'data': CartSerializer(cart).data
+            })
+        return Response({
+            'status': 'failed',
+            'message': 'Failed to create cart.',
+            'response_code': status.HTTP_400_BAD_REQUEST,
+            'data': serializer.errors
+        })
 
 class CartDetailView(generics.RetrieveDestroyAPIView):
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
 
 class AddToCartView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
         user = request.user
         product_id = request.data.get('product_id')
-        quantity = request.data.get('quantity', 1)
-        
+        quantity = int(request.data.get('quantity', 1))  # Ensure quantity is an integer
+
         try:
             product = Product.objects.get(id=product_id)
         except Product.DoesNotExist:
-            return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'status': 'failed', 'message': 'Product not found.', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
+        # Retrieve or create the cart for the user
         cart, created = Cart.objects.get_or_create(user=user)
-        cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product, defaults={'quantity': quantity})
+
+        # Retrieve or create the cart item
+        cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
 
         if not created:
-            cart_item.quantity += int(quantity)
+            # Item already exists in cart, update the quantity
+            cart_item.quantity += quantity
             cart_item.save()
+            message = 'Quantity updated for the item in cart.'
+        else:
+            cart_item.quantity = quantity
+            cart_item.save()
+            message = 'Item added to cart.'
 
-        return Response({'status': 'success', 'message': 'Item added to cart'}, status=status.HTTP_200_OK)
+        return Response({
+            'status': 'success',
+            'message': message,
+            'response_code': status.HTTP_200_OK,
+            'data': CartSerializer(cart).data  # Optional: Return the updated cart data
+        }, status=status.HTTP_200_OK)
+    
+class UpdateCartItemQuantityView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        cart_item_id = request.data.get('cart_item_id')
+        quantity = int(request.data.get('quantity', 1))  # Ensure quantity is an integer
+
+        try:
+            cart_item = CartItem.objects.get(id=cart_item_id, cart__user=user)
+        except CartItem.DoesNotExist:
+            return Response({'status': 'failed', 'message': 'Cart item not found.', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+
+        if quantity <= 0:
+            cart_item.delete()
+            return Response({
+                'status': 'success',
+                'message': 'Item removed from cart.',
+                'response_code': status.HTTP_200_OK
+            }, status=status.HTTP_200_OK)
+
+        cart_item.quantity = quantity
+        cart_item.save()
+
+        return Response({
+            'status': 'success',
+            'message': 'Quantity updated successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': CartSerializer(cart_item.cart).data
+        }, status=status.HTTP_200_OK)
 #Banner views
 
 from rest_framework import status
