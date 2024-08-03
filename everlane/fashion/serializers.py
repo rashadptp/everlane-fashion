@@ -83,10 +83,26 @@ class SubcategorySerializer(serializers.ModelSerializer):
         model = Subcategory
         fields = ['id', 'name', 'category','image','is_activity','is_deleted','created_on']
 
+
+class ProductItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductItem
+        fields = ['id', 'product', 'size', 'stock']
+
+
+class ProductItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductItem
+        fields = ['id', 'product', 'size', 'stock']
+
 class ProductSerializer(serializers.ModelSerializer):
+    items = ProductItemSerializer(many=True, read_only=True) 
+
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'subcategory','image',"is_trending","summer","winter","rainy","autumn",'is_activity','is_deleted','created_on']
+        fields = ['id', 'name', 'description', 'price', 'subcategory', 'image', 'is_trending', 'summer', 'winter', 'rainy', 'autumn', 'items']
+
+
 
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
