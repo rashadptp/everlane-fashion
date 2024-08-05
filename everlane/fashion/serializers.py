@@ -84,10 +84,7 @@ class SubcategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'category','image','is_active','is_deleted','created_on']
 
 
-class ProductItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductItem
-        fields = ['id', 'product', 'size', 'stock']
+
 
 
 class ProductItemSerializer(serializers.ModelSerializer):
@@ -104,7 +101,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'subcategory', 'image', 'is_trending', 'summer', 'winter', 'rainy', 'autumn', 'items']
+        fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image', 'is_trending', 'summer', 'winter', 'rainy', 'autumn', 'items']
 
 
 
