@@ -91,9 +91,13 @@ class ProductItemSerializer(serializers.ModelSerializer):
 
 
 class ProductItemSerializer(serializers.ModelSerializer):
+    is_out_of_stock = serializers.SerializerMethodField()
     class Meta:
         model = ProductItem
-        fields = ['id', 'product', 'size', 'stock']
+        fields = ['id', 'product', 'size', 'stock','is_out_of_stock']
+
+    def get_is_out_of_stock(self, obj):
+        return obj.stock == 0    
 
 class ProductSerializer(serializers.ModelSerializer):
     items = ProductItemSerializer(many=True, read_only=True) 

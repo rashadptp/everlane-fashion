@@ -93,7 +93,8 @@ class ProductListView(generics.ListAPIView):
             item_serializer = ProductItemSerializer(items, many=True)
             product_data.append({
                 'product': product_serializer.data,
-                'items': item_serializer.data
+                'items': item_serializer.data,
+                'is_out_of_stock': not items.exists() or all(item.stock == 0 for item in items)
             })
         return Response({
             'status': "success",
@@ -118,7 +119,8 @@ class ProductDetailView(generics.RetrieveAPIView):
             'response_code': 200,
             'data': {
                 'product': product_serializer.data,
-                'items': item_serializer.data
+                'items': item_serializer.data,
+                'is_out_of_stock': not items.exists() or all(item.stock == 0 for item in items)
             }
         })
 
