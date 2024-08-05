@@ -52,7 +52,7 @@ class User(AbstractUser):
 class Category(models.Model):
     name = models.CharField(max_length=255)
     image = models.ImageField(upload_to='category/')
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
 
@@ -63,7 +63,7 @@ class Subcategory(models.Model):
     name = models.CharField(max_length=255)
     category = models.ForeignKey(Category, related_name='subcategories', on_delete=models.CASCADE)
     image=models.ImageField(upload_to='subcategories/',null=True)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
 
@@ -83,7 +83,7 @@ class Product(models.Model):
     winter=models.BooleanField(default='False')
     rainy=models.BooleanField(default='False')
     autumn=models.BooleanField(default='False')
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
 
@@ -109,7 +109,7 @@ class Order(models.Model):
     user = models.ForeignKey(User, related_name='orders', on_delete=models.CASCADE)
     product = models.ManyToManyField(Product)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
 
@@ -119,7 +119,7 @@ class Order(models.Model):
 class Wishlist(models.Model):
     user = models.ForeignKey(User, related_name='wishlists', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, related_name='wishlists', on_delete=models.CASCADE)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
 
@@ -129,7 +129,7 @@ class Wishlist(models.Model):
 
 class Cart(models.Model):
     user = models.ForeignKey(User, related_name='carts', on_delete=models.CASCADE)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
 
@@ -140,7 +140,7 @@ class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, related_name='cart_items', on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
 
@@ -156,7 +156,7 @@ class Banner(models.Model):
         ('F', 'Flutter'),
     ]
     image = models.ImageField(upload_to='banners/')
-    is_active = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
     which = models.CharField(max_length=2, choices=VIEW)
