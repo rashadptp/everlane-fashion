@@ -368,22 +368,18 @@ class AngularBannerListView(generics.ListAPIView):
     serializer_class = BannerSerializer
 
     def get_queryset(self):
-        """
-        Filter the banners to only include those for Angular.
-        """
+        
         return Banner.objects.filter(is_deleted=False, is_active=True, which='A')
 
     def get(self, request, *args, **kwargs):
-        """
-        Handle GET requests for Angular banners.
-        """
+        
         banners = self.get_queryset()
         serializer = self.get_serializer(banners, many=True)
 
         if not banners.exists():
             response_data = {
                 'status': 'failed',
-                'message': 'No Angular banners found.',
+                'message': 'No banners found.',
                 'response_code': status.HTTP_404_NOT_FOUND,
                 'data': []
             }
@@ -391,7 +387,7 @@ class AngularBannerListView(generics.ListAPIView):
 
         response_data = {
             'status': 'success',
-            'message': 'Angular banners retrieved successfully.',
+            'message': 'banners retrieved successfully.',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         }
@@ -407,22 +403,18 @@ class FlutterBannerListView(generics.ListAPIView):
     serializer_class = BannerSerializer
 
     def get_queryset(self):
-        """
-        Filter the banners to only include those for Flutter.
-        """
+        
         return Banner.objects.filter(is_deleted=False, is_active=True, which='F')
 
     def get(self, request, *args, **kwargs):
-        """
-        Handle GET requests for Flutter banners.
-        """
+        
         banners = self.get_queryset()
         serializer = self.get_serializer(banners, many=True)
 
         if not banners.exists():
             response_data = {
                 'status': 'failed',
-                'message': 'No Flutter banners found.',
+                'message': 'No banners found.',
                 'response_code': status.HTTP_404_NOT_FOUND,
                 'data': []
             }
@@ -430,7 +422,7 @@ class FlutterBannerListView(generics.ListAPIView):
 
         response_data = {
             'status': 'success',
-            'message': 'Flutter banners retrieved successfully.',
+            'message': 'banners retrieved successfully.',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         }
