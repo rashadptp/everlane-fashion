@@ -359,64 +359,85 @@ class UpdateCartItemQuantityView(APIView):
 
 #Banner views
 
-from rest_framework import status
+from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from .models import Banner
 from .serializers import BannerSerializer
 
-class BannerListAngularView(APIView):
-    def get(self, request, format=None):
-        banners = Banner.objects.filter(is_deleted=False, is_active=True, which='A')
-        serializer = BannerSerializer(banners, many=True)
-        return Response({
-            'status': "success",
-            'message': 'Banners retrieved successfully for Angular app.',
+class AngularBannerListView(generics.ListAPIView):
+    serializer_class = BannerSerializer
+
+    def get_queryset(self):
+        """
+        Filter the banners to only include those for Angular.
+        """
+        return Banner.objects.filter(is_deleted=False, is_active=True, which='A')
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for Angular banners.
+        """
+        banners = self.get_queryset()
+        serializer = self.get_serializer(banners, many=True)
+
+        if not banners.exists():
+            response_data = {
+                'status': 'failed',
+                'message': 'No Angular banners found.',
+                'response_code': status.HTTP_404_NOT_FOUND,
+                'data': []
+            }
+            return Response(response_data, status=status.HTTP_404_NOT_FOUND)
+
+        response_data = {
+            'status': 'success',
+            'message': 'Angular banners retrieved successfully.',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        })
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
 
-class BannerListFlutterView(APIView):
-    def get(self, request, format=None):
-        banners = Banner.objects.filter(is_deleted=False, is_active=True, which='F')
-        serializer = BannerSerializer(banners, many=True)
-        return Response({
-            'status': "success",
-            'message': 'Banners retrieved successfully for Flutter app.',
+
+from rest_framework import generics, status
+from rest_framework.response import Response
+from .models import Banner
+from .serializers import BannerSerializer
+
+class FlutterBannerListView(generics.ListAPIView):
+    serializer_class = BannerSerializer
+
+    def get_queryset(self):
+        """
+        Filter the banners to only include those for Flutter.
+        """
+        return Banner.objects.filter(is_deleted=False, is_active=True, which='F')
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for Flutter banners.
+        """
+        banners = self.get_queryset()
+        serializer = self.get_serializer(banners, many=True)
+
+        if not banners.exists():
+            response_data = {
+                'status': 'failed',
+                'message': 'No Flutter banners found.',
+                'response_code': status.HTTP_404_NOT_FOUND,
+                'data': []
+            }
+            return Response(response_data, status=status.HTTP_404_NOT_FOUND)
+
+        response_data = {
+            'status': 'success',
+            'message': 'Flutter banners retrieved successfully.',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        })
-
-
-# from rest_framework import status
-# from rest_framework.response import Response
-# from rest_framework.views import APIView
-# from .models import Banner
-# from .serializers import BannerSerializer
-
-# class BannerListView(APIView):
-#     def get(self, request, format=None):
-#         banners = Banner.objects.all()
-#         serializer = BannerSerializer(banners, many=True)
-#         return Response({
-#             'status': "success",
-#             'message': 'Banners retrieved successfully.',
-#             'response_code': status.HTTP_200_OK,
-#             'data': serializer.data
-#         })
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 
-# class BannerListAngularView(APIView):
-#     def get(self, request, format=None):
-#         banners = Banner.objects.all()
-#         serializer = BannerSerializer(banners, many=True)
-#         return Response({
-#             'status': "success",
-#             'message': 'Banners retrieved successfully.',
-#             'response_code': status.HTTP_200_OK,
-#             'data': serializer.data
-#         })
 
 #Trending images listing api
 
