@@ -113,7 +113,7 @@ class OrderSerializer(serializers.ModelSerializer):
 class WishlistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wishlist
-        fields = ['id', 'user', 'product','is_active','is_deleted','created_on']
+        fields = ['id', 'product','is_active','is_deleted','created_on']
 
 
 class CartItemSerializer(serializers.ModelSerializer):
