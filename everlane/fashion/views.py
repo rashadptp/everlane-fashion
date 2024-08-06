@@ -500,6 +500,40 @@ class SeasonalProductsView(generics.ListAPIView):
             'data': serializer.data
         }, status=status.HTTP_200_OK)
 
+#Questionnaire   
+
+
+class QuestionnaireCreateView(generics.CreateAPIView):
+    serializer_class = QuestionareSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            questionnaire = serializer.save(user=request.user)
+            return Response({
+                'status': "success",
+                'message': 'Questionnaire submitted successfully.',
+                'response_code': status.HTTP_201_CREATED,
+                'data': QuestionnaireSerializer(questionnaire).data
+            }, status=status.HTTP_201_CREATED)
+        return Response({
+            'status': "failed",
+            'message': 'Failed to submit questionnaire.',
+            'response_code': status.HTTP_400_BAD_REQUEST,
+            'data': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+   
+    
+
+
+
+
 
 
 

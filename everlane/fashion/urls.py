@@ -34,6 +34,7 @@ urlpatterns = [
     path('products/winter/', SeasonalProductsView.as_view(), {'season': 'winter'}, name='winter-products'),
     path('products/rainy/', SeasonalProductsView.as_view(), {'season': 'rainy'}, name='rainy-products'),
     path('products/autumn/', SeasonalProductsView.as_view(), {'season': 'autumn'}, name='autumn-products'),
+    path('questionnaire/', QuestionnaireCreateView.as_view(), name='questionnaire'),
     
 
 

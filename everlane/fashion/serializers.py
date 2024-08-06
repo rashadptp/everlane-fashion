@@ -136,3 +136,10 @@ class BannerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Banner
         fields = ['image','is_active','is_deleted','created_on','which']  
+
+
+
+class QuestionnaireSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id','gender', 'skin_color','height','preferred_season','usage_of_dress']
