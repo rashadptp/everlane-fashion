@@ -25,7 +25,7 @@ urlpatterns = [
     # path('carts/<int:pk>/', CartDetailView.as_view(), name='cart-detail'),
     path('add-to-cart/', AddToCartView.as_view(), name='add-to-cart'),
     path('update-cart-item-quantity/', UpdateCartItemQuantityView.as_view(), name='update-cart-item-quantity'),
-    path('api/cart-item/<int:item_id>/delete/', CartItemDeleteView.as_view(), name='cart-item-delete'),
+    path('cart-item/<int:product_id>/delete/', CartItemDeleteView.as_view(), name='cart-item-delete'),
     path('banners/', AngularBannerListView.as_view(), name='banner-list'),
     path('bannerss/', FlutterBannerListView.as_view(), name='banner-list'),
     path('products/trending/', TrendingProductsView.as_view(), name='trending-products'),
@@ -36,7 +36,7 @@ urlpatterns = [
     path('questionnaire/', QuestionnaireCreateView.as_view(), name='questionnaire'),
     path('wishlist/', WishlistListView.as_view(), name='wishlist'),
     path('wishlist/add/', AddWishlistView.as_view(), name='add-wishlist'),
-    path('wishlist/delete', DeleteWishlistView.as_view(), name='delete-wishlist'),
+    path('wishlist/delete/<int:pk>/', DeleteWishlistView.as_view(), name='delete-wishlist'),
 ]
     
 
