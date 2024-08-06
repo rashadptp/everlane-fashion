@@ -35,6 +35,7 @@ urlpatterns = [
     path('questionnaire/', QuestionnaireCreateView.as_view(), name='questionnaire'),
     path('wishlist/', WishlistListView.as_view(), name='wishlist'),
     path('wishlist/add/', AddWishlistView.as_view(), name='add-wishlist'),
+    path('wishlist/delete', DeleteWishlistView.as_view(), name='delete-wishlist'),
 ]
     
 

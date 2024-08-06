@@ -589,6 +589,33 @@ class AddWishlistView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
+class DeleteWishlistView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk, *args, **kwargs):
+        try:
+        
+            wishlist_item = Wishlist.objects.get(pk=pk, user=request.user)
+        except Wishlist.DoesNotExist:
+          
+            return Response({
+                'status': 'failed',
+                'message': 'Wishlist item not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        
+        wishlist_item.delete()
+        
+        return Response({
+            'status': 'success',
+            'message': 'Wishlist item deleted successfully.',
+            'response_code': status.HTTP_204_NO_CONTENT
+        }, status=status.HTTP_204_NO_CONTENT)
+
+
+
+
 
 
 
