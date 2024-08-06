@@ -504,7 +504,7 @@ class SeasonalProductsView(generics.ListAPIView):
 
 
 class QuestionnaireCreateView(generics.CreateAPIView):
-    serializer_class = QuestionareSerializer
+    serializer_class = QuestionnaireSerializer
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
