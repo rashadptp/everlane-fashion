@@ -249,9 +249,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 class CartListView(generics.ListCreateAPIView):
-    queryset = Cart.objects.all()
     serializer_class = CartSerializer
     permission_classes = [IsAuthenticated]  # Ensure only authenticated users can access
+
+    def get_queryset(self):
+        # Filter carts to show only those belonging to the authenticated user
+        user = self.request.user
+        return Cart.objects.filter(user=user)
 
     def get(self, request, *args, **kwargs):
         carts = self.get_queryset()
@@ -266,7 +270,7 @@ class CartListView(generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            cart = serializer.save()
+            cart = serializer.save(user=request.user)  # Ensure the cart is created for the authenticated user
             return Response({
                 'status': 'success',
                 'message': 'Cart created successfully.',
@@ -279,6 +283,7 @@ class CartListView(generics.ListCreateAPIView):
             'response_code': status.HTTP_400_BAD_REQUEST,
             'data': serializer.errors
         })
+
 
 class CartDetailView(generics.RetrieveDestroyAPIView):
     queryset = Cart.objects.all()

@@ -108,7 +108,7 @@ class ProductSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ['id', 'user', 'product', 'created_at', 'total_amount','is_active','is_deleted','created_on']
+        fields = ['id', 'user', 'product', 'total_amount','is_active','is_deleted','created_on']
 
 class WishlistSerializer(serializers.ModelSerializer):
     class Meta:
