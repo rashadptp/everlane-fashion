@@ -143,3 +143,12 @@ class QuestionnaireSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id','gender', 'skin_color','height','preferred_season','usage_of_dress']
+    
+    def update(self, instance, validated_data):
+        instance.gender = validated_data.get('gender', instance.gender)
+        instance.skin_color = validated_data.get('skin_color', instance.skin_color)
+        instance.height = validated_data.get('height', instance.height)
+        instance.preferred_season = validated_data.get('preferred_season', instance.preferred_season)
+        instance.usage_of_dress = validated_data.get('usage_of_dress', instance.usage_of_dress)
+        instance.save()
+        return instance

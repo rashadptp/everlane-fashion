@@ -503,14 +503,15 @@ class SeasonalProductsView(generics.ListAPIView):
 #Questionnaire   
 
 
-class QuestionnaireCreateView(generics.CreateAPIView):
+class QuestionnaireCreateView(generics.UpdateAPIView):
     serializer_class = QuestionnaireSerializer
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+    def update(self, request, *args, **kwargs):
+        user = request.user
+        serializer = self.get_serializer(user, data=request.data, partial=True)
         if serializer.is_valid():
-            questionnaire = serializer.save(user=request.user)
+            questionnaire = serializer.save()
             return Response({
                 'status': "success",
                 'message': 'Questionnaire submitted successfully.',
