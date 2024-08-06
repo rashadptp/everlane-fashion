@@ -331,7 +331,7 @@ class CartItemDeleteView(APIView):
 
     def delete(self, request, *args, **kwargs):
         cart_item_id = kwargs.get('item_id')
-        
+
         try:
             # Ensure the cart item belongs to the authenticated user
             cart_item = CartItem.objects.get(id=cart_item_id, cart__user=request.user)
@@ -341,14 +341,13 @@ class CartItemDeleteView(APIView):
                 'message': 'Cart item not found or does not belong to you.',
                 'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
-        
+
         cart_item.delete()
         return Response({
             'status': 'success',
             'message': 'Cart item deleted successfully.',
             'response_code': status.HTTP_200_OK
         }, status=status.HTTP_200_OK)
-    
 
     
 class UpdateCartItemQuantityView(APIView):
