@@ -82,8 +82,14 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ProductListView(generics.ListAPIView):
-    queryset = Product.objects.all()
     serializer_class = ProductSerializer
+
+    def get_queryset(self):
+        queryset = Product.objects.all()
+        subcategory_id = self.request.query_params.get('subcategory', None)
+        if subcategory_id is not None:
+            queryset = queryset.filter(subcategory_id=subcategory_id)
+        return queryset
 
     def list(self, request, *args, **kwargs):
         products = self.get_queryset()
@@ -514,6 +520,7 @@ class QuestionnaireCreateView(generics.UpdateAPIView):
             'response_code': status.HTTP_400_BAD_REQUEST,
             'data': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+    
 
 
 #wishlist view
