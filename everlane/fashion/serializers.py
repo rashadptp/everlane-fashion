@@ -126,7 +126,7 @@ class CartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cart
-        fields = ['id', 'user', 'created_at', 'items','is_active','is_deleted','created_on']
+        fields = ['id', 'user', 'items','is_active','is_deleted','created_on']
 
 #for banner
 from rest_framework import serializers
