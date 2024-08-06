@@ -135,7 +135,7 @@ from .models import Banner
 class BannerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Banner
-        fields = ['image','is_active','is_deleted','created_on','which']  
+        fields = ['image','category','is_active','is_deleted','created_on','which']  
 
 
 

@@ -156,6 +156,7 @@ class Banner(models.Model):
         ('F', 'Flutter'),
     ]
     image = models.ImageField(upload_to='banners/')
+    category = models.ForeignKey(Category, related_name='banners', on_delete=models.CASCADE,null=True)
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
