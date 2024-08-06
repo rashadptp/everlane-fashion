@@ -119,14 +119,14 @@ class WishlistSerializer(serializers.ModelSerializer):
 class CartItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
-        fields = ['id', 'product', 'quantity', 'added_at','is_active','is_deleted','created_on']
+        fields = ['id', 'product', 'quantity','is_active','is_deleted','created_on']
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = Cart
-        fields = ['id', 'user', 'created_at', 'items','is_active','is_deleted','created_on']
+        fields = ['id', 'user', 'items','is_active','is_deleted','created_on']
 
 #for banner
 from rest_framework import serializers
