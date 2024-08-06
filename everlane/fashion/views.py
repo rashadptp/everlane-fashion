@@ -527,6 +527,38 @@ class QuestionnaireCreateView(generics.UpdateAPIView):
     
 
 
+#wishlist view
+ 
+class WishlistView(generics.ListAPIView):
+    serializer_class = WishlistSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Wishlist.objects.filter(user=user, is_deleted=False)
+
+class AddWishlistView(generics.CreateAPIView):
+    serializer_class = WishlistSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            wishlist = serializer.save(user=request.user)
+            return Response({
+                'status': "success",
+                'message': 'Product added to wishlist successfully.',
+                'response_code': status.HTTP_201_CREATED,
+                'data': WishlistSerializer(wishlist).data
+            }, status=status.HTTP_201_CREATED)
+        return Response({
+            'status': "failed",
+            'message': 'Failed to add product to wishlist.',
+            'response_code': status.HTTP_400_BAD_REQUEST,
+            'data': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 

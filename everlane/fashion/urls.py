@@ -35,10 +35,13 @@ urlpatterns = [
     path('products/rainy/', SeasonalProductsView.as_view(), {'season': 'rainy'}, name='rainy-products'),
     path('products/autumn/', SeasonalProductsView.as_view(), {'season': 'autumn'}, name='autumn-products'),
     path('questionnaire/', QuestionnaireCreateView.as_view(), name='questionnaire'),
-    
-
-
-    
-    
-    
+    path('wishlist/', WishlistView.as_view(), name='wishlist'),
+    path('wishlist/add/', AddWishlistView.as_view(), name='add-wishlist'),
 ]
+    
+
+
+    
+    
+    
+
