@@ -98,17 +98,20 @@ class ProductListView(generics.ListAPIView):
             product_serializer = self.get_serializer(product)
             items = ProductItem.objects.filter(product=product)
             item_serializer = ProductItemSerializer(items, many=True)
-            product_data.append({
-                'product': product_serializer.data,
-                'items': item_serializer.data,
-                'is_out_of_stock': not items.exists() or all(item.stock == 0 for item in items)
-            })
+            product_data.append(
+                    product_serializer.data
+                
+            )
         return Response({
             'status': "success",
             'message': "Products retrieved successfully.",
             'response_code': status.HTTP_200_OK,
             'data': product_data
         })
+    
+    # 'product': 
+                # 'items': item_serializer.data,
+                # 'is_out_of_stock': not items.exists() or all(item.stock == 0 for item in items)
 
 class ProductDetailView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
@@ -511,7 +514,7 @@ from .models import Product
 from .serializers import ProductSerializer
 
 class SeasonalProductsView(generics.ListAPIView):
-    serializer_class = ProductSerializer
+    serializer_class = SeosonSerializer
 
     def get_queryset(self):
         season = self.kwargs.get('season')

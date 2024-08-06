@@ -97,11 +97,16 @@ class ProductItemSerializer(serializers.ModelSerializer):
         return obj.stock == 0    
 
 class ProductSerializer(serializers.ModelSerializer):
-    items = ProductItemSerializer(many=True, read_only=True) 
+    # items = ProductItemSerializer(many=True, read_only=True) 
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image', 'is_trending', 'summer', 'winter', 'rainy', 'autumn', 'items']
+        fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_trending']
+
+class SeosonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Product
+        fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','winter','summer','rainy','autumn']
 
 
 
