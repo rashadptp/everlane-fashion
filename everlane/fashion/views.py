@@ -395,8 +395,14 @@ class AngularBannerListView(generics.ListAPIView):
     serializer_class = BannerSerializer
 
     def get_queryset(self):
+        category_id=self.request.query_params.get('category_id')
+        queryset= Banner.objects.filter(is_deleted=False, is_active=True, which='A')
+        if category_id:
+            queryset= queryset.filter(category_id=category_id)
+        return queryset
+
         
-        return Banner.objects.filter(is_deleted=False, is_active=True, which='A')
+       
 
     def get(self, request, *args, **kwargs):
         
