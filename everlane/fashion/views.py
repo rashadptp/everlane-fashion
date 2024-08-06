@@ -559,6 +559,8 @@ class AddWishlistView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
+        user=request.user
+        
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             wishlist = serializer.save(user=request.user)
