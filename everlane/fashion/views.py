@@ -285,9 +285,9 @@ class CartListView(generics.ListCreateAPIView):
         })
 
 
-class CartDetailView(generics.RetrieveDestroyAPIView):
-    queryset = Cart.objects.all()
-    serializer_class = CartSerializer
+# class CartDetailView(generics.RetrieveDestroyAPIView):
+#     queryset = Cart.objects.all()
+#     serializer_class = CartSerializer
 
 class AddToCartView(APIView):
     permission_classes = [IsAuthenticated]
@@ -324,6 +324,32 @@ class AddToCartView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': CartSerializer(cart).data  # Optional: Return the updated cart data
         }, status=status.HTTP_200_OK)
+    
+
+class CartItemDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        cart_item_id = kwargs.get('item_id')
+        
+        try:
+            # Ensure the cart item belongs to the authenticated user
+            cart_item = CartItem.objects.get(id=cart_item_id, cart__user=request.user)
+        except CartItem.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Cart item not found or does not belong to you.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        cart_item.delete()
+        return Response({
+            'status': 'success',
+            'message': 'Cart item deleted successfully.',
+            'response_code': status.HTTP_200_OK
+        }, status=status.HTTP_200_OK)
+    
+
     
 class UpdateCartItemQuantityView(APIView):
     permission_classes = [IsAuthenticated]
