@@ -34,6 +34,7 @@ class RegisterAdminView(generics.CreateAPIView):
                 "message": "Admin registered successfully."
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 #Login view
 
 from rest_framework import generics, status
@@ -212,7 +213,6 @@ class CategoryListView(generics.ListCreateAPIView):
         return Response(response_data)
 
 
-
 class SubcategoryListView(generics.ListCreateAPIView):
     serializer_class = SubcategorySerializer
 
@@ -236,16 +236,6 @@ class SubcategoryListView(generics.ListCreateAPIView):
 class SubcategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Subcategory.objects.all()
     serializer_class = SubcategorySerializer
-
-
-class WishlistListView(generics.ListCreateAPIView):
-    queryset = Wishlist.objects.all()
-    serializer_class = WishlistSerializer
-
-class WishlistDetailView(generics.RetrieveDestroyAPIView):
-    queryset = Wishlist.objects.all()
-    serializer_class = WishlistSerializer
-
 
 
 from rest_framework import status
@@ -527,14 +517,35 @@ class QuestionnaireCreateView(generics.UpdateAPIView):
 
 
 #wishlist view
- 
-class WishlistView(generics.ListAPIView):
+
+class WishlistListView(generics.ListAPIView):
     serializer_class = WishlistSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated] 
 
     def get_queryset(self):
-        user = self.request.user
-        return Wishlist.objects.filter(user=user, is_deleted=False)
+        
+        return Wishlist.objects.filter(user=self.request.user, is_deleted=False)
+
+    def get(self, request, *args, **kwargs):
+        wishlists = self.get_queryset()
+        if wishlists.exists():
+            serializer = self.get_serializer(wishlists, many=True)
+            return Response({
+                'status': 'success',
+                'message': 'Wishlist retrieved successfully.',
+                'response_code': status.HTTP_200_OK,
+                'data': serializer.data
+            })
+        else:
+            return Response({
+                'status': 'failed',
+                'message': 'No items found in your wishlist.',
+                'response_code': status.HTTP_404_NOT_FOUND,
+                'data': []
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+#Add to wishlist view
 
 class AddWishlistView(generics.CreateAPIView):
     serializer_class = WishlistSerializer
@@ -545,13 +556,13 @@ class AddWishlistView(generics.CreateAPIView):
         if serializer.is_valid():
             wishlist = serializer.save(user=request.user)
             return Response({
-                'status': "success",
+                'status': 'success',
                 'message': 'Product added to wishlist successfully.',
                 'response_code': status.HTTP_201_CREATED,
                 'data': WishlistSerializer(wishlist).data
             }, status=status.HTTP_201_CREATED)
         return Response({
-            'status': "failed",
+            'status': 'failed',
             'message': 'Failed to add product to wishlist.',
             'response_code': status.HTTP_400_BAD_REQUEST,
             'data': serializer.errors
@@ -560,9 +571,6 @@ class AddWishlistView(generics.CreateAPIView):
 
 
 
-
-   
-    
 
 
 
