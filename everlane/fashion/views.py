@@ -436,8 +436,12 @@ class FlutterBannerListView(generics.ListAPIView):
     serializer_class = BannerSerializer
 
     def get_queryset(self):
-        
-        return Banner.objects.filter(is_deleted=False, is_active=True, which='F')
+        category_id=self.request.query_params.get('category_id')
+        queryset= Banner.objects.filter(is_deleted=False, is_active=True, which='F')
+        if category_id:
+            queryset= queryset.filter(category_id=category_id)
+        return queryset
+
 
     def get(self, request, *args, **kwargs):
         
