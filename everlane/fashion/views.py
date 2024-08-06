@@ -557,17 +557,22 @@ class WishlistListView(generics.ListAPIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
 
-#Add to wishlist view
+# #Add to wishlist view
 
-class AddWishlistView(generics.CreateAPIView):
-    serializer_class = WishlistSerializer
+
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from .serializers import WishlistSerializer
+
+class AddWishlistView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        user=request.user
-        
-        serializer = self.get_serializer(data=request.data)
+        serializer = WishlistSerializer(data=request.data)
         if serializer.is_valid():
+            
             wishlist = serializer.save(user=request.user)
             return Response({
                 'status': 'success',
@@ -575,12 +580,15 @@ class AddWishlistView(generics.CreateAPIView):
                 'response_code': status.HTTP_201_CREATED,
                 'data': WishlistSerializer(wishlist).data
             }, status=status.HTTP_201_CREATED)
+        
         return Response({
             'status': 'failed',
             'message': 'Failed to add product to wishlist.',
             'response_code': status.HTTP_400_BAD_REQUEST,
             'data': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 
