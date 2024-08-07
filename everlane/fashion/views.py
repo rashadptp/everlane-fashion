@@ -804,7 +804,7 @@ class PlaceOrderView(APIView):
 
         # Create the order
         order = Order.objects.create(
-            customer=user,
+            user=user,
             total_amount=total_amount,
             payment_method=payment_method,
             is_completed=False if payment_method == 'ONLINE' else True
@@ -821,7 +821,6 @@ class PlaceOrderView(APIView):
 
         # Clear the cart
         cart_items.delete()
-        cart.is_active = False
         cart.save()
 
         if payment_method == 'ONLINE':
