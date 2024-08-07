@@ -166,6 +166,15 @@ class Banner(models.Model):
     def __str__(self):
         return self.image.url
 
+#address list model
+
+class AddressList(models.Model):
+    user = models.ForeignKey(User, related_name='addresses', on_delete=models.CASCADE)
+    
+
+
+
+
 
 
 

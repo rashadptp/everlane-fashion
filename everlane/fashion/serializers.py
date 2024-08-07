@@ -157,3 +157,5 @@ class QuestionnaireSerializer(serializers.ModelSerializer):
         instance.usage_of_dress = validated_data.get('usage_of_dress', instance.usage_of_dress)
         instance.save()
         return instance
+
+
