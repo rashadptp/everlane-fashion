@@ -21,17 +21,27 @@ urlpatterns = [
     # path('categories/<int:pk>/', CategoryDetailView.as_view(), name='category-detail'),
     path('subcategories/', SubcategoryListView.as_view(), name='subcategory-list'),
     path('subcategories/<int:pk>/', SubcategoryDetailView.as_view(), name='subcategory-detail'),
-    path('wishlists/', WishlistListView.as_view(), name='wishlist-list'),
-    path('wishlists/<int:pk>/', WishlistDetailView.as_view(), name='wishlist-detail'),
     path('carts/', CartListView.as_view(), name='cart-list'),
-    path('carts/<int:pk>/', CartDetailView.as_view(), name='cart-detail'),
+    # path('carts/<int:pk>/', CartDetailView.as_view(), name='cart-detail'),
     path('add-to-cart/', AddToCartView.as_view(), name='add-to-cart'),
-    path('banners/', BannerListView.as_view(), name='banner-list'),
+    path('update-cart-item-quantity/', UpdateCartItemQuantityView.as_view(), name='update-cart-item-quantity'),
+    path('cart-item/<int:item_id>/delete/', CartItemDeleteView.as_view(), name='cart-item-delete'),
+    path('banners/', AngularBannerListView.as_view(), name='banner-list'),
+    path('bannerss/', FlutterBannerListView.as_view(), name='banner-list'),
     path('products/trending/', TrendingProductsView.as_view(), name='trending-products'),
     path('products/summer/', SeasonalProductsView.as_view(), {'season': 'summer'}, name='summer-products'),
     path('products/winter/', SeasonalProductsView.as_view(), {'season': 'winter'}, name='winter-products'),
     path('products/rainy/', SeasonalProductsView.as_view(), {'season': 'rainy'}, name='rainy-products'),
     path('products/autumn/', SeasonalProductsView.as_view(), {'season': 'autumn'}, name='autumn-products'),
-    
-    
+    path('questionnaire/', QuestionnaireCreateView.as_view(), name='questionnaire'),
+    path('wishlist/', WishlistListView.as_view(), name='wishlist'),
+    path('wishlist/add/', AddWishlistView.as_view(), name='add-wishlist'),
+    path('wishlist/delete/<int:pk>/', DeleteWishlistView.as_view(), name='delete-wishlist'),
 ]
+    
+
+
+    
+    
+    
+

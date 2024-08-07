@@ -76,40 +76,66 @@ class UserSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ['id', 'name','image']
+        fields = ['id', 'name','image','is_active','is_deleted','created_on']
 
 class SubcategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Subcategory
-        fields = ['id', 'name', 'category','image']
+        fields = ['id', 'name', 'category','image','is_active','is_deleted','created_on']
+
+
+
+
+
+class ProductItemSerializer(serializers.ModelSerializer):
+    is_out_of_stock = serializers.SerializerMethodField()
+    class Meta:
+        model = ProductItem
+        fields = ['id', 'product', 'size', 'stock','is_out_of_stock']
+
+    def get_is_out_of_stock(self, obj):
+        return obj.stock == 0    
 
 class ProductSerializer(serializers.ModelSerializer):
+    # items = ProductItemSerializer(many=True, read_only=True) 
+
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'subcategory','image',"is_trending","summer","winter","rainy","autumn"]
+        fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','is_trending']
+
+class SeosonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Product
+        fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','winter','summer','rainy','autumn']
+
 
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ['id', 'user', 'product', 'created_at', 'total_amount']
+        fields = ['id', 'user', 'product', 'total_amount','is_active','is_deleted','created_on']
 
 class WishlistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wishlist
-        fields = ['id', 'user', 'product', 'added_at']
+        fields = ['id', 'product','is_active','is_deleted','created_on']
 
 
 class CartItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.ReadOnlyField(source='product.name')
+    product_price = serializers.ReadOnlyField(source='product.price')
+
     class Meta:
         model = CartItem
-        fields = ['id', 'product', 'quantity', 'added_at']
+        fields = ['id', 'product','product_name', 'product_price', 'quantity','is_active','is_deleted','created_on']
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
+    total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
     class Meta:
         model = Cart
-        fields = ['id', 'user', 'created_at', 'items']
+        fields = ['id', 'user', 'items','is_active','is_deleted','created_on','total_price']
+        read_only_fields = ['id', 'user', 'total_price']
 
 #for banner
 from rest_framework import serializers
@@ -118,4 +144,26 @@ from .models import Banner
 class BannerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Banner
-        fields = ['image']  
+        fields = ['image','category','is_active','is_deleted','created_on','which']  
+
+
+
+class QuestionnaireSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id','gender', 'skin_color','height','preferred_season','usage_of_dress']
+    
+    def update(self, instance, validated_data):
+        instance.gender = validated_data.get('gender', instance.gender)
+        instance.skin_color = validated_data.get('skin_color', instance.skin_color)
+        instance.height = validated_data.get('height', instance.height)
+        instance.preferred_season = validated_data.get('preferred_season', instance.preferred_season)
+        instance.usage_of_dress = validated_data.get('usage_of_dress', instance.usage_of_dress)
+        instance.save()
+        return instance
+
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ['id','user', 'mobile','pincode','locality','address','city','state','landmark','is_default','is_active','is_deleted','created_on']
