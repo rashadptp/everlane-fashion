@@ -7,7 +7,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'mobile', 'password', 'confirm_password']
+        fields = ('username', 'first_name', 'last_name', 'email', 'mobile', 'password', 'confirm_password')
 
     def validate(self, data):
         password = data.get('password')
@@ -42,7 +42,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class AdminRegistrationSerializer(UserRegistrationSerializer):
     class Meta(UserRegistrationSerializer.Meta):
-        fields = UserRegistrationSerializer.Meta.fields + ('is_admin')
+        fields = UserRegistrationSerializer.Meta.fields + ('is_admin',)
     
     def create(self, validated_data):
         validated_data['is_admin'] = True
