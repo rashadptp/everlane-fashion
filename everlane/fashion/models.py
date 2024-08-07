@@ -117,6 +117,12 @@ class ProductItem(models.Model):
         return f"{self.product.name} - {self.get_size_display()}"
 
 class Order(models.Model):
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Processing', 'Processing'),
+        ('Completed', 'Completed'),
+    ]
+
     PAYMENT_METHODS = [
         ('COD', 'Cash on Delivery'),
         ('ONLINE', 'Online Payment'),
@@ -130,6 +136,7 @@ class Order(models.Model):
     is_completed = models.BooleanField(default=False)
     payment_method = models.CharField(max_length=10, choices=PAYMENT_METHODS,default='COD')
     payment_status = models.CharField(max_length=20, default='Pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
 
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"
