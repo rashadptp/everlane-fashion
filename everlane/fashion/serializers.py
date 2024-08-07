@@ -121,16 +121,21 @@ class WishlistSerializer(serializers.ModelSerializer):
 
 
 class CartItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.ReadOnlyField(source='product.name')
+    product_price = serializers.ReadOnlyField(source='product.price')
+
     class Meta:
         model = CartItem
-        fields = ['id', 'product', 'quantity','is_active','is_deleted','created_on']
+        fields = ['id', 'product','product_name', 'product_price', 'quantity','is_active','is_deleted','created_on']
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
+    total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
     class Meta:
         model = Cart
-        fields = ['id', 'user', 'items','is_active','is_deleted','created_on']
+        fields = ['id', 'user', 'items','is_active','is_deleted','created_on','total_price']
+        read_only_fields = ['id', 'user', 'total_price']
 
 #for banner
 from rest_framework import serializers

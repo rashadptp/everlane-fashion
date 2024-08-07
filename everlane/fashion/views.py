@@ -317,6 +317,9 @@ class AddToCartView(APIView):
             cart_item.quantity = quantity
             cart_item.save()
             message = 'Item added to cart.'
+        
+        cart.total_price = sum(item.product.price * item.quantity for item in cart.cartitem_set.all())
+        cart.save()
 
         return Response({
             'status': 'success',
