@@ -26,6 +26,7 @@ urlpatterns = [
     path('add-to-cart/', AddToCartView.as_view(), name='add-to-cart'),
     path('update-cart-item-quantity/', UpdateCartItemQuantityView.as_view(), name='update-cart-item-quantity'),
     path('cart-item/<int:item_id>/delete/', CartItemDeleteView.as_view(), name='cart-item-delete'),
+    path('place-order/', PlaceOrderView.as_view(), name='place-order'),
     path('banners/', AngularBannerListView.as_view(), name='banner-list'),
     path('bannerss/', FlutterBannerListView.as_view(), name='banner-list'),
     path('products/trending/', TrendingProductsView.as_view(), name='trending-products'),

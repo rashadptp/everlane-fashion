@@ -7,7 +7,19 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'mobile', 'password', 'confirm_password')
+        fields = ['username', 'first_name', 'last_name', 'email', 'mobile', 'password', 'confirm_password']
+        
+
+        extra_kwargs = {
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+            'email': {'required': True},
+            'mobile': {'required': True},
+            'password': {'required': True},
+            'confirm_password': {'required': True},
+        }
+
+
 
         
 
@@ -44,7 +56,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class AdminRegistrationSerializer(UserRegistrationSerializer):
     class Meta(UserRegistrationSerializer.Meta):
-        fields = UserRegistrationSerializer.Meta.fields + ('is_admin')
+        fields = UserRegistrationSerializer.Meta.fields + ('is_admin',)
     
     def create(self, validated_data):
         validated_data['is_admin'] = True
@@ -98,6 +110,14 @@ class ProductItemSerializer(serializers.ModelSerializer):
     def get_is_out_of_stock(self, obj):
         return obj.stock == 0    
 
+class ProductRetrieveSerializer(serializers.ModelSerializer):
+    items = ProductItemSerializer(many=True, read_only=True) 
+
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','is_trending','items']
+
+
 class ProductSerializer(serializers.ModelSerializer):
     # items = ProductItemSerializer(many=True, read_only=True) 
 
@@ -110,11 +130,16 @@ class SeosonSerializer(serializers.ModelSerializer):
         model=Product
         fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','winter','summer','rainy','autumn']
 
+class OrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'product', 'quantity', 'price']
 
 class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
     class Meta:
         model = Order
-        fields = ['id', 'user', 'product', 'total_amount','is_active','is_deleted','created_on']
+        fields = ['id', 'user', 'product', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status', 'items']
 
 class WishlistSerializer(serializers.ModelSerializer):
     class Meta:
