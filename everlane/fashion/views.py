@@ -511,7 +511,7 @@ from .models import Product
 from .serializers import ProductSerializer
 
 class SeasonalProductsView(generics.ListAPIView):
-    serializer_class = ProductSerializer
+    serializer = SeosonSerializer
 
     def get_queryset(self):
         season = self.kwargs.get('season')
