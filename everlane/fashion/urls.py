@@ -37,6 +37,15 @@ urlpatterns = [
     path('wishlist/', WishlistListView.as_view(), name='wishlist'),
     path('wishlist/add/', AddWishlistView.as_view(), name='add-wishlist'),
     path('wishlist/delete/<int:pk>/', DeleteWishlistView.as_view(), name='delete-wishlist'),
+    path('addresses/default/', DefaultAddressView.as_view(), name='default-address'),
+    path('addresses/', AddressListView.as_view(), name='address-list'),
+    path('addresses/create/', AddressCreateView.as_view(), name='address-create'),
+    path('addresses/<int:pk>/delete/', AddressDeleteView.as_view(), name='address-delete'),
+
+
+
+
+
 ]
     
 

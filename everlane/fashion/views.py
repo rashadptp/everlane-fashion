@@ -666,7 +666,123 @@ class DeleteWishlistView(APIView):
             'message': 'Wishlist item deleted successfully.',
             'response_code': status.HTTP_200_OK
         }, status=status.HTTP_200_OK)
+
+
+#Address view
+
+class DefaultAddressView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            default_address = Address.objects.get(user=request.user, is_default=True)
+            serializer = AddressSerializer(default_address)
+            return Response({
+                'status': 'success',
+                'message': 'Default address retrieved successfully.',
+                'response_code': status.HTTP_200_OK,
+                'data': serializer.data
+            }, status=status.HTTP_200_OK)
+        except Address.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Default address not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+
+class AddressListView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = AddressSerializer
+
+    def get_queryset(self):
+        return Address.objects.filter(user=self.request.user, is_deleted=False)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if queryset.exists():
+
+            serializer = self.get_serializer(queryset, many=True)
+            return Response({
+            'status': 'success',
+            'message': 'Addresses retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
+
+        else:
+            
+            return Response({
+                'status': 'failed',
+                'message': 'No addresses found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class AddressCreateView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = AddressSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
     
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            return Response({
+                'status': 'success',
+                'message': 'Address created successfully.',
+                'response_code': status.HTTP_201_CREATED,
+                'data': serializer.data
+            }, status=status.HTTP_201_CREATED)
+        else:
+            return Response({
+                'status': 'failed',
+                'message': 'Address creation failed.',
+                'response_code': status.HTTP_400_BAD_REQUEST,
+                'errors': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AddressDeleteView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = Address.objects.all()
+    serializer_class = AddressSerializer
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            address = self.get_object()
+            address.is_deleted = True
+            address.save()
+            return Response({
+                'status': 'success',
+                'message': 'Address deleted successfully.',
+                'response_code': status.HTTP_200_OK
+            }, status=status.HTTP_200_OK)
+        except Address.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Address not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
 
 
 
