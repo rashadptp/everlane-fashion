@@ -168,9 +168,30 @@ class Banner(models.Model):
 
 #address list model
 
-class AddressList(models.Model):
-    user = models.ForeignKey(User, related_name='addresses', on_delete=models.CASCADE)
-    
+class Address(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
+    mobile = models.CharField(max_length=15)
+    pincode = models.CharField(max_length=10)
+    locality = models.CharField(max_length=255)
+    address = models.TextField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    landmark = models.CharField(max_length=255, blank=True, null=True)
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    created_on = models.DateTimeField(default=timezone.now)
+
+
+    def save(self, *args, **kwargs):
+        if self.is_default:
+            AddressList.objects.filter(user=self.user, is_default=True).update(is_default=False)
+        super(AddressList, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.address}, {self.city}, {self.state}, {self.pincode}'
+
+
 
 
 

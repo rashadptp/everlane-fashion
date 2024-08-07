@@ -158,3 +158,7 @@ class QuestionnaireSerializer(serializers.ModelSerializer):
         return instance
 
 
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ['id','user', 'mobile','pincode','locality','address','city','state','landmark','is_default','is_active','is_deleted','created_on']
