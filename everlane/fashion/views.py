@@ -355,29 +355,49 @@ class UpdateCartItemQuantityView(APIView):
     def post(self, request, *args, **kwargs):
         user = request.user
         cart_item_id = request.data.get('cart_item_id')
-        quantity = int(request.data.get('quantity', 1))  # Ensure quantity is an integer
+        action = request.data.get('action')  # 'increase' or 'decrease'
 
         try:
-            cart_item = CartItem.objects.get(id=cart_item_id, cart__user=user)
+            cart_item = CartItem.objects.get(id=cart_item_id, cart__user=user, is_active=True, is_deleted=False)
         except CartItem.DoesNotExist:
-            return Response({'status': 'failed', 'message': 'Cart item not found.', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-
-        if quantity <= 0:
-            cart_item.delete()
             return Response({
-                'status': 'success',
-                'message': 'Item removed from cart.',
-                'response_code': status.HTTP_200_OK
-            }, status=status.HTTP_200_OK)
+                'status': 'failed',
+                'message': 'Cart item not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
 
-        cart_item.quantity = quantity
-        cart_item.save()
+        if action == 'increase':
+            cart_item.quantity += 1
+            cart_item.save()
+            message = 'Quantity increased.'
+        elif action == 'decrease':
+            if cart_item.quantity > 1:
+                cart_item.quantity -= 1
+                cart_item.save()
+                message = 'Quantity decreased.'
+            else:
+                return Response({
+                    'status': 'failed',
+                    'message': 'Quantity cannot be less than 1.',
+                    'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({
+                'status': 'failed',
+                'message': 'Invalid action.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update the total price of the cart
+        cart = cart_item.cart
+        cart.total_price = sum(item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
+        cart.save()
 
         return Response({
             'status': 'success',
-            'message': 'Quantity updated successfully.',
+            'message': message,
             'response_code': status.HTTP_200_OK,
-            'data': CartSerializer(cart_item.cart).data
+            'data': CartSerializer(cart).data  # Return the updated cart data
         }, status=status.HTTP_200_OK)
 
 
