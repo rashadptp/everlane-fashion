@@ -8,8 +8,8 @@ urlpatterns = [
 
 
 
-    path('users/', UserListView.as_view(), name='user-list'),
-    path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
+    # path('users/', UserListView.as_view(), name='user-list'),
+    # path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
     path('products/', ProductListView.as_view(), name='product-list'),
     path('products/create/', ProductCreateView.as_view(), name='product-create'),
     path('products/<int:pk>/update/', ProductUpdateView.as_view(), name='product-update'),

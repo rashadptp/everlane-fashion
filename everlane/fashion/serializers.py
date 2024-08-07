@@ -8,8 +8,11 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'mobile', 'password', 'confirm_password']
+<<<<<<< HEAD
         
 
+=======
+>>>>>>> 0a4a15567c417978a03da683155a078ace562e07
         extra_kwargs = {
             'first_name': {'required': True},
             'last_name': {'required': True},
@@ -18,10 +21,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'password': {'required': True},
             'confirm_password': {'required': True},
         }
+<<<<<<< HEAD
 
 
 
         
+=======
+>>>>>>> 0a4a15567c417978a03da683155a078ace562e07
 
     def validate(self, data):
         password = data.get('password')
@@ -83,10 +89,11 @@ class LoginSerializer(serializers.Serializer):
         return data
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name','is_admin']
+# class UserSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = ['id', 'username', 'email', 'first_name', 'last_name','is_admin']
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -139,7 +146,7 @@ class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     class Meta:
         model = Order
-        fields = ['id', 'user', 'product', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status', 'items']
+        fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status', 'items']
 
 class WishlistSerializer(serializers.ModelSerializer):
     class Meta:
