@@ -186,8 +186,8 @@ class Address(models.Model):
 
     def save(self, *args, **kwargs):
         if self.is_default:
-            AddressList.objects.filter(user=self.user, is_default=True).update(is_default=False)
-        super(AddressList, self).save(*args, **kwargs)
+            Address.objects.filter(user=self.user, is_default=True).update(is_default=False)
+        super(Address, self).save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.address}, {self.city}, {self.state}, {self.pincode}'
