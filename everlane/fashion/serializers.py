@@ -8,6 +8,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'mobile', 'password', 'confirm_password']
+        extra_kwargs = {
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+            'email': {'required': True},
+            'mobile': {'required': True},
+            'password': {'required': True},
+            'confirm_password': {'required': True},
+        }
 
     def validate(self, data):
         password = data.get('password')
@@ -69,10 +77,11 @@ class LoginSerializer(serializers.Serializer):
         return data
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name','is_admin']
+# class UserSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = ['id', 'username', 'email', 'first_name', 'last_name','is_admin']
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
