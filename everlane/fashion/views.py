@@ -511,7 +511,7 @@ from .models import Product
 from .serializers import ProductSerializer
 
 class SeasonalProductsView(generics.ListAPIView):
-    serializer = SeosonSerializer
+    serializer_class = SeosonSerializer
 
     def get_queryset(self):
         season = self.kwargs.get('season')
@@ -647,6 +647,9 @@ class DeleteWishlistView(APIView):
             'message': 'Wishlist item deleted successfully.',
             'response_code': status.HTTP_200_OK
         }, status=status.HTTP_200_OK)
+    
+
+
 
 
 

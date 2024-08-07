@@ -101,13 +101,12 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_trending']
+        fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','is_trending']
 
 class SeosonSerializer(serializers.ModelSerializer):
     class Meta:
         model=Product
-        fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','winter','summer','rainy','autumn']
-
+        fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','winter','summer','rainy','autumn']
 
 
 class OrderSerializer(serializers.ModelSerializer):
