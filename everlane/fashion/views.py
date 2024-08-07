@@ -98,11 +98,7 @@ class ProductListView(generics.ListAPIView):
             product_serializer = self.get_serializer(product)
             items = ProductItem.objects.filter(product=product)
             item_serializer = ProductItemSerializer(items, many=True)
-            product_data.append({
-                'product': product_serializer.data,
-                'items': item_serializer.data,
-                'is_out_of_stock': not items.exists() or all(item.stock == 0 for item in items)
-            })
+            product_data.append(product_serializer.data)
         return Response({
             'status': "success",
             'message': "Products retrieved successfully.",
