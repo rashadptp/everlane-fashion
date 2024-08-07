@@ -852,10 +852,56 @@ class PlaceOrderView(APIView):
 
 
 
+class OrderListView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Optionally filter orders by the authenticated user
+        user = self.request.user
+        return Order.objects.filter(user=user, is_deleted=False)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            'status': 'success',
+            'message': 'Orders retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        })
 
 
+class UpdateOrderStatusView(APIView):
+    permission_classes = [IsAuthenticated,IsAdminUser]
 
+    def patch(self, request, order_id):
+        try:
+            order = Order.objects.get(id=order_id, user=request.user)
+        except Order.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Order not found or does not belong to you.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
 
+        status = request.data.get('status')
+        if status not in dict(Order.STATUS_CHOICES):
+            return Response({
+                'status': 'failed',
+                'message': 'Invalid status.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        order.status = status
+        order.save()
+
+        return Response({
+            'status': 'success',
+            'message': 'Order status updated successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': OrderSerializer(order).data
+        }, status=status.HTTP_200_OK)
         
 
 
