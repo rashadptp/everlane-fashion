@@ -689,7 +689,6 @@ class DefaultAddressView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
 
-
 class AddressListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = AddressSerializer
