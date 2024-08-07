@@ -645,8 +645,8 @@ class DeleteWishlistView(APIView):
         return Response({
             'status': 'success',
             'message': 'Wishlist item deleted successfully.',
-            'response_code': status.HTTP_204_NO_CONTENT
-        }, status=status.HTTP_204_NO_CONTENT)
+            'response_code': status.HTTP_200_OK
+        }, status=status.HTTP_200_OK)
 
 
 
