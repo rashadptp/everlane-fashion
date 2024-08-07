@@ -108,23 +108,21 @@ class ProductListView(generics.ListAPIView):
 
 class ProductDetailView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated]
+    serializer_class = ProductRetrieveSerializer
+    # permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         product = self.get_object()
+        product_data=[]
         product_serializer = self.get_serializer(product)
         items = ProductItem.objects.filter(product=product)
         item_serializer = ProductItemSerializer(items, many=True)
+        product_data.append(product_serializer.data)
         return Response({
             'status': 'success',
             'message': 'Product details retrieved successfully.',
             'response_code': 200,
-            'data': {
-                'product': product_serializer.data,
-                'items': item_serializer.data,
-                'is_out_of_stock': not items.exists() or all(item.stock == 0 for item in items)
-            }
+            'data': product_serializer.data
         })
 
 class ProductCreateView(generics.CreateAPIView):
@@ -771,7 +769,87 @@ class AddressDeleteView(generics.DestroyAPIView):
 
 
 
+class PlaceOrderView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        payment_method = request.data.get('payment_method')
+        
+        if payment_method not in ['COD', 'ONLINE']:
+            return Response({
+                'status': 'failed',
+                'message': 'Invalid payment method.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            cart = Cart.objects.get(user=user, is_active=True, is_deleted=False)
+        except Cart.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'No active cart found for the user.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        cart_items = CartItem.objects.filter(cart=cart, is_active=True, is_deleted=False)
+        if not cart_items.exists():
+            return Response({
+                'status': 'failed',
+                'message': 'No items in the cart to place an order.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        total_amount = sum(item.product.price * item.quantity for item in cart_items)
+
+        # Create the order
+        order = Order.objects.create(
+            customer=user,
+            total_amount=total_amount,
+            payment_method=payment_method,
+            is_completed=False if payment_method == 'ONLINE' else True
+        )
+
+        # Create order items from cart items
+        for item in cart_items:
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+                price=item.product.price
+            )
+
+        # Clear the cart
+        cart_items.delete()
+        cart.is_active = False
+        cart.save()
+
+        if payment_method == 'ONLINE':
+            # Integrate with a payment gateway here
+            # Redirect the user to the payment gateway
+            # payment_url = self.initiate_online_payment(order)   PAYMENT LATER
+            return Response({
+                'status': 'success',
+                'message': 'Order placed successfully. Payment will be integrated later.',
+                'response_code': status.HTTP_201_CREATED,
+                'data': {
+                    'order': OrderSerializer(order).data,
+                    # 'payment_url': payment_url
+                }
+            }, status=status.HTTP_201_CREATED)
+
+        return Response({
+            'status': 'success',
+            'message': 'Order placed successfully.',
+            'response_code': status.HTTP_201_CREATED,
+            'data': OrderSerializer(order).data
+        }, status=status.HTTP_201_CREATED)
+
+    # def initiate_online_payment(self, order):
+    #     # Placeholder for initiating an online payment
+    #     # This should be replaced with actual payment gateway integration code
+    #     payment_url = "https://payment-gateway-url.com"
+    #     return payment_url
 
 
 
