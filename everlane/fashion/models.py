@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
-
+from django.core.validators import RegexValidator
 
 
 class User(AbstractUser):
@@ -37,7 +37,18 @@ class User(AbstractUser):
     ]
     
 
-    mobile = models.IntegerField(null=True, blank=True)
+    mobile = models.CharField(
+        max_length=15,
+        null=True,
+        blank=True,
+        validators=[
+            RegexValidator(
+                regex='^\d{0,15}$',
+                message='Mobile number must be numeric and can contain up to 15 digits',
+                code='invalid_mobile_number'
+            ),
+        ]
+    )
     skin_color = models.CharField(max_length=10, choices=SKIN_COLOR_CHOICES, null=True, blank=True)
     height = models.CharField(max_length=10, choices=HEIGHT_CHOICES, null=True, blank=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True, blank=True)
