@@ -9,6 +9,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'first_name', 'last_name', 'email', 'mobile', 'password', 'confirm_password')
 
+        
+
     def validate(self, data):
         password = data.get('password')
         confirm_password = data.get('confirm_password')
@@ -42,7 +44,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class AdminRegistrationSerializer(UserRegistrationSerializer):
     class Meta(UserRegistrationSerializer.Meta):
-        fields = UserRegistrationSerializer.Meta.fields + ('is_admin',)
+        fields = UserRegistrationSerializer.Meta.fields + ('is_admin')
     
     def create(self, validated_data):
         validated_data['is_admin'] = True
@@ -166,4 +168,6 @@ class QuestionnaireSerializer(serializers.ModelSerializer):
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
-        fields = ['id', 'mobile','pincode','locality','address','city','state','landmark','is_default','is_active','is_deleted','created_on']
+        fields = ['id','mobile','pincode','locality','address','city','state','landmark','is_default','is_active','is_deleted','created_on']
+
+
