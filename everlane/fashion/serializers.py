@@ -51,7 +51,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class AdminRegistrationSerializer(UserRegistrationSerializer):
     class Meta(UserRegistrationSerializer.Meta):
-        fields = UserRegistrationSerializer.Meta.fields + ('is_admin',)
+        fields = UserRegistrationSerializer.Meta.fields + ['is_admin',]
     
     def create(self, validated_data):
         validated_data['is_admin'] = True
