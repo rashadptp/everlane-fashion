@@ -83,14 +83,58 @@ from .serializers import *
 
 
 
+# class ProductListView(generics.ListAPIView):
+#     serializer_class = ProductSerializer
+
+#     def get_queryset(self):
+#         queryset = Product.objects.all()
+#         subcategory_id = self.request.query_params.get('subcategory', None)
+#         if subcategory_id is not None:
+#             queryset = queryset.filter(subcategory_id=subcategory_id)
+#         return queryset
+
+#     def list(self, request, *args, **kwargs):
+#         products = self.get_queryset()
+#         product_data = []
+#         for product in products:
+#             product_serializer = self.get_serializer(product)
+#             items = ProductItem.objects.filter(product=product)
+#             item_serializer = ProductItemSerializer(items, many=True)
+#             product_data.append(product_serializer.data)
+#         return Response({
+#             'status': "success",
+#             'message': "Products retrieved successfully.",
+#             'response_code': status.HTTP_200_OK,
+#             'data': product_data
+#         })
+
+
+# new product list and search
+
+from django.db.models import Q
+from rest_framework import generics, status
+from rest_framework.response import Response
+from .models import Product, ProductItem, Variant
+from .serializers import ProductSerializer, ProductItemSerializer, VariantReadSerializer
+
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
 
     def get_queryset(self):
         queryset = Product.objects.all()
+
+        # Filter by subcategory
         subcategory_id = self.request.query_params.get('subcategory', None)
         if subcategory_id is not None:
             queryset = queryset.filter(subcategory_id=subcategory_id)
+
+        # Search by name or brand
+        search_query = self.request.query_params.get('query', None)
+        if search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=search_query) | Q(brand__icontains=search_query)
+            )
+
         return queryset
 
     def list(self, request, *args, **kwargs):
@@ -100,7 +144,11 @@ class ProductListView(generics.ListAPIView):
             product_serializer = self.get_serializer(product)
             items = ProductItem.objects.filter(product=product)
             item_serializer = ProductItemSerializer(items, many=True)
-            product_data.append(product_serializer.data)
+            product_data.append({
+                'product': product_serializer.data,
+                'items': item_serializer.data
+            })
+
         return Response({
             'status': "success",
             'message': "Products retrieved successfully.",
@@ -907,35 +955,35 @@ class UpdateOrderStatusView(APIView):
 
 # Search view
 
-from django.db.models import Q
+# from django.db.models import Q
 
-class ProductSearchAPIView(APIView):
-    def get(self, request, format=None):
-        query = request.GET.get('query')
-        if query:
-            keywords = query.split()
-            q_objects = Q()
-            for keyword in keywords:
-                q_objects |= Q(name__icontains=keyword) | Q(brand__icontains=keyword)
+# class ProductSearchAPIView(APIView):
+#     def get(self, request, format=None):
+#         query = request.GET.get('query')
+#         if query:
+#             keywords = query.split()
+#             q_objects = Q()
+#             for keyword in keywords:
+#                 q_objects |= Q(name__icontains=keyword) | Q(brand__icontains=keyword)
 
-            results = Product.objects.filter(q_objects).distinct()
+#             results = Product.objects.filter(q_objects).distinct()
 
-            if results.exists():
-                serializer = ProductSerializer(results, many=True)
-                return Response({
-                    "success": True,
-                    "message": "Products found.",
-                    "data": serializer.data
-                }, status=status.HTTP_200_OK)
-            else:
-                return Response({
-                    "success": False,
-                    "message": "No products found matching the query."
-                }, status=status.HTTP_404_NOT_FOUND)
-        return Response({
-            "success": False,
-            "message": "No query provided."
-        }, status=status.HTTP_400_BAD_REQUEST)
+#             if results.exists():
+#                 serializer = ProductSerializer(results, many=True)
+#                 return Response({
+#                     "success": True,
+#                     "message": "Products found.",
+#                     "data": serializer.data
+#                 }, status=status.HTTP_200_OK)
+#             else:
+#                 return Response({
+#                     "success": False,
+#                     "message": "No products found matching the query."
+#                 }, status=status.HTTP_404_NOT_FOUND)
+#         return Response({
+#             "success": False,
+#             "message": "No query provided."
+#         }, status=status.HTTP_400_BAD_REQUEST)
 
 
         
