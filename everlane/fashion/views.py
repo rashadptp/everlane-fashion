@@ -974,10 +974,6 @@ class ProductSearchAPIView(APIView):
 #             'data': serializer.data
 #         })
 
-import logging
-
-logger = logging.getLogger(__name__)
-
 class RecommendationAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -991,24 +987,38 @@ class RecommendationAPIView(APIView):
         preferred_season = user.preferred_season
         usage_of_dress = user.usage_of_dress
 
-        print(f"User attributes - Skin Color: {skin_color}, Height: {height}, Gender: {gender}, Preferred Season: {preferred_season}, Usage of Dress: {usage_of_dress}")
+        # Start with basic filters
+        filters = {
+            'is_active': True,
+            'is_deleted': False,
+        }
 
-        # Filter products based on user preferences
-        recommended_products = Product.objects.filter(
-            summer=(preferred_season == 'SUMMER'),
-            winter=(preferred_season == 'WINTER'),
-            rainy=(preferred_season == 'MONSOON'),
-            autumn=(preferred_season == 'AUTUMN'),
-            is_active=True,
-            is_deleted=False,
-        ).filter(
-            skin_colors__icontains=skin_color if skin_color else '',
-            heights__icontains=height if height else '',
-            genders__icontains=gender if gender else '',
-            usages__icontains=usage_of_dress if usage_of_dress else ''
-        ).distinct()
+        # Add season filter
+        if preferred_season == 'SUMMER':
+            filters['summer'] = True
+        elif preferred_season == 'WINTER':
+            filters['winter'] = True
+        elif preferred_season == 'MONSOON':
+            filters['rainy'] = True
+        elif preferred_season == 'AUTUMN':
+            filters['autumn'] = True
 
-        logger.debug(f"Recommended products: {recommended_products}")
+        # Add dynamic filters for user attributes
+        if skin_color:
+            filters['skin_colors__icontains'] = skin_color
+        if height:
+            filters['heights__icontains'] = height
+        if gender:
+            filters['genders__icontains'] = gender
+        if usage_of_dress:
+            filters['usages__icontains'] = usage_of_dress
+
+        # Apply filters
+        recommended_products = Product.objects.filter(**filters).distinct()
+        
+        # Log filters and results
+        print(f"Applied filters: {filters}")
+        print(f"Recommended products: {recommended_products}")
 
         # Serialize the filtered products
         serializer = RecommendSerializer(recommended_products, many=True)
@@ -1019,8 +1029,6 @@ class RecommendationAPIView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         }, status=status.HTTP_200_OK)
-
-
 
 
 
