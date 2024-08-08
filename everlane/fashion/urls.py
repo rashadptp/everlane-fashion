@@ -44,8 +44,6 @@ urlpatterns = [
     path('addresses/', AddressListView.as_view(), name='address-list'),
     path('addresses/create/', AddressCreateView.as_view(), name='address-create'),
     path('addresses/<int:pk>/delete/', AddressDeleteView.as_view(), name='address-delete'),
-    
-
     path('recommendations/', RecommendationAPIView.as_view(), name='recommendations'),
     
 
