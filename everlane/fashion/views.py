@@ -112,10 +112,6 @@ from .serializers import *
 # new product list and search
 
 from django.db.models import Q
-from rest_framework import generics, status
-from rest_framework.response import Response
-from .models import Product, ProductItem, Variant
-from .serializers import ProductSerializer, ProductItemSerializer, VariantReadSerializer
 
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
