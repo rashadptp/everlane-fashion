@@ -18,6 +18,7 @@ admin.site.register(Cart)
 admin.site.register(CartItem)
 admin.site.register(Banner)
 admin.site.register(ProductItem)
+admin.site.register(Address)
 
 
 
