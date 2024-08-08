@@ -98,6 +98,12 @@ class Product(models.Model):
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
 
+
+    skin_colors = models.CharField(max_length=255, blank=True)  # e.g., "Fair,Dark"
+    heights = models.CharField(max_length=255, blank=True)       # e.g., "Short,Tall"
+    genders = models.CharField(max_length=255, blank=True)       # e.g., "M,F"
+    usages = models.CharField(max_length=255, blank=True)
+
     def __str__(self):
         return self.name
 

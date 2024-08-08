@@ -5,6 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from .models import *
 from .permissions import IsAdminUser
 from .serializers import *
+import joblib
+import pandas as pd
 
 #register view
 
@@ -942,9 +944,77 @@ class ProductSearchAPIView(APIView):
 
         
 
+# class RecommendDressView(APIView):
+#     def post(self, request, *args, **kwargs):
+#         skin_color = request.data.get('skin_color')
+#         height = request.data.get('height')
+#         gender = request.data.get('gender')
+#         preferred_season = request.data.get('preferred_season')
+#         usage_of_dress = request.data.get('usage_of_dress')
 
+#         # Load the pre-trained model
+#         model_path = 'recommendation_model.pkl'
+#         clf = joblib.load(model_path)
 
+#         # Create the input DataFrame
+#         input_data = pd.DataFrame({
+#             'skin_type': [skin_color],
+#             'height': [height],
+#             'gender': [gender],
+#             'season': [preferred_season],
+#             'usage': [usage_of_dress]
+#         })
+#         input_data = pd.get_dummies(input_data)
 
+#         # Predict the recommended dress
+#         dress_ids = clf.predict(input_data)
+#         recommended_dresses = Product.objects.filter(id__in=dress_ids)
+
+#         serializer = ProductSerializer(recommended_dresses, many=True)
+#         return Response({
+#             'status': 'success',
+#             'message': 'Dresses recommended successfully.',
+#             'response_code': status.HTTP_200_OK,
+#             'data': serializer.data
+#         })
+
+class RecommendationAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+
+        # Retrieve user attributes
+        skin_color = user.skin_color
+        height = user.height
+        gender = user.gender
+        preferred_season = user.preferred_season
+        usage_of_dress = user.usage_of_dress
+
+        # Filter products based on user preferences
+        recommended_products = Product.objects.filter(
+            summer=(preferred_season == 'SUMMER'),
+            winter=(preferred_season == 'WINTER'),
+            rainy=(preferred_season == 'MONSOON'),
+            autumn=(preferred_season == 'AUTUMN'),
+            is_active=True,
+            is_deleted=False,
+        ).filter(
+            skin_colors__icontains=skin_color if skin_color else '',
+            heights__icontains=height if height else '',
+            genders__icontains=gender if gender else '',
+            usages__icontains=usage_of_dress if usage_of_dress else ''
+        ).distinct()
+
+        # Serialize the filtered products
+        serializer = RecommendSerializer(recommended_products, many=True)
+
+        return Response({
+            'status': 'success',
+            'message': 'Recommendations retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
 
 
 
