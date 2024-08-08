@@ -203,9 +203,6 @@ class Banner(models.Model):
 
 #address list model
 
-
-
-
 class Address(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
     mobile = models.CharField(max_length=15)
