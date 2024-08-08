@@ -939,6 +939,10 @@ class UpdateOrderStatusView(APIView):
 #             'data': serializer.data
 #         })
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class RecommendationAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -951,6 +955,8 @@ class RecommendationAPIView(APIView):
         gender = user.gender
         preferred_season = user.preferred_season
         usage_of_dress = user.usage_of_dress
+
+        print(f"User attributes - Skin Color: {skin_color}, Height: {height}, Gender: {gender}, Preferred Season: {preferred_season}, Usage of Dress: {usage_of_dress}")
 
         # Filter products based on user preferences
         recommended_products = Product.objects.filter(
@@ -967,6 +973,8 @@ class RecommendationAPIView(APIView):
             usages__icontains=usage_of_dress if usage_of_dress else ''
         ).distinct()
 
+        logger.debug(f"Recommended products: {recommended_products}")
+
         # Serialize the filtered products
         serializer = RecommendSerializer(recommended_products, many=True)
 
@@ -976,9 +984,6 @@ class RecommendationAPIView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         }, status=status.HTTP_200_OK)
-
-
-
 
 
 
