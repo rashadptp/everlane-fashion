@@ -203,6 +203,9 @@ class Banner(models.Model):
 
 #address list model
 
+
+
+
 class Address(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
     mobile = models.CharField(max_length=15)
@@ -217,14 +220,20 @@ class Address(models.Model):
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
 
-
     def save(self, *args, **kwargs):
-        if self.is_default:
+        if not Address.objects.filter(user=self.user).exists():
+            self.is_default = True
+        elif self.is_default:
             Address.objects.filter(user=self.user, is_default=True).update(is_default=False)
         super(Address, self).save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.address}, {self.city}, {self.state}, {self.pincode}'
+
+
+        
+
+
 
 
 

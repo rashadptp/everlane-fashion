@@ -8,11 +8,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'mobile', 'password', 'confirm_password']
-<<<<<<< HEAD
         
-
-=======
->>>>>>> 0a4a15567c417978a03da683155a078ace562e07
         extra_kwargs = {
             'first_name': {'required': True},
             'last_name': {'required': True},
@@ -21,13 +17,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'password': {'required': True},
             'confirm_password': {'required': True},
         }
-<<<<<<< HEAD
-
-
-
-        
-=======
->>>>>>> 0a4a15567c417978a03da683155a078ace562e07
 
     def validate(self, data):
         password = data.get('password')
@@ -201,5 +190,8 @@ class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = ['id','mobile','pincode','locality','address','city','state','landmark','is_default','is_active','is_deleted','created_on']
+
+
+
 
 
