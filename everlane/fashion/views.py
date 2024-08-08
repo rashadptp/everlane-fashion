@@ -901,6 +901,45 @@ class UpdateOrderStatusView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': OrderSerializer(order).data
         }, status=status.HTTP_200_OK)
+
+
+# Search view
+
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Product
+from .serializers import ProductSerializer
+from django.db.models import Q
+
+class ProductSearchAPIView(APIView):
+    def get(self, request, format=None):
+        query = request.GET.get('query')
+        if query:
+            keywords = query.split()
+            q_objects = Q()
+            for keyword in keywords:
+                q_objects |= Q(name__icontains=keyword) | Q(brand__icontains=keyword)
+
+            results = Product.objects.filter(q_objects).distinct()
+
+            if results.exists():
+                serializer = ProductSerializer(results, many=True)
+                return Response({
+                    "success": True,
+                    "message": "Products found.",
+                    "data": serializer.data
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    "success": False,
+                    "message": "No products found matching the query."
+                }, status=status.HTTP_404_NOT_FOUND)
+        return Response({
+            "success": False,
+            "message": "No query provided."
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
         
 
 
