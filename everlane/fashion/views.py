@@ -907,10 +907,6 @@ class UpdateOrderStatusView(APIView):
 
 # Search view
 
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Product
-from .serializers import ProductSerializer
 from django.db.models import Q
 
 class ProductSearchAPIView(APIView):
