@@ -209,6 +209,14 @@ class AddressSerializer(serializers.ModelSerializer):
         fields = ['id','mobile','pincode','locality','address','city','state','landmark','is_default','is_active','is_deleted','created_on']
 
 
+class ProfileSerializer(serializers.ModelSerializer):
+    address = AddressSerializer() 
+
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'mobile', 'address','city','state','landmark','']
+
+
 
 
 

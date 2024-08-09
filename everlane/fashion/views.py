@@ -971,75 +971,6 @@ class UpdateOrderStatusView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-# Search view
-
-# from django.db.models import Q
-
-# class ProductSearchAPIView(APIView):
-#     def get(self, request, format=None):
-#         query = request.GET.get('query')
-#         if query:
-#             keywords = query.split()
-#             q_objects = Q()
-#             for keyword in keywords:
-#                 q_objects |= Q(name__icontains=keyword) | Q(brand__icontains=keyword)
-
-#             results = Product.objects.filter(q_objects).distinct()
-
-#             if results.exists():
-#                 serializer = ProductSerializer(results, many=True)
-#                 return Response({
-#                     "success": True,
-#                     "message": "Products found.",
-#                     "data": serializer.data
-#                 }, status=status.HTTP_200_OK)
-#             else:
-#                 return Response({
-#                     "success": False,
-#                     "message": "No products found matching the query."
-#                 }, status=status.HTTP_404_NOT_FOUND)
-#         return Response({
-#             "success": False,
-#             "message": "No query provided."
-#         }, status=status.HTTP_400_BAD_REQUEST)
-
-
-        
-
-# class RecommendDressView(APIView):
-#     def post(self, request, *args, **kwargs):
-#         skin_color = request.data.get('skin_color')
-#         height = request.data.get('height')
-#         gender = request.data.get('gender')
-#         preferred_season = request.data.get('preferred_season')
-#         usage_of_dress = request.data.get('usage_of_dress')
-
-#         # Load the pre-trained model
-#         model_path = 'recommendation_model.pkl'
-#         clf = joblib.load(model_path)
-
-#         # Create the input DataFrame
-#         input_data = pd.DataFrame({
-#             'skin_type': [skin_color],
-#             'height': [height],
-#             'gender': [gender],
-#             'season': [preferred_season],
-#             'usage': [usage_of_dress]
-#         })
-#         input_data = pd.get_dummies(input_data)
-
-#         # Predict the recommended dress
-#         dress_ids = clf.predict(input_data)
-#         recommended_dresses = Product.objects.filter(id__in=dress_ids)
-
-#         serializer = ProductSerializer(recommended_dresses, many=True)
-#         return Response({
-#             'status': 'success',
-#             'message': 'Dresses recommended successfully.',
-#             'response_code': status.HTTP_200_OK,
-#             'data': serializer.data
-#         })
-
 class RecommendationAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -1205,7 +1136,6 @@ class ProcessReturnView(APIView):
             'response_code': status.HTTP_400_BAD_REQUEST
         }, status=status.HTTP_400_BAD_REQUEST)
 
-
 # User profile view
 
 class UserProfileView(APIView):
@@ -1213,6 +1143,22 @@ class UserProfileView(APIView):
 
     def get(self, request, *args, **kwargs):
         user = request.user
+        serializer = ProfileSerializer(user)
+
+        return Response({
+            'status': 'success',
+            'message': 'User profile retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
+
+    
+
+
+    
+
+
+
 
 
 
