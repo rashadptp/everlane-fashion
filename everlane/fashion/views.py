@@ -17,11 +17,22 @@ class RegisterUserView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+
             return Response({
-                "user": UserRegistrationSerializer(user).data,
-                "message": "User registered successfully."
+                'status': "success",
+                'message': 'User registered successfully.',
+                'response_code': status.HTTP_201_CREATED,
+                'data': UserRegistrationSerializer(user).data
             }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+
+            return Response({
+                'status': "failed",
+                'message': 'User registration failed.',
+                'response_code': status.HTTP_400_BAD_REQUEST,
+                'data': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RegisterAdminView(generics.CreateAPIView):
@@ -31,11 +42,20 @@ class RegisterAdminView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+
             return Response({
-                "user": AdminRegistrationSerializer(user).data,
-                "message": "Admin registered successfully."
+                'status': "success",
+                'message': "Admin registered successfully.",
+                'response_code': status.HTTP_201_CREATED,
+                'data': AdminRegistrationSerializer(user).data
             }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({
+                'status': "failed",
+                'message': "Admin registration failed.",
+                'response_code': status.HTTP_400_BAD_REQUEST,
+                'data': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 #Login view
 
@@ -52,61 +72,27 @@ class LoginView(generics.GenericAPIView):
         if serializer.is_valid():
             user = serializer.validated_data['user']
             token, created = Token.objects.get_or_create(user=user)
+
             return Response({
-                "token": token.key,
-                "user_id": user.pk,
-                "username": user.username,
-                "message": "Login successful."
+                'status': "success",
+                'message': 'Login successful',
+                'response_code': status.HTTP_200_OK,
+                'data': {
+                    "token": token.key,
+                    "user_id": user.pk,
+                    "username": user.username
+                }
             }, status=status.HTTP_200_OK)
         return Response({
             'status': "failed",
-            'message': 'Invalid username or password.',
+            'message': 'Invalid username or password',
             'response_code': status.HTTP_400_BAD_REQUEST,
             'data': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+           
 
 
 
-
-
-from rest_framework import generics
-from .models import User, Product, Order, Category, Subcategory
-from .serializers import *
-
-# class UserListView(generics.ListCreateAPIView):
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
-
-# class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
-
-
-
-# class ProductListView(generics.ListAPIView):
-#     serializer_class = ProductSerializer
-
-#     def get_queryset(self):
-#         queryset = Product.objects.all()
-#         subcategory_id = self.request.query_params.get('subcategory', None)
-#         if subcategory_id is not None:
-#             queryset = queryset.filter(subcategory_id=subcategory_id)
-#         return queryset
-
-#     def list(self, request, *args, **kwargs):
-#         products = self.get_queryset()
-#         product_data = []
-#         for product in products:
-#             product_serializer = self.get_serializer(product)
-#             items = ProductItem.objects.filter(product=product)
-#             item_serializer = ProductItemSerializer(items, many=True)
-#             product_data.append(product_serializer.data)
-#         return Response({
-#             'status': "success",
-#             'message': "Products retrieved successfully.",
-#             'response_code': status.HTTP_200_OK,
-#             'data': product_data
-#         })
 
 
 # new product list and search
