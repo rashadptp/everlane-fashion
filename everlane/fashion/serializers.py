@@ -133,7 +133,7 @@ class SeosonSerializer(serializers.ModelSerializer):
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'quantity', 'price','return_status']
+        fields = ['id', 'product', 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on']
     return_status = serializers.CharField(source='get_return_status_display', read_only=True)
 
 class OrderSerializer(serializers.ModelSerializer):
