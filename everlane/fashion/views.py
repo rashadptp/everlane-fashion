@@ -89,7 +89,47 @@ class LoginView(generics.GenericAPIView):
             'response_code': status.HTTP_400_BAD_REQUEST,
             'data': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+        
+
+# Logout view
            
+from rest_framework import generics, status
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.models import Token
+
+class LogoutView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            # Get the user's token
+            token = Token.objects.get(user=request.user)
+            # Delete the token to log the user out
+            token.delete()
+            
+            return Response({
+                'status': "success",
+                'message': 'Logged out successfully.',
+                'response_code': status.HTTP_200_OK,
+                'data': None
+            }, status=status.HTTP_200_OK)
+        
+        except Token.DoesNotExist:
+            return Response({
+                'status': "failed",
+                'message': 'Logout failed. Token does not exist.',
+                'response_code': status.HTTP_400_BAD_REQUEST,
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception as e:
+            return Response({
+                'status': "failed",
+                'message': 'Logout failed.',
+                'response_code': status.HTTP_400_BAD_REQUEST,
+                'data': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 
