@@ -75,14 +75,13 @@ class LoginView(generics.GenericAPIView):
 
             return Response({
                 'status': "success",
-                'message': 'Login successful',
-                'response_code': status.HTTP_200_OK,
-                'data': {
-                    "token": token.key,
-                    "user_id": user.pk,
-                    "username": user.username
-                }
-            }, status=status.HTTP_200_OK)
+                 'message': 'Login successful',
+                 'response_code': status.HTTP_200_OK,
+                 'token': token.key,
+                  'user_id': user.pk,
+                   'username': user.username
+                       }, status=status.HTTP_200_OK)
+
         return Response({
             'status': "failed",
             'message': 'Invalid username or password',
