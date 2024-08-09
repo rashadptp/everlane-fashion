@@ -134,14 +134,14 @@ class OrderItemSerializer(serializers.ModelSerializer):
     return_status = serializers.CharField(source='get_return_status_display', read_only=True)
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on']
+        fields = ['id', 'product', 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
     return_status = serializers.CharField(source='get_return_status_display', read_only=True)
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     class Meta:
         model = Order
-        fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','status','items','return_status']
+        fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','status','items']
 
 
 class ReturnSerializer(serializers.ModelSerializer):

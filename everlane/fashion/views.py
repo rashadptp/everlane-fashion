@@ -1129,12 +1129,8 @@ class RequestReturnView(APIView):
         order_item.is_returned = True
         order_item.return_reason = return_reason
         order_item.return_requested_on = timezone.now()
+        order_item.return_status = 'PENDING'
         order_item.save()
-
-        # Optionally update the order's return status
-        order = order_item.order
-        order.return_status = 'PENDING'
-        order.save()
 
         return Response({
             'status': 'success',
@@ -1173,11 +1169,10 @@ class ProcessReturnView(APIView):
             order_item.is_returned = True
             order_item.save()
 
-            # Update order's return status
-            order.return_status = 'APPROVED'
-            order.refund_amount = order_item.price * order_item.quantity
-            order.refund_date = timezone.now()
-            order.save()
+            order_item.return_status = 'APPROVED'
+            order_item.refund_amount = order_item.price * order_item.quantity
+            order_item.refund_date = timezone.now()
+            order_item.save()
 
             # Process refund (if necessary)
             # Here, integrate with a payment gateway to process the refund for online payments
@@ -1190,8 +1185,8 @@ class ProcessReturnView(APIView):
             }, status=status.HTTP_200_OK)
 
         elif action == 'reject':
-            order.return_status = 'REJECTED'
-            order.save()
+            order_item.return_status = 'REJECTED'
+            order_item.save()
 
             return Response({
                 'status': 'success',
