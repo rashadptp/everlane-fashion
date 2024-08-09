@@ -131,6 +131,7 @@ class SeosonSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','winter','summer','rainy','autumn']
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    return_status = serializers.CharField(source='get_return_status_display', read_only=True)
     class Meta:
         model = OrderItem
         fields = ['id', 'product', 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on']
@@ -140,7 +141,7 @@ class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     class Meta:
         model = Order
-        fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','status','items']
+        fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','status','items','return_status']
 
 
 class ReturnSerializer(serializers.ModelSerializer):
