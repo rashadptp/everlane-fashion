@@ -47,7 +47,7 @@ urlpatterns = [
     path('addresses/create/', AddressCreateView.as_view(), name='address-create'),
     path('addresses/<int:pk>/delete/', AddressDeleteView.as_view(), name='address-delete'),
     path('recommendations/', RecommendationAPIView.as_view(), name='recommendations'),
-    # path('search/', ProductSearchAPIView.as_view(), name='product-search'),
+  # path('search/', ProductSearchAPIView.as_view(), name='product-search'),
     
 
 
