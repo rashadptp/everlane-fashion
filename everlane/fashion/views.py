@@ -5,6 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from .models import *
 from .permissions import IsAdminUser
 from .serializers import *
+import joblib
+import pandas as pd
 
 #register view
 
@@ -15,11 +17,22 @@ class RegisterUserView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+
             return Response({
-                "user": UserRegistrationSerializer(user).data,
-                "message": "User registered successfully."
+                'status': "success",
+                'message': 'User registered successfully.',
+                'response_code': status.HTTP_201_CREATED,
+                'data': UserRegistrationSerializer(user).data
             }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+
+            return Response({
+                'status': "failed",
+                'message': 'User registration failed.',
+                'response_code': status.HTTP_400_BAD_REQUEST,
+                'data': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RegisterAdminView(generics.CreateAPIView):
@@ -29,11 +42,20 @@ class RegisterAdminView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+
             return Response({
-                "user": AdminRegistrationSerializer(user).data,
-                "message": "Admin registered successfully."
+                'status': "success",
+                'message': "Admin registered successfully.",
+                'response_code': status.HTTP_201_CREATED,
+                'data': AdminRegistrationSerializer(user).data
             }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({
+                'status': "failed",
+                'message': "Admin registration failed.",
+                'response_code': status.HTTP_400_BAD_REQUEST,
+                'data': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 #Login view
 
@@ -50,45 +72,90 @@ class LoginView(generics.GenericAPIView):
         if serializer.is_valid():
             user = serializer.validated_data['user']
             token, created = Token.objects.get_or_create(user=user)
+
             return Response({
-                "token": token.key,
-                "user_id": user.pk,
-                "username": user.username,
-                "message": "Login successful."
-            }, status=status.HTTP_200_OK)
+                'status': "success",
+                 'message': 'Login successful',
+                 'response_code': status.HTTP_200_OK,
+                 'token': token.key,
+                  'user_id': user.pk,
+                   'username': user.username
+                       }, status=status.HTTP_200_OK)
+
         return Response({
             'status': "failed",
-            'message': 'Invalid username or password.',
+            'message': 'Invalid username or password',
             'response_code': status.HTTP_400_BAD_REQUEST,
             'data': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+        
+
+# Logout view
+           
+from rest_framework import generics, status
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.models import Token
+
+class LogoutView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            # Get the user's token
+            token = Token.objects.get(user=request.user)
+            # Delete the token to log the user out
+            token.delete()
+            
+            return Response({
+                'status': "success",
+                'message': 'Logged out successfully.',
+                'response_code': status.HTTP_200_OK,
+                'data': None
+            }, status=status.HTTP_200_OK)
+        
+        except Token.DoesNotExist:
+            return Response({
+                'status': "failed",
+                'message': 'Logout failed. Token does not exist.',
+                'response_code': status.HTTP_400_BAD_REQUEST,
+                'data': None
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception as e:
+            return Response({
+                'status': "failed",
+                'message': 'Logout failed.',
+                'response_code': status.HTTP_400_BAD_REQUEST,
+                'data': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 
 
 
-from rest_framework import generics
-from .models import User, Product, Order, Category, Subcategory
-from .serializers import *
+# new product list and search
 
-class UserListView(generics.ListCreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-
+from django.db.models import Q
 
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
 
     def get_queryset(self):
         queryset = Product.objects.all()
+
+        # Filter by subcategory
         subcategory_id = self.request.query_params.get('subcategory', None)
         if subcategory_id is not None:
             queryset = queryset.filter(subcategory_id=subcategory_id)
+
+        # Search by name or brand
+        search_query = self.request.query_params.get('query', None)
+        if search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=search_query) | Q(brand__icontains=search_query)
+            )
+
         return queryset
 
     def list(self, request, *args, **kwargs):
@@ -98,11 +165,8 @@ class ProductListView(generics.ListAPIView):
             product_serializer = self.get_serializer(product)
             items = ProductItem.objects.filter(product=product)
             item_serializer = ProductItemSerializer(items, many=True)
-            product_data.append({
-                'product': product_serializer.data,
-                'items': item_serializer.data,
-                'is_out_of_stock': not items.exists() or all(item.stock == 0 for item in items)
-            })
+            product_data.append( product_serializer.data)
+
         return Response({
             'status': "success",
             'message': "Products retrieved successfully.",
@@ -112,23 +176,21 @@ class ProductListView(generics.ListAPIView):
 
 class ProductDetailView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated]
+    serializer_class = ProductRetrieveSerializer
+    # permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         product = self.get_object()
+        product_data=[]
         product_serializer = self.get_serializer(product)
         items = ProductItem.objects.filter(product=product)
         item_serializer = ProductItemSerializer(items, many=True)
+        product_data.append(product_serializer.data)
         return Response({
             'status': 'success',
             'message': 'Product details retrieved successfully.',
             'response_code': 200,
-            'data': {
-                'product': product_serializer.data,
-                'items': item_serializer.data,
-                'is_out_of_stock': not items.exists() or all(item.stock == 0 for item in items)
-            }
+            'data': product_serializer.data
         })
 
 class ProductCreateView(generics.CreateAPIView):
@@ -359,29 +421,49 @@ class UpdateCartItemQuantityView(APIView):
     def post(self, request, *args, **kwargs):
         user = request.user
         cart_item_id = request.data.get('cart_item_id')
-        quantity = int(request.data.get('quantity', 1))  # Ensure quantity is an integer
+        action = request.data.get('action')  # 'increase' or 'decrease'
 
         try:
-            cart_item = CartItem.objects.get(id=cart_item_id, cart__user=user)
+            cart_item = CartItem.objects.get(id=cart_item_id, cart__user=user, is_active=True, is_deleted=False)
         except CartItem.DoesNotExist:
-            return Response({'status': 'failed', 'message': 'Cart item not found.', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-
-        if quantity <= 0:
-            cart_item.delete()
             return Response({
-                'status': 'success',
-                'message': 'Item removed from cart.',
-                'response_code': status.HTTP_200_OK
-            }, status=status.HTTP_200_OK)
+                'status': 'failed',
+                'message': 'Cart item not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
 
-        cart_item.quantity = quantity
-        cart_item.save()
+        if action == 'increase':
+            cart_item.quantity += 1
+            cart_item.save()
+            message = 'Quantity increased.'
+        elif action == 'decrease':
+            if cart_item.quantity > 1:
+                cart_item.quantity -= 1
+                cart_item.save()
+                message = 'Quantity decreased.'
+            else:
+                return Response({
+                    'status': 'failed',
+                    'message': 'Quantity cannot be less than 1.',
+                    'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({
+                'status': 'failed',
+                'message': 'Invalid action.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update the total price of the cart
+        cart = cart_item.cart
+        cart.total_price = sum(item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
+        cart.save()
 
         return Response({
             'status': 'success',
-            'message': 'Quantity updated successfully.',
+            'message': message,
             'response_code': status.HTTP_200_OK,
-            'data': CartSerializer(cart_item.cart).data
+            'data': CartSerializer(cart).data  # Return the updated cart data
         }, status=status.HTTP_200_OK)
 
 
@@ -650,13 +732,369 @@ class DeleteWishlistView(APIView):
             'message': 'Wishlist item deleted successfully.',
             'response_code': status.HTTP_200_OK
         }, status=status.HTTP_200_OK)
+
+
+#Address view
+
+class DefaultAddressView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            default_address = Address.objects.get(user=request.user, is_default=True)
+            serializer = AddressSerializer(default_address)
+            return Response({
+                'status': 'success',
+                'message': 'Default address retrieved successfully.',
+                'response_code': status.HTTP_200_OK,
+                'data': serializer.data
+            }, status=status.HTTP_200_OK)
+        except Address.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Default address not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class AddressListView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = AddressSerializer
+
+    def get_queryset(self):
+        return Address.objects.filter(user=self.request.user, is_deleted=False)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if queryset.exists():
+
+            serializer = self.get_serializer(queryset, many=True)
+            return Response({
+            'status': 'success',
+            'message': 'Addresses retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
+
+        else:
+            
+            return Response({
+                'status': 'failed',
+                'message': 'No addresses found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class AddressCreateView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = AddressSerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
     
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            return Response({
+                'status': 'success',
+                'message': 'Address created successfully.',
+                'response_code': status.HTTP_201_CREATED,
+                'data': serializer.data
+            }, status=status.HTTP_201_CREATED)
+        else:
+            return Response({
+                'status': 'failed',
+                'message': 'Address creation failed.',
+                'response_code': status.HTTP_400_BAD_REQUEST,
+                'errors': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AddressDeleteView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = Address.objects.all()
+    serializer_class = AddressSerializer
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            address = self.get_object()
+            address.is_deleted = True
+            address.save()
+            return Response({
+                'status': 'success',
+                'message': 'Address deleted successfully.',
+                'response_code': status.HTTP_200_OK
+            }, status=status.HTTP_200_OK)
+        except Address.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Address not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
 
 
 
 
+class PlaceOrderView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        payment_method = request.data.get('payment_method')
+        
+        if payment_method not in ['COD', 'ONLINE']:
+            return Response({
+                'status': 'failed',
+                'message': 'Invalid payment method.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            cart = Cart.objects.get(user=user, is_active=True, is_deleted=False)
+        except Cart.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'No active cart found for the user.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        cart_items = CartItem.objects.filter(cart=cart, is_active=True, is_deleted=False)
+        if not cart_items.exists():
+            return Response({
+                'status': 'failed',
+                'message': 'No items in the cart to place an order.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        total_amount = sum(item.product.price * item.quantity for item in cart_items)
+
+        # Create the order
+        order = Order.objects.create(
+            user=user,
+            total_amount=total_amount,
+            payment_method=payment_method,
+            is_completed=False if payment_method == 'ONLINE' else True
+        )
+
+        # Create order items from cart items
+        for item in cart_items:
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+                price=item.product.price
+            )
+
+        # Clear the cart
+        cart_items.delete()
+        cart.save()
+
+        if payment_method == 'ONLINE':
+            # Integrate with a payment gateway here
+            # Redirect the user to the payment gateway
+            # payment_url = self.initiate_online_payment(order)   PAYMENT LATER
+            return Response({
+                'status': 'success',
+                'message': 'Order placed successfully. Payment will be integrated later.',
+                'response_code': status.HTTP_201_CREATED,
+                'data': {
+                    'order': OrderSerializer(order).data,
+                    # 'payment_url': payment_url
+                }
+            }, status=status.HTTP_201_CREATED)
+
+        return Response({
+            'status': 'success',
+            'message': 'Order placed successfully.',
+            'response_code': status.HTTP_201_CREATED,
+            'data': OrderSerializer(order).data
+        }, status=status.HTTP_201_CREATED)
+
+    # def initiate_online_payment(self, order):
+    #     # Placeholder for initiating an online payment
+    #     # This should be replaced with actual payment gateway integration code
+    #     payment_url = "https://payment-gateway-url.com"
+    #     return payment_url
 
 
+
+class OrderListView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Optionally filter orders by the authenticated user
+        user = self.request.user
+        return Order.objects.filter(user=user, is_deleted=False)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            'status': 'success',
+            'message': 'Orders retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        })
+
+
+class UpdateOrderStatusView(APIView):
+    permission_classes = [IsAuthenticated,IsAdminUser]
+
+    def patch(self, request, order_id):
+        try:
+            order = Order.objects.get(id=order_id, user=request.user)
+        except Order.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Order not found or does not belong to you.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        status = request.data.get('status')
+        if status not in dict(Order.STATUS_CHOICES):
+            return Response({
+                'status': 'failed',
+                'message': 'Invalid status.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        order.status = status
+        order.save()
+
+        return Response({
+            'status': 'success',
+            'message': 'Order status updated successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': OrderSerializer(order).data
+        }, status=status.HTTP_200_OK)
+
+
+# Search view
+
+# from django.db.models import Q
+
+# class ProductSearchAPIView(APIView):
+#     def get(self, request, format=None):
+#         query = request.GET.get('query')
+#         if query:
+#             keywords = query.split()
+#             q_objects = Q()
+#             for keyword in keywords:
+#                 q_objects |= Q(name__icontains=keyword) | Q(brand__icontains=keyword)
+
+#             results = Product.objects.filter(q_objects).distinct()
+
+#             if results.exists():
+#                 serializer = ProductSerializer(results, many=True)
+#                 return Response({
+#                     "success": True,
+#                     "message": "Products found.",
+#                     "data": serializer.data
+#                 }, status=status.HTTP_200_OK)
+#             else:
+#                 return Response({
+#                     "success": False,
+#                     "message": "No products found matching the query."
+#                 }, status=status.HTTP_404_NOT_FOUND)
+#         return Response({
+#             "success": False,
+#             "message": "No query provided."
+#         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+        
+
+# class RecommendDressView(APIView):
+#     def post(self, request, *args, **kwargs):
+#         skin_color = request.data.get('skin_color')
+#         height = request.data.get('height')
+#         gender = request.data.get('gender')
+#         preferred_season = request.data.get('preferred_season')
+#         usage_of_dress = request.data.get('usage_of_dress')
+
+#         # Load the pre-trained model
+#         model_path = 'recommendation_model.pkl'
+#         clf = joblib.load(model_path)
+
+#         # Create the input DataFrame
+#         input_data = pd.DataFrame({
+#             'skin_type': [skin_color],
+#             'height': [height],
+#             'gender': [gender],
+#             'season': [preferred_season],
+#             'usage': [usage_of_dress]
+#         })
+#         input_data = pd.get_dummies(input_data)
+
+#         # Predict the recommended dress
+#         dress_ids = clf.predict(input_data)
+#         recommended_dresses = Product.objects.filter(id__in=dress_ids)
+
+#         serializer = ProductSerializer(recommended_dresses, many=True)
+#         return Response({
+#             'status': 'success',
+#             'message': 'Dresses recommended successfully.',
+#             'response_code': status.HTTP_200_OK,
+#             'data': serializer.data
+#         })
+
+class RecommendationAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+
+        # Retrieve user attributes
+        skin_color = user.skin_color
+        height = user.height
+        gender = user.gender
+        preferred_season = user.preferred_season
+        usage_of_dress = user.usage_of_dress
+
+        # Start with basic filters
+        filters = {
+            'is_active': True,
+            'is_deleted': False,
+        }
+
+        # Add season filter
+        if preferred_season == 'SUMMER':
+            filters['summer'] = True
+        elif preferred_season == 'WINTER':
+            filters['winter'] = True
+        elif preferred_season == 'MONSOON':
+            filters['rainy'] = True
+        elif preferred_season == 'AUTUMN':
+            filters['autumn'] = True
+
+        # Add dynamic filters for user attributes
+        if skin_color:
+            filters['skin_colors__icontains'] = skin_color
+        if height:
+            filters['heights__icontains'] = height
+        if gender:
+            filters['genders__icontains'] = gender
+        if usage_of_dress:
+            filters['usages__icontains'] = usage_of_dress
+
+        # Apply filters
+        recommended_products = Product.objects.filter(**filters).distinct()
+        
+        # Log filters and results
+        print(f"Applied filters: {filters}")
+        print(f"Recommended products: {recommended_products}")
+
+        # Serialize the filtered products
+        serializer = RecommendSerializer(recommended_products, many=True)
+
+        return Response({
+            'status': 'success',
+            'message': 'Recommendations retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
 
 
 
@@ -664,9 +1102,103 @@ class DeleteWishlistView(APIView):
 
 
 
+############ RETURN ################
+class RequestReturnView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        order_item_id = request.data.get('order_item_id')
+        return_reason = request.data.get('return_reason')
+
+        try:
+            order_item = OrderItem.objects.get(id=order_item_id, order__user=request.user)
+        except OrderItem.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Order item not found or does not belong to you.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        if order_item.is_returned:
+            return Response({
+                'status': 'failed',
+                'message': 'Return has already been requested for this item.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        order_item.is_returned = True
+        order_item.return_reason = return_reason
+        order_item.return_requested_on = timezone.now()
+        order_item.return_status = 'PENDING'
+        order_item.save()
+
+        return Response({
+            'status': 'success',
+            'message': 'Return requested successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': OrderItemSerializer(order_item).data
+        }, status=status.HTTP_200_OK)
 
 
+class ProcessReturnView(APIView):
+    permission_classes = [IsAdminUser]  # Only allow admin users to process returns
 
+    def post(self, request, *args, **kwargs):
+        order_item_id = request.data.get('order_item_id')
+        action = request.data.get('action')  # 'approve' or 'reject'
+
+        try:
+            order_item = OrderItem.objects.get(id=order_item_id)
+        except OrderItem.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Order item not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        if not order_item.is_returned:
+            return Response({
+                'status': 'failed',
+                'message': 'No return request found for this item.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        order = order_item.order
+
+        if action == 'approve':
+            order_item.is_returned = True
+            order_item.save()
+
+            order_item.return_status = 'APPROVED'
+            order_item.refund_amount = order_item.price * order_item.quantity
+            order_item.refund_date = timezone.now()
+            order_item.save()
+
+            # Process refund (if necessary)
+            # Here, integrate with a payment gateway to process the refund for online payments
+
+            return Response({
+                'status': 'success',
+                'message': 'Return approved and refund processed.',
+                'response_code': status.HTTP_200_OK,
+                'data': ReturnSerializer(order).data
+            }, status=status.HTTP_200_OK)
+
+        elif action == 'reject':
+            order_item.return_status = 'REJECTED'
+            order_item.save()
+
+            return Response({
+                'status': 'success',
+                'message': 'Return request rejected.',
+                'response_code': status.HTTP_200_OK
+            }, status=status.HTTP_200_OK)
+
+        return Response({
+            'status': 'failed',
+            'message': 'Invalid action provided.',
+            'response_code': status.HTTP_400_BAD_REQUEST
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 

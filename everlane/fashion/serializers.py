@@ -7,7 +7,16 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'mobile', 'password', 'confirm_password')
+        fields = ['username', 'first_name', 'last_name', 'email', 'mobile', 'password', 'confirm_password']
+        
+        extra_kwargs = {
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+            'email': {'required': True},
+            'mobile': {'required': True},
+            'password': {'required': True},
+            'confirm_password': {'required': True},
+        }
 
     def validate(self, data):
         password = data.get('password')
@@ -42,7 +51,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class AdminRegistrationSerializer(UserRegistrationSerializer):
     class Meta(UserRegistrationSerializer.Meta):
-        fields = UserRegistrationSerializer.Meta.fields + ('is_admin',)
+        fields = UserRegistrationSerializer.Meta.fields + ['is_admin',]
     
     def create(self, validated_data):
         validated_data['is_admin'] = True
@@ -69,10 +78,11 @@ class LoginSerializer(serializers.Serializer):
         return data
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name','is_admin']
+# class UserSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = ['id', 'username', 'email', 'first_name', 'last_name','is_admin']
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -96,23 +106,52 @@ class ProductItemSerializer(serializers.ModelSerializer):
     def get_is_out_of_stock(self, obj):
         return obj.stock == 0    
 
+class ProductRetrieveSerializer(serializers.ModelSerializer):
+    items = ProductItemSerializer(many=True, read_only=True) 
+
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','is_trending','items']
+
+
 class ProductSerializer(serializers.ModelSerializer):
     # items = ProductItemSerializer(many=True, read_only=True) 
 
     class Meta:
         model = Product
         fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','is_trending']
+class RecommendSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Product
+        fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','is_trending','winter','summer','rainy','autumn','skin_colors', 'heights', 'genders', 'usages']
 
 class SeosonSerializer(serializers.ModelSerializer):
     class Meta:
         model=Product
         fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','winter','summer','rainy','autumn']
 
+class OrderItemSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'product', 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
+    
 
 class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
     class Meta:
         model = Order
-        fields = ['id', 'user', 'product', 'total_amount','is_active','is_deleted','created_on']
+        fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','status','items']
+
+
+class ReturnSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 
+                  'payment_method', 'payment_status','status', 'items']
+        
 
 class WishlistSerializer(serializers.ModelSerializer):
     class Meta:
@@ -166,4 +205,12 @@ class QuestionnaireSerializer(serializers.ModelSerializer):
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
-        fields = ['id','user', 'mobile','pincode','locality','address','city','state','landmark','is_default','is_active','is_deleted','created_on']
+        fields = ['id','mobile','pincode','locality','address','city','state','landmark','is_default','is_active','is_deleted','created_on']
+
+
+
+
+
+
+
+
