@@ -133,6 +133,15 @@ class Order(models.Model):
         ('COD', 'Cash on Delivery'),
         ('ONLINE', 'Online Payment'),
     ]
+
+    RETURN_STATUS_CHOICES = [
+        ('NO_RETURN', 'No Return'),
+        ('PENDING', 'Return Pending'),
+        ('APPROVED', 'Return Approved'),
+        ('REJECTED', 'Return Rejected'),
+    ]
+
+
     user = models.ForeignKey(User, related_name='orders', on_delete=models.CASCADE)
     product = models.ManyToManyField(Product)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -144,6 +153,10 @@ class Order(models.Model):
     payment_status = models.CharField(max_length=20, default='Pending')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
 
+    return_status = models.CharField(max_length=10, choices=RETURN_STATUS_CHOICES, default='NO_RETURN')
+    refund_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    refund_date = models.DateTimeField(null=True, blank=True)
+
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"
       
@@ -152,6 +165,11 @@ class OrderItem(models.Model):
     product = models.ForeignKey(Product, related_name='order_items', on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
+
+
+    is_returned = models.BooleanField(default=False)
+    return_reason = models.TextField(null=True, blank=True)
+    return_requested_on = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.product.name} ({self.quantity})"

@@ -133,13 +133,25 @@ class SeosonSerializer(serializers.ModelSerializer):
 class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'quantity', 'price']
+        fields = ['id', 'product', 'quantity', 'price','return_status']
+    return_status = serializers.CharField(source='get_return_status_display', read_only=True)
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     class Meta:
         model = Order
         fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','status','items']
+
+
+class ReturnSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 
+                  'payment_method', 'payment_status','status',
+                 'return_status', 'refund_amount', 'refund_date', 'items']
+        
 
 class WishlistSerializer(serializers.ModelSerializer):
     class Meta:

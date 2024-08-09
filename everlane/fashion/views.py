@@ -1103,9 +1103,108 @@ class RecommendationAPIView(APIView):
 
 
 
+############ RETURN ################
+class RequestReturnView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        order_item_id = request.data.get('order_item_id')
+        return_reason = request.data.get('return_reason')
+
+        try:
+            order_item = OrderItem.objects.get(id=order_item_id, order__user=request.user)
+        except OrderItem.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Order item not found or does not belong to you.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        if order_item.is_returned:
+            return Response({
+                'status': 'failed',
+                'message': 'Return has already been requested for this item.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        order_item.is_returned = True
+        order_item.return_reason = return_reason
+        order_item.return_requested_on = timezone.now()
+        order_item.save()
+
+        # Optionally update the order's return status
+        order = order_item.order
+        order.return_status = 'PENDING'
+        order.save()
+
+        return Response({
+            'status': 'success',
+            'message': 'Return requested successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': OrderItemSerializer(order_item).data
+        }, status=status.HTTP_200_OK)
 
 
+class ProcessReturnView(APIView):
+    permission_classes = [IsAdminUser]  # Only allow admin users to process returns
 
+    def post(self, request, *args, **kwargs):
+        order_item_id = request.data.get('order_item_id')
+        action = request.data.get('action')  # 'approve' or 'reject'
+
+        try:
+            order_item = OrderItem.objects.get(id=order_item_id)
+        except OrderItem.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Order item not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        if not order_item.is_returned:
+            return Response({
+                'status': 'failed',
+                'message': 'No return request found for this item.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        order = order_item.order
+
+        if action == 'approve':
+            order_item.is_returned = True
+            order_item.save()
+
+            # Update order's return status
+            order.return_status = 'APPROVED'
+            order.refund_amount = order_item.price * order_item.quantity
+            order.refund_date = timezone.now()
+            order.save()
+
+            # Process refund (if necessary)
+            # Here, integrate with a payment gateway to process the refund for online payments
+
+            return Response({
+                'status': 'success',
+                'message': 'Return approved and refund processed.',
+                'response_code': status.HTTP_200_OK,
+                'data': ReturnSerializer(order).data
+            }, status=status.HTTP_200_OK)
+
+        elif action == 'reject':
+            order.return_status = 'REJECTED'
+            order.save()
+
+            return Response({
+                'status': 'success',
+                'message': 'Return request rejected.',
+                'response_code': status.HTTP_200_OK
+            }, status=status.HTTP_200_OK)
+
+        return Response({
+            'status': 'failed',
+            'message': 'Invalid action provided.',
+            'response_code': status.HTTP_400_BAD_REQUEST
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 
