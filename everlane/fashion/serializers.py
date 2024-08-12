@@ -224,7 +224,11 @@ class ImageUploadModelSerializer(serializers.ModelSerializer):
 
 class DressDonationSerializer(serializers.ModelSerializer):
     donor_name = serializers.CharField(source='user.username', read_only=True)
-    images = ImageUploadModelSerializer(many=True, write_only=True)
+    images = serializers.ListField(
+        child=serializers.ImageField(max_length=100, allow_empty_file=False, use_url=True),
+        allow_empty=False,
+        write_only=True
+    )
 
     class Meta:
         model = DressDonation
@@ -239,23 +243,17 @@ class DressDonationSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        # Extract images from the validated data
         images_data = validated_data.pop('images')
-        
-        # Create the donation instance first
+
         donation = DressDonation.objects.create(**validated_data)
         
-        # Now create each ImageUploadModel instance and associate it with the donation
         image_instances = []
         for image_data in images_data:
-            image_instance = ImageUploadModel.objects.create(image=image_data['image'])
+            image_instance = ImageUploadModel.objects.create(image=image_data)
             image_instances.append(image_instance)
-        donation.images.set(image_instances)
         
+        donation.images.set(image_instances)
         return donation
-
-
-
 
 
 
