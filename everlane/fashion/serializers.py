@@ -217,17 +217,18 @@ class DisasterSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ImageUploadModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ImageUploadModel
+        fields = ['image']
+
 class DressDonationSerializer(serializers.ModelSerializer):
     donor_name = serializers.CharField(source='user.username', read_only=True)
-    images = serializers.ListField(
-        child=serializers.ImageField(max_length=100, allow_empty_file=False, use_url=True),
-        allow_empty=False,
-        write_only=True
-    )
+    images = ImageUploadModelSerializer(many=True, write_only=True)
 
     class Meta:
         model = DressDonation
-        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images','pickup_location', 'donated_on','donor_name']
+        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images', 'pickup_location', 'donated_on', 'donor_name']
 
     def validate_images(self, value):
         """
@@ -247,13 +248,11 @@ class DressDonationSerializer(serializers.ModelSerializer):
         # Now create each ImageUploadModel instance and associate it with the donation
         image_instances = []
         for image_data in images_data:
-        # Create an ImageUploadModel instance for each image
-            image_instance = ImageUploadModel.objects.create(image=image_data)
+            image_instance = ImageUploadModel.objects.create(image=image_data['image'])
             image_instances.append(image_instance)
         donation.images.set(image_instances)
         
         return donation
-
 
 
 

@@ -1280,20 +1280,20 @@ class DressDonationCreateView(APIView):
         serializer = DressDonationSerializer(data=request.data)
         if serializer.is_valid():
             donation = serializer.save(user=request.user)
+            
             return Response({
                 'status': 'success',
                 'message': 'Dress donation recorded successfully.',
                 'response_code': status.HTTP_201_CREATED,
                 'data': DressDonationSerializer(donation).data
             }, status=status.HTTP_201_CREATED)
+        
         return Response({
             'status': 'failed',
             'message': 'Invalid data.',
             'response_code': status.HTTP_400_BAD_REQUEST,
             'errors': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 
