@@ -270,6 +270,7 @@ class Address(models.Model):
 
 ########################################                    DONATION    ###############################################
 class Disaster(models.Model):
+    user = models.ForeignKey(User, related_name='disaster', on_delete=models.CASCADE,null=True)
     name = models.CharField(max_length=255)
     location = models.CharField(max_length=255)
     description = models.TextField()
