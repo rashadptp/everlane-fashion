@@ -225,7 +225,7 @@ class DressDonationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DressDonation
-        fields = ['id', 'user', 'disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images', 'created_on']
+        fields = ['id', 'disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images', 'created_on']
 
 
 

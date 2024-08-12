@@ -1236,7 +1236,18 @@ class DisasterListCreateView(APIView):
             'response_code': status.HTTP_400_BAD_REQUEST,
             'errors': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+class AdminDisasterApprovalListView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
+    def get(self, request, *args, **kwargs):
+        disasters_to_approve = Disaster.objects.filter(is_approved=False)
+        serializer = DisasterSerializer(disasters_to_approve, many=True)
+        return Response({
+            'status': 'success',
+            'message': 'Disasters awaiting approval retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
 
 class ApproveDisasterView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
