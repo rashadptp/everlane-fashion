@@ -227,7 +227,7 @@ class DressDonationSerializer(serializers.ModelSerializer):
         model = DressDonation
         fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images','pickup_location', 'donated_on']
 
-    def validate_dress_images(self, value):
+    def validate_images(self, value):
         """
         Ensure at least 5 images are uploaded.
         """
