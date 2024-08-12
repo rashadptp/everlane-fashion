@@ -234,6 +234,13 @@ class DressDonationSerializer(serializers.ModelSerializer):
         model = DressDonation
         fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images', 'pickup_location', 'donated_on', 'donor_name']
 
+    def get_images(self, obj):
+        """
+        Return URLs of the uploaded images.
+        """
+        return [image.image.url for image in obj.images.all()]
+
+
     def validate_images(self, value):
         """
         Ensure at least 5 images are uploaded.
