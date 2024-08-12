@@ -218,6 +218,7 @@ class DisasterSerializer(serializers.ModelSerializer):
 
 
 class DressDonationSerializer(serializers.ModelSerializer):
+    donor_name = serializers.CharField(source='user.username', read_only=True)
     images = serializers.ListField(
         child=serializers.ImageField(max_length=100, allow_empty_file=False, use_url=True),
         allow_empty=False,
@@ -226,7 +227,7 @@ class DressDonationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DressDonation
-        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images','pickup_location', 'donated_on']
+        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images','pickup_location', 'donated_on','donor_name']
 
     def validate_images(self, value):
         """

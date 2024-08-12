@@ -1319,7 +1319,36 @@ class UserDonationListView(APIView):
 
     
         
+class DisasterDonationsView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request, disaster_id, *args, **kwargs):
+        try:
+            disaster = Disaster.objects.get(id=disaster_id)
+        except Disaster.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Disaster not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Ensure the user is the one who registered the disaster or an admin
+        if not (request.user == disaster.user or request.user.is_staff):
+            return Response({
+                'status': 'failed',
+                'message': 'You do not have permission to view these donations.',
+                'response_code': status.HTTP_403_FORBIDDEN
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        donations = DressDonation.objects.filter(disaster=disaster)
+        serializer = DressDonationSerializer(donations, many=True)
+
+        return Response({
+            'status': 'success',
+            'message': 'Donations retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
 
 
 

@@ -59,6 +59,7 @@ urlpatterns = [
     path('disasters/pending/', AdminDisasterApprovalListView.as_view(), name='admin-disaster-approval-list'),
     path('donations/', DressDonationCreateView.as_view(), name='dress-donation-create'),
      path('user-donations/', UserDonationListView.as_view(), name='user-donation-list'),
+     path('disasters/<int:disaster_id>/donations/', DisasterDonationsView.as_view(), name='disaster-donations'),
 
     
 
