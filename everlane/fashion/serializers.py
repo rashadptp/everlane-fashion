@@ -245,7 +245,7 @@ class DressDonationSerializer(serializers.ModelSerializer):
         # Now create each ImageUploadModel instance and associate it with the donation
         for image_data in images_data:
             image_instance = ImageUploadModel.objects.create(image=image_data)
-            donation.dress_images.add(image_instance)
+            donation.images.add(image_instance)
         
         return donation
 
