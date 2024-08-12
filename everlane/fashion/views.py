@@ -1297,7 +1297,20 @@ class DressDonationCreateView(APIView):
 
 
 
+class UserDonationListView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        donations = user.donations.all()
+        serializer = DressDonationSerializer(donations, many=True)
+        return Response({
+            'status': 'success',
+            'message': 'User donations retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data,
+            'donation_count': donations.count()
+        }, status=status.HTTP_200_OK)
 
 
 

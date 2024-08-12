@@ -309,6 +309,15 @@ class ImageUploadModel(models.Model):
     def __str__(self):
         return f"Image {self.id} uploaded at {self.uploaded_at}"
     
+class PickupLocation(models.Model):
+    address = models.CharField(max_length=255)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    zipcode = models.CharField(max_length=10)
+
+    def __str__(self):
+        return f'{self.address}, {self.city}, {self.state}, {self.zipcode}'
+    
 
 class DressDonation(models.Model):
     user = models.ForeignKey(User, related_name='donations', on_delete=models.CASCADE)
@@ -318,6 +327,8 @@ class DressDonation(models.Model):
     kids_dresses = models.IntegerField(default=0)
     images = models.ManyToManyField(ImageUploadModel, related_name='donations')
     created_on = models.DateTimeField(default=timezone.now)
+    pickup_location = models.ForeignKey(PickupLocation, on_delete=models.SET_NULL, null=True, blank=True)
+    donated_on = models.DateTimeField(auto_now_add=True,null = True)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -329,3 +340,7 @@ class DressDonation(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.disaster.name}"
+    
+
+
+
