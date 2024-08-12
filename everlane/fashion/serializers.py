@@ -230,7 +230,7 @@ class DressDonationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DressDonation
-        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images', 'uploaded_images', 'pickup_location', 'donated_on']
+        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images', 'pickup_location', 'donated_on']
 
     def validate_uploaded_images(self, value):
         """
