@@ -1352,4 +1352,25 @@ class DisasterDonationsView(APIView):
 
 
 
+class UserDisastersView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request, *args, **kwargs):
+        # Retrieve disasters registered by the current user
+        disasters = Disaster.objects.filter(user=request.user)
+
+        if not disasters.exists():
+            return Response({
+                'status': 'success',
+                'message': 'You do not have any registered disasters.',
+                'response_code': status.HTTP_200_OK,
+                'data': []
+            }, status=status.HTTP_200_OK)
+
+        serializer = DisasterSerializer(disasters, many=True)
+        return Response({
+            'status': 'success',
+            'message': 'Disasters retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
