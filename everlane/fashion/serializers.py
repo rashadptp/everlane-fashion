@@ -218,14 +218,36 @@ class DisasterSerializer(serializers.ModelSerializer):
 
 class DressDonationSerializer(serializers.ModelSerializer):
     images = serializers.ListField(
-        child=serializers.ImageField(),
-        min_length=5,
-        max_length=10,
+        child=serializers.ImageField(max_length=100, allow_empty_file=False, use_url=True),
+        allow_empty=False,
+        write_only=True
     )
 
     class Meta:
         model = DressDonation
-        fields = ['id', 'disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images', 'created_on']
+        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images']
+
+    def validate_dress_images(self, value):
+        """
+        Ensure at least 5 images are uploaded.
+        """
+        if len(value) < 5:
+            raise serializers.ValidationError("You must upload at least 5 dress images.")
+        return value
+
+    def create(self, validated_data):
+        # Extract images from the validated data
+        images_data = validated_data.pop('images')
+        
+        # Create the donation instance first
+        donation = DressDonation.objects.create(**validated_data)
+        
+        # Now create each ImageUploadModel instance and associate it with the donation
+        for image_data in images_data:
+            image_instance = ImageUploadModel.objects.create(image=image_data)
+            donation.dress_images.add(image_instance)
+        
+        return donation
 
 
 

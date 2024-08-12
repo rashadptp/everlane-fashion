@@ -302,6 +302,13 @@ class Disaster(models.Model):
             self.fulfilled_kids_dresses >= self.required_kids_dresses
         )
 
+class ImageUploadModel(models.Model):
+    image = models.ImageField(upload_to='donation_images/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Image {self.id} uploaded at {self.uploaded_at}"
+    
 
 class DressDonation(models.Model):
     user = models.ForeignKey(User, related_name='donations', on_delete=models.CASCADE)
@@ -309,7 +316,7 @@ class DressDonation(models.Model):
     men_dresses = models.IntegerField(default=0)
     women_dresses = models.IntegerField(default=0)
     kids_dresses = models.IntegerField(default=0)
-    images = models.ImageField(upload_to='donations/', null=True)
+    images = models.ManyToManyField(ImageUploadModel, related_name='donations')
     created_on = models.DateTimeField(default=timezone.now)
 
     def save(self, *args, **kwargs):
