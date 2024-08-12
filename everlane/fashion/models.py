@@ -274,7 +274,7 @@ class Disaster(models.Model):
     location = models.CharField(max_length=255)
     description = models.TextField()
     is_approved = models.BooleanField(default=False)
-    created_by = models.ForeignKey(User, related_name='disasters', on_delete=models.CASCADE)
+    created_by = models.ForeignKey(User, related_name='disasters', on_delete=models.CASCADE,null=True)
     created_on = models.DateTimeField(default=timezone.now)
 
     required_men_dresses = models.IntegerField(default=0)
