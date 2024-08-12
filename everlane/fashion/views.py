@@ -1131,7 +1131,7 @@ class ProcessReturnView(APIView):
             'response_code': status.HTTP_400_BAD_REQUEST
         }, status=status.HTTP_400_BAD_REQUEST)
 
-# User profile view
+# User profile view(get)
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -1139,13 +1139,42 @@ class UserProfileView(APIView):
     def get(self, request, *args, **kwargs):
         user = request.user
         serializer = ProfileSerializer(user)
-
         return Response({
             'status': 'success',
             'message': 'User profile retrieved successfully.',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         }, status=status.HTTP_200_OK)
+        
+
+class UserProfileUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, *args, **kwargs):
+        user = request.user  # Get the currently authenticated user
+        serializer = ProfileSerializer(user, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'status': 'success',
+                'message': 'User profile updated successfully.',
+                'response_code': status.HTTP_200_OK,
+                'data': serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response({
+            'status': 'error',
+            'message': 'Profile update failed.',
+            'response_code': status.HTTP_400_BAD_REQUEST,
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+    
 
     
 

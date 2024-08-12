@@ -207,13 +207,41 @@ class AddressSerializer(serializers.ModelSerializer):
         model = Address
         fields = ['id','mobile','pincode','locality','address','city','state','landmark','is_default','is_active','is_deleted','created_on']
 
+# user profile serializer
+
+
 
 class ProfileSerializer(serializers.ModelSerializer):
-    address = AddressSerializer() 
+    address = AddressSerializer()
+    old_password = serializers.CharField(write_only=True, required=False)
+    new_password = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'mobile', 'address','city','state','landmark','']
+        fields = ['id', 'first_name', 'last_name', 'email', 'mobile', 'address', 'city', 'state', 'landmark', 'old_password', 'new_password']
+
+    def update(self, instance, validated_data):
+        # Handle address update
+        address_data = validated_data.pop('address', None)
+        if address_data:
+            Address.objects.update_or_create(user=instance, defaults=address_data)
+
+        # Handle password change
+        old_password = validated_data.pop('old_password', None)
+        new_password = validated_data.pop('new_password', None)
+        if old_password and new_password:
+            if not instance.check_password(old_password):
+                raise serializers.ValidationError({"old_password": "Old password is not correct."})
+            if len(new_password) < 8:
+                raise serializers.ValidationError({"new_password": "New password must be at least 8 characters long."})
+            instance.set_password(new_password)
+
+        # Update other user fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
 
 
 
