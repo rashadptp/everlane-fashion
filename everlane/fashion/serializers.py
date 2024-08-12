@@ -215,9 +215,14 @@ class DisasterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Disaster
         fields = '__all__'
+class ImageUploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ImageUploadModel
+        fields = ['image', 'uploaded_at']
 
 class DressDonationSerializer(serializers.ModelSerializer):
-    images = serializers.ListField(
+    images = ImageUploadSerializer(many=True, read_only=True)
+    uploaded_images = serializers.ListField(
         child=serializers.ImageField(max_length=100, allow_empty_file=False, use_url=True),
         allow_empty=False,
         write_only=True
@@ -225,9 +230,9 @@ class DressDonationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DressDonation
-        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images','pickup_location', 'donated_on']
+        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images', 'uploaded_images', 'pickup_location', 'donated_on']
 
-    def validate_images(self, value):
+    def validate_uploaded_images(self, value):
         """
         Ensure at least 5 images are uploaded.
         """
@@ -236,17 +241,16 @@ class DressDonationSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        # Extract images from the validated data
-        images_data = validated_data.pop('images')
-        
-        # Create the donation instance first
+        uploaded_images = validated_data.pop('uploaded_images')
         donation = DressDonation.objects.create(**validated_data)
-        
-        # Now create each ImageUploadModel instance and associate it with the donation
-        for image_data in images_data:
+
+        image_instances = []
+        for image_data in uploaded_images:
             image_instance = ImageUploadModel.objects.create(image=image_data)
-            donation.images.add(image_instance)
-        
+            image_instances.append(image_instance)
+
+        donation.images.set(image_instances)
+
         return donation
 
 
