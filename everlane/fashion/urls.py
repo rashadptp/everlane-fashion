@@ -60,6 +60,7 @@ urlpatterns = [
     path('donations/', DressDonationCreateView.as_view(), name='dress-donation-create'),
      path('user-donations/', UserDonationListView.as_view(), name='user-donation-list'),
      path('disasters/<int:disaster_id>/donations/', DisasterDonationsView.as_view(), name='disaster-donations'),
+     path('my-disasters/', UserDisastersView.as_view(), name='user-disasters'),
 
     
 
