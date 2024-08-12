@@ -268,3 +268,57 @@ class Address(models.Model):
 
 
 
+########################################                    DONATION    ###############################################
+class Disaster(models.Model):
+    name = models.CharField(max_length=255)
+    location = models.CharField(max_length=255)
+    description = models.TextField()
+    is_approved = models.BooleanField(default=False)
+    created_by = models.ForeignKey(User, related_name='disasters', on_delete=models.CASCADE)
+    created_on = models.DateTimeField(default=timezone.now)
+
+    required_men_dresses = models.IntegerField(default=0)
+    required_women_dresses = models.IntegerField(default=0)
+    required_kids_dresses = models.IntegerField(default=0)
+
+    fulfilled_men_dresses = models.IntegerField(default=0)
+    fulfilled_women_dresses = models.IntegerField(default=0)
+    fulfilled_kids_dresses = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.name
+
+    def update_fulfillment(self, men_dresses, women_dresses, kids_dresses):
+        self.fulfilled_men_dresses += men_dresses
+        self.fulfilled_women_dresses += women_dresses
+        self.fulfilled_kids_dresses += kids_dresses
+        self.save()
+
+    @property
+    def is_fulfilled(self):
+        return (
+            self.fulfilled_men_dresses >= self.required_men_dresses and
+            self.fulfilled_women_dresses >= self.required_women_dresses and
+            self.fulfilled_kids_dresses >= self.required_kids_dresses
+        )
+
+
+class DressDonation(models.Model):
+    user = models.ForeignKey(User, related_name='donations', on_delete=models.CASCADE)
+    disaster = models.ForeignKey(Disaster, related_name='donations', on_delete=models.CASCADE)
+    men_dresses = models.IntegerField(default=0)
+    women_dresses = models.IntegerField(default=0)
+    kids_dresses = models.IntegerField(default=0)
+    images = models.ImageField(upload_to='donations/', null=True)
+    created_on = models.DateTimeField(default=timezone.now)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.disaster.update_fulfillment(
+            self.men_dresses,
+            self.women_dresses,
+            self.kids_dresses,
+        )
+
+    def __str__(self):
+        return f"{self.user.username} - {self.disaster.name}"

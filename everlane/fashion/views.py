@@ -1206,6 +1206,81 @@ class ProcessReturnView(APIView):
 
 
 
+###############################################    DONATION      ##########################################################
+class DisasterListCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        disasters = Disaster.objects.filter(is_approved=True)
+        serializer = DisasterSerializer(disasters, many=True)
+        return Response({
+            'status': 'success',
+            'message': 'Disasters retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        serializer = DisasterSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(created_by=request.user)
+            return Response({
+                'status': 'success',
+                'message': 'Disaster created successfully. Awaiting approval.',
+                'response_code': status.HTTP_201_CREATED,
+                'data': serializer.data
+            }, status=status.HTTP_201_CREATED)
+        return Response({
+            'status': 'failed',
+            'message': 'Invalid data.',
+            'response_code': status.HTTP_400_BAD_REQUEST,
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ApproveDisasterView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def patch(self, request, disaster_id):
+        try:
+            disaster = Disaster.objects.get(id=disaster_id)
+        except Disaster.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Disaster not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        disaster.is_approved = True
+        disaster.save()
+
+        return Response({
+            'status': 'success',
+            'message': 'Disaster approved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': DisasterSerializer(disaster).data
+        }, status=status.HTTP_200_OK)
+
+
+class DressDonationCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = DressDonationSerializer(data=request.data)
+        if serializer.is_valid():
+            donation = serializer.save(user=request.user)
+            return Response({
+                'status': 'success',
+                'message': 'Dress donation recorded successfully.',
+                'response_code': status.HTTP_201_CREATED,
+                'data': DressDonationSerializer(donation).data
+            }, status=status.HTTP_201_CREATED)
+        return Response({
+            'status': 'failed',
+            'message': 'Invalid data.',
+            'response_code': status.HTTP_400_BAD_REQUEST,
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 

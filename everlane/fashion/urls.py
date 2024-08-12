@@ -49,6 +49,15 @@ urlpatterns = [
     path('addresses/<int:pk>/delete/', AddressDeleteView.as_view(), name='address-delete'),
     path('recommendations/', RecommendationAPIView.as_view(), name='recommendations'),
   # path('search/', ProductSearchAPIView.as_view(), name='product-search'),
+
+
+
+    #######################################  DONATIONS      #############################
+    
+    path('disasters/', DisasterListCreateView.as_view(), name='disaster-list-create'),
+    path('disasters/approve/<int:disaster_id>/', ApproveDisasterView.as_view(), name='disaster-approve'),
+    path('donations/', DressDonationCreateView.as_view(), name='dress-donation-create'),
+
     
 
 

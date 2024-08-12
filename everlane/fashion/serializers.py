@@ -206,7 +206,26 @@ class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = ['id','mobile','pincode','locality','address','city','state','landmark','is_default','is_active','is_deleted','created_on']
+        
 
+
+########################################     DONATION    #########################################################
+
+class DisasterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Disaster
+        fields = '__all__'
+
+class DressDonationSerializer(serializers.ModelSerializer):
+    images = serializers.ListField(
+        child=serializers.ImageField(),
+        min_length=5,
+        max_length=10,
+    )
+
+    class Meta:
+        model = DressDonation
+        fields = ['id', 'user', 'disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images', 'created_on']
 
 
 
