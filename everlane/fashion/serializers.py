@@ -135,12 +135,11 @@ class SeosonSerializer(serializers.ModelSerializer):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.name')
-    product_price = serializers.ReadOnlyField(source='product.price')
     
     
     class Meta:
         model = OrderItem
-        fields = ['id', 'product','product_name','product_price' 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
+        fields = ['id', 'product','product_name', 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
     
 
 class OrderSerializer(serializers.ModelSerializer):
