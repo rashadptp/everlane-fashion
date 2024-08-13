@@ -140,7 +140,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
+        fields = ['id', 'product','product_name','product_price' 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
     
 
 class OrderSerializer(serializers.ModelSerializer):
