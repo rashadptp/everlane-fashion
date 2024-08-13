@@ -220,6 +220,11 @@ class Order(models.Model):
     payment_status = models.CharField(max_length=20, default='Pending')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
 
+    is_donated = models.BooleanField(default=False)
+    disaster = models.ForeignKey(Disaster, related_name='donated_items', null=True, blank=True, on_delete=models.SET_NULL)
+    pickup_location = models.ForeignKey(PickupLocation, related_name='donated_items', null=True, blank=True, on_delete=models.SET_NULL)
+    is_paid = models.BooleanField(default=False)
+
 
     def __str__(self):
         return f"Order {self.id} by {self.user.username}"
@@ -246,10 +251,7 @@ class OrderItem(models.Model):
     refund_date = models.DateTimeField(null=True, blank=True)
 
 
-    is_donated = models.BooleanField(default=False)
-    disaster = models.ForeignKey(Disaster, related_name='donated_items', null=True, blank=True, on_delete=models.SET_NULL)
-    pickup_location = models.ForeignKey(PickupLocation, related_name='donated_items', null=True, blank=True, on_delete=models.SET_NULL)
-    is_paid = models.BooleanField(default=False)
+    
 
     def __str__(self):
         return f"{self.product.name} ({self.quantity})"

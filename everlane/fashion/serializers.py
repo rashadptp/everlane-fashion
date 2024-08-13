@@ -133,21 +133,22 @@ class SeosonSerializer(serializers.ModelSerializer):
 class OrderItemSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.name')
     product_price = serializers.ReadOnlyField(source='product.price')
-    disaster_name = serializers.ReadOnlyField(source='disaster.name')
-    pickup_location_address = serializers.ReadOnlyField(source='pickup_location.address')
+    
     
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date',
-                  'is_donated', 'disaster', 'disaster_name',
-            'pickup_location', 'pickup_location_address', 'is_paid']
+        fields = ['id', 'product', 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
     
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
+    disaster_name = serializers.ReadOnlyField(source='disaster.name')
+    pickup_location_address = serializers.ReadOnlyField(source='pickup_location.address')
     class Meta:
         model = Order
-        fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','status','items']
+        fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','status','items',
+                  'is_donated', 'disaster', 'disaster_name',
+            'pickup_location', 'pickup_location_address', 'is_paid']
 
 
 class ReturnSerializer(serializers.ModelSerializer):
