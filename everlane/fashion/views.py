@@ -1285,6 +1285,8 @@ class ProcessReturnView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
+# User profile view(get)
+
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]

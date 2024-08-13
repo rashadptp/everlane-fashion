@@ -251,6 +251,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
+        
 ########################################     DONATION    #########################################################
 
 class DisasterSerializer(serializers.ModelSerializer):
