@@ -1363,15 +1363,34 @@ class DressDonationCreateView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = DressDonationSerializer(data=request.data)
         if serializer.is_valid():
-            donation = serializer.save(user=request.user)
+            disaster = serializer.validated_data['disaster']
             
+            men_dresses = serializer.validated_data.get('men_dresses', 0)
+            women_dresses = serializer.validated_data.get('women_dresses', 0)
+            kids_dresses = serializer.validated_data.get('kids_dresses', 0)
+            
+            if (disaster.fulfilled_men_dresses + men_dresses > disaster.required_men_dresses or
+                disaster.fulfilled_women_dresses + women_dresses > disaster.required_women_dresses or
+                disaster.fulfilled_kids_dresses + kids_dresses > disaster.required_kids_dresses):
+                return Response({
+                    'status': 'failed',
+                    'message': 'Donation exceeds the required dresses for this disaster.',
+                    'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Record the donation
+            donation = serializer.save(user=request.user)
+
+            # Update the disaster's fulfillment status
+            disaster.update_fulfillment(men_dresses, women_dresses, kids_dresses)
+
             return Response({
                 'status': 'success',
                 'message': 'Dress donation recorded successfully.',
                 'response_code': status.HTTP_201_CREATED,
                 'data': DressDonationSerializer(donation).data
             }, status=status.HTTP_201_CREATED)
-        
+
         return Response({
             'status': 'failed',
             'message': 'Invalid data.',
