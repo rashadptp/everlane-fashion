@@ -1285,7 +1285,7 @@ class ProcessReturnView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
-####user profile####
+
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -1294,15 +1294,61 @@ class UserProfileView(APIView):
         serializer = ProfileSerializer(user)
         return Response({
             'status': 'success',
-            'message': 'User profile retrieved successfully.',
+            'message': 'User profile retrieved successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         }, status=status.HTTP_200_OK)
 
+class ProfileUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, *args, **kwargs):
+        user = request.user
+        serializer = ProfileSerializer(user, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'status': 'success',
+                'message': 'User profile updated successfully',
+                'response_code': status.HTTP_200_OK,
+                'data': serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response({
+            'status': 'error',
+            'message': 'Profile update failed.',
+            'response_code': status.HTTP_400_BAD_REQUEST,
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
+class PasswordChangeView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def patch(self, request, *args, **kwargs):
+        user = request.user
+        serializer = ProfileSerializer(user, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            if 'old_password' not in request.data or 'new_password' not in request.data:
+                return Response({
+                    'status': 'error',
+                    'message': 'Both old_password and new_password fields are required',
+                    'response_code': status.HTTP_400_BAD_REQUEST,
+                }, status=status.HTTP_400_BAD_REQUEST)
 
+            serializer.save()
+            return Response({
+                'status': 'success',
+                'message': 'Password updated successfully',
+                'response_code': status.HTTP_200_OK
+            }, status=status.HTTP_200_OK)
+        return Response({
+            'status': 'error',
+            'message': 'Password update failed',
+            'response_code': status.HTTP_400_BAD_REQUEST,
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 

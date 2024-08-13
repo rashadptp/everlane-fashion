@@ -222,7 +222,6 @@ class AddressSerializer(serializers.ModelSerializer):
         fields = ['id','mobile','pincode','locality','address','city','state','landmark','is_default','is_active','is_deleted','created_on']
         
 
-
 class ProfileSerializer(serializers.ModelSerializer):
     old_password = serializers.CharField(write_only=True, required=False)
     new_password = serializers.CharField(write_only=True, required=False)
@@ -252,7 +251,6 @@ class ProfileSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
-
 ########################################     DONATION    #########################################################
 
 class DisasterSerializer(serializers.ModelSerializer):
