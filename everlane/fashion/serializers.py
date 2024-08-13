@@ -94,7 +94,10 @@ class SubcategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'category','image','is_active','is_deleted','created_on']
 
 
-
+class PickupLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PickupLocation
+        fields = ['id', 'city', 'address']
 
 
 class ProductItemSerializer(serializers.ModelSerializer):
