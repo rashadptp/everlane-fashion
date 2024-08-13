@@ -164,9 +164,11 @@ class ReturnSerializer(serializers.ModelSerializer):
 
 class WishlistSerializer(serializers.ModelSerializer):
     product_image = serializers.ImageField(source='product.image', read_only=True) 
+    product_name = serializers.ReadOnlyField(source='product.name')
+    product_price = serializers.ReadOnlyField(source='product.price')
     class Meta:
         model = Wishlist
-        fields = ['id', 'product','is_active','is_deleted','created_on','product_image']
+        fields = ['id', 'product','is_active','is_deleted','created_on','product_image','product_name', 'product_price']
 
 
 class CartItemSerializer(serializers.ModelSerializer):
