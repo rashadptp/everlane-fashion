@@ -194,6 +194,31 @@ class DressDonation(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.disaster.name}"
     
+class Address(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
+    mobile = models.CharField(max_length=15)
+    pincode = models.CharField(max_length=10)
+    locality = models.CharField(max_length=255)
+    address = models.TextField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    landmark = models.CharField(max_length=255, blank=True, null=True)
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
+    created_on = models.DateTimeField(default=timezone.now)
+
+    def save(self, *args, **kwargs):
+        if not Address.objects.filter(user=self.user).exists():
+            self.is_default = True
+        elif self.is_default:
+            Address.objects.filter(user=self.user, is_default=True).update(is_default=False)
+        super(Address, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.address}, {self.city}, {self.state}, {self.pincode}'
+
+    
 class Order(models.Model):
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
@@ -224,6 +249,7 @@ class Order(models.Model):
     disaster = models.ForeignKey(Disaster, related_name='donated_items', null=True, blank=True, on_delete=models.SET_NULL)
     pickup_location = models.ForeignKey(PickupLocation, related_name='donated_items', null=True, blank=True, on_delete=models.SET_NULL)
     is_paid = models.BooleanField(default=False)
+    delivery_address = models.ForeignKey(Address, related_name='orders', null=True, blank=True, on_delete=models.SET_NULL)
 
 
     def __str__(self):
@@ -309,29 +335,29 @@ class Banner(models.Model):
 
 #address list model
 
-class Address(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
-    mobile = models.CharField(max_length=15)
-    pincode = models.CharField(max_length=10)
-    locality = models.CharField(max_length=255)
-    address = models.TextField()
-    city = models.CharField(max_length=100)
-    state = models.CharField(max_length=100)
-    landmark = models.CharField(max_length=255, blank=True, null=True)
-    is_default = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-    is_deleted = models.BooleanField(default=False)
-    created_on = models.DateTimeField(default=timezone.now)
+# class Address(models.Model):
+#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
+#     mobile = models.CharField(max_length=15)
+#     pincode = models.CharField(max_length=10)
+#     locality = models.CharField(max_length=255)
+#     address = models.TextField()
+#     city = models.CharField(max_length=100)
+#     state = models.CharField(max_length=100)
+#     landmark = models.CharField(max_length=255, blank=True, null=True)
+#     is_default = models.BooleanField(default=False)
+#     is_active = models.BooleanField(default=True)
+#     is_deleted = models.BooleanField(default=False)
+#     created_on = models.DateTimeField(default=timezone.now)
 
-    def save(self, *args, **kwargs):
-        if not Address.objects.filter(user=self.user).exists():
-            self.is_default = True
-        elif self.is_default:
-            Address.objects.filter(user=self.user, is_default=True).update(is_default=False)
-        super(Address, self).save(*args, **kwargs)
+#     def save(self, *args, **kwargs):
+#         if not Address.objects.filter(user=self.user).exists():
+#             self.is_default = True
+#         elif self.is_default:
+#             Address.objects.filter(user=self.user, is_default=True).update(is_default=False)
+#         super(Address, self).save(*args, **kwargs)
 
-    def __str__(self):
-        return f'{self.address}, {self.city}, {self.state}, {self.pincode}'
+#     def __str__(self):
+#         return f'{self.address}, {self.city}, {self.state}, {self.pincode}'
 
 
         

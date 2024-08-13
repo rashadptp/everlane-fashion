@@ -94,7 +94,10 @@ class SubcategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'category','image','is_active','is_deleted','created_on']
 
 
-
+class PickupLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PickupLocation
+        fields = ['id', 'city', 'address']
 
 
 class ProductItemSerializer(serializers.ModelSerializer):
@@ -132,12 +135,11 @@ class SeosonSerializer(serializers.ModelSerializer):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.name')
-    product_price = serializers.ReadOnlyField(source='product.price')
     
     
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
+        fields = ['id', 'product','product_name', 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
     
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -162,9 +164,12 @@ class ReturnSerializer(serializers.ModelSerializer):
 
 class WishlistSerializer(serializers.ModelSerializer):
     product_image = serializers.ImageField(source='product.image', read_only=True) 
+    product_name = serializers.ReadOnlyField(source='product.name')
+    product_price = serializers.ReadOnlyField(source='product.price')
+    product_description=serializers.ReadOnlyField(source='product.description')
     class Meta:
         model = Wishlist
-        fields = ['id', 'product','is_active','is_deleted','created_on','product_image']
+        fields = ['id', 'product','is_active','is_deleted','created_on','product_image','product_name', 'product_price','product_description']
 
 
 class CartItemSerializer(serializers.ModelSerializer):
