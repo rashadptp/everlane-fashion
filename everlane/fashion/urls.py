@@ -48,8 +48,6 @@ urlpatterns = [
     path('addresses/create/', AddressCreateView.as_view(), name='address-create'),
     path('addresses/<int:pk>/delete/', AddressDeleteView.as_view(), name='address-delete'),
     path('recommendations/', RecommendationAPIView.as_view(), name='recommendations'),
-    path('profile/', UserProfileView.as_view(), name='user-profile-detail'), 
-    path('profile/update/', UserProfileUpdateView.as_view(), name='user-profile-update'), 
   # path('search/', ProductSearchAPIView.as_view(), name='product-search'),
 
 

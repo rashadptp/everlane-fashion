@@ -842,14 +842,36 @@ class PlaceOrderView(APIView):
     def post(self, request, *args, **kwargs):
         user = request.user
         payment_method = request.data.get('payment_method')
-        
+        order_type = request.data.get('order_type')  # 'delivery' or 'donate'
+        address_id = request.data.get('address_id')  # For delivery option
+        disaster_id = request.data.get('disaster_id')  # For donation option
+        pickup_location_id = request.data.get('pickup_location_id')  # For donation option
+
+        # Validate payment method
         if payment_method not in ['COD', 'ONLINE']:
             return Response({
                 'status': 'failed',
                 'message': 'Invalid payment method.',
                 'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
-        
+
+        # Validate order type
+        if order_type not in ['delivery', 'donate']:
+            return Response({
+                'status': 'failed',
+                'message': 'Invalid order type.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Restrict COD for donations
+        if order_type == 'donate' and payment_method == 'COD':
+            return Response({
+                'status': 'failed',
+                'message': 'COD is not available for donations.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get the user's active cart
         try:
             cart = Cart.objects.get(user=user, is_active=True, is_deleted=False)
         except Cart.DoesNotExist:
@@ -867,6 +889,7 @@ class PlaceOrderView(APIView):
                 'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        # Calculate the total amount
         total_amount = sum(item.product.price * item.quantity for item in cart_items)
 
         # Create the order
@@ -874,7 +897,8 @@ class PlaceOrderView(APIView):
             user=user,
             total_amount=total_amount,
             payment_method=payment_method,
-            is_completed=False if payment_method == 'ONLINE' else True
+            is_completed=False if payment_method == 'ONLINE' else True,
+            is_donated=True if order_type == 'donate' else False
         )
 
         # Create order items from cart items
@@ -890,27 +914,87 @@ class PlaceOrderView(APIView):
         cart_items.delete()
         cart.save()
 
-        if payment_method == 'ONLINE':
-            # Integrate with a payment gateway here
-            # Redirect the user to the payment gateway
-            # payment_url = self.initiate_online_payment(order)   PAYMENT LATER
+        # If the order is a donation
+        if order_type == 'donate':
+            try:
+                disaster = Disaster.objects.get(id=disaster_id)
+                pickup_location = PickupLocation.objects.get(id=pickup_location_id)
+            except Disaster.DoesNotExist:
+                return Response({
+                    'status': 'failed',
+                    'message': 'Invalid disaster selected.',
+                    'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
+            except PickupLocation.DoesNotExist:
+                return Response({
+                    'status': 'failed',
+                    'message': 'Invalid pickup location selected.',
+                    'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Assign disaster and pickup location to the order
+            order.disaster = disaster
+            order.pickup_location = pickup_location
+            order.save()
+
+            if payment_method == 'ONLINE':
+                # Integrate with a payment gateway here
+                return Response({
+                    'status': 'success',
+                    'message': 'Order placed successfully as a donation. Payment will be integrated later.',
+                    'response_code': status.HTTP_201_CREATED,
+                    'data': {
+                        'order': OrderSerializer(order).data,
+                        # 'payment_url': payment_url  # Placeholder for payment URL
+                    }
+                }, status=status.HTTP_201_CREATED)
+
             return Response({
                 'status': 'success',
-                'message': 'Order placed successfully. Payment will be integrated later.',
+                'message': 'Order placed successfully as a donation.',
                 'response_code': status.HTTP_201_CREATED,
-                'data': {
-                    'order': OrderSerializer(order).data,
-                    # 'payment_url': payment_url
-                }
+                'data': OrderSerializer(order).data
+            }, status=status.HTTP_201_CREATED)
+
+        # If the order is for delivery
+        if order_type == 'delivery':
+            try:
+                address = Address.objects.get(id=address_id, user=user, is_deleted=False)
+            except Address.DoesNotExist:
+                return Response({
+                    'status': 'failed',
+                    'message': 'Invalid address selected.',
+                    'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Assign the delivery address to the order
+            order.delivery_address = address
+            order.save()
+
+            if payment_method == 'ONLINE':
+                # Integrate with a payment gateway here
+                return Response({
+                    'status': 'success',
+                    'message': 'Order placed successfully for delivery. Payment will be integrated later.',
+                    'response_code': status.HTTP_201_CREATED,
+                    'data': {
+                        'order': OrderSerializer(order).data,
+                        # 'payment_url': payment_url  # Placeholder for payment URL
+                    }
+                }, status=status.HTTP_201_CREATED)
+
+            return Response({
+                'status': 'success',
+                'message': 'Order placed successfully for delivery.',
+                'response_code': status.HTTP_201_CREATED,
+                'data': OrderSerializer(order).data
             }, status=status.HTTP_201_CREATED)
 
         return Response({
-            'status': 'success',
-            'message': 'Order placed successfully.',
-            'response_code': status.HTTP_201_CREATED,
-            'data': OrderSerializer(order).data
-        }, status=status.HTTP_201_CREATED)
-
+            'status': 'failed',
+            'message': 'Unknown error occurred.',
+            'response_code': status.HTTP_400_BAD_REQUEST
+        }, status=status.HTTP_400_BAD_REQUEST)
     # def initiate_online_payment(self, order):
     #     # Placeholder for initiating an online payment
     #     # This should be replaced with actual payment gateway integration code
@@ -970,6 +1054,75 @@ class UpdateOrderStatusView(APIView):
             'data': OrderSerializer(order).data
         }, status=status.HTTP_200_OK)
 
+
+# Search view
+
+# from django.db.models import Q
+
+# class ProductSearchAPIView(APIView):
+#     def get(self, request, format=None):
+#         query = request.GET.get('query')
+#         if query:
+#             keywords = query.split()
+#             q_objects = Q()
+#             for keyword in keywords:
+#                 q_objects |= Q(name__icontains=keyword) | Q(brand__icontains=keyword)
+
+#             results = Product.objects.filter(q_objects).distinct()
+
+#             if results.exists():
+#                 serializer = ProductSerializer(results, many=True)
+#                 return Response({
+#                     "success": True,
+#                     "message": "Products found.",
+#                     "data": serializer.data
+#                 }, status=status.HTTP_200_OK)
+#             else:
+#                 return Response({
+#                     "success": False,
+#                     "message": "No products found matching the query."
+#                 }, status=status.HTTP_404_NOT_FOUND)
+#         return Response({
+#             "success": False,
+#             "message": "No query provided."
+#         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+        
+
+# class RecommendDressView(APIView):
+#     def post(self, request, *args, **kwargs):
+#         skin_color = request.data.get('skin_color')
+#         height = request.data.get('height')
+#         gender = request.data.get('gender')
+#         preferred_season = request.data.get('preferred_season')
+#         usage_of_dress = request.data.get('usage_of_dress')
+
+#         # Load the pre-trained model
+#         model_path = 'recommendation_model.pkl'
+#         clf = joblib.load(model_path)
+
+#         # Create the input DataFrame
+#         input_data = pd.DataFrame({
+#             'skin_type': [skin_color],
+#             'height': [height],
+#             'gender': [gender],
+#             'season': [preferred_season],
+#             'usage': [usage_of_dress]
+#         })
+#         input_data = pd.get_dummies(input_data)
+
+#         # Predict the recommended dress
+#         dress_ids = clf.predict(input_data)
+#         recommended_dresses = Product.objects.filter(id__in=dress_ids)
+
+#         serializer = ProductSerializer(recommended_dresses, many=True)
+#         return Response({
+#             'status': 'success',
+#             'message': 'Dresses recommended successfully.',
+#             'response_code': status.HTTP_200_OK,
+#             'data': serializer.data
+#         })
 
 class RecommendationAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -1130,59 +1283,6 @@ class ProcessReturnView(APIView):
             'message': 'Invalid action provided.',
             'response_code': status.HTTP_400_BAD_REQUEST
         }, status=status.HTTP_400_BAD_REQUEST)
-
-# User profile view(get)
-
-class UserProfileView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        user = request.user
-        serializer = ProfileSerializer(user)
-        return Response({
-            'status': 'success',
-            'message': 'User profile retrieved successfully.',
-            'response_code': status.HTTP_200_OK,
-            'data': serializer.data
-        }, status=status.HTTP_200_OK)
-        
-
-class UserProfileUpdateView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def put(self, request, *args, **kwargs):
-        user = request.user  # Get the currently authenticated user
-        serializer = ProfileSerializer(user, data=request.data, partial=True)
-        
-        if serializer.is_valid():
-            serializer.save()
-            return Response({
-                'status': 'success',
-                'message': 'User profile updated successfully.',
-                'response_code': status.HTTP_200_OK,
-                'data': serializer.data
-            }, status=status.HTTP_200_OK)
-        return Response({
-            'status': 'error',
-            'message': 'Profile update failed.',
-            'response_code': status.HTTP_400_BAD_REQUEST,
-            'errors': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
-
-
-    
-
-    
-
-
-    
-
-
-
 
 
 
