@@ -218,6 +218,37 @@ class AddressSerializer(serializers.ModelSerializer):
         
 
 
+class ProfileSerializer(serializers.ModelSerializer):
+    old_password = serializers.CharField(write_only=True, required=False)
+    new_password = serializers.CharField(write_only=True, required=False)
+
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'mobile', 'old_password', 'new_password']
+
+    def update(self, instance, validated_data):
+        # Handle password change
+        old_password = validated_data.pop('old_password', None)
+        new_password = validated_data.pop('new_password', None)
+        
+        if old_password and new_password:
+            if not instance.check_password(old_password):
+                raise serializers.ValidationError({"old_password": "Old password is not correct."})
+            if len(new_password) < 8:
+                raise serializers.ValidationError({"new_password": "New password must be at least 8 characters long."})
+            if not any(char.isdigit() for char in new_password):
+                raise serializers.ValidationError({"new_password": "New password must contain at least one digit."})
+            if not any(char.isalpha() for char in new_password):
+                raise serializers.ValidationError({"new_password": "New password must contain at least one letter."})
+            instance.set_password(new_password)
+        
+        # Update other user fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+
 ########################################     DONATION    #########################################################
 
 class DisasterSerializer(serializers.ModelSerializer):

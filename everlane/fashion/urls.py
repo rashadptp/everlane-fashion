@@ -49,9 +49,8 @@ urlpatterns = [
     path('addresses/<int:pk>/delete/', AddressDeleteView.as_view(), name='address-delete'),
     path('recommendations/', RecommendationAPIView.as_view(), name='recommendations'),
     path('profile/', UserProfileView.as_view(), name='user-profile-detail'), 
-    path('profile/update/', UserProfileUpdateView.as_view(), name='user-profile-update'), 
-  # path('search/', ProductSearchAPIView.as_view(), name='product-search'),
-
+    path('profile/update/',ProfileUpdateView.as_view(), name='user-profile-update'),
+    path('profile/change-password/',PasswordChangeView.as_view(), name='change-password'),
 
 
     #######################################  DONATIONS      #############################
