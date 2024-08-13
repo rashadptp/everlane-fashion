@@ -672,9 +672,9 @@ class WishlistListView(generics.ListAPIView):
             return Response({
                 'status': 'failed',
                 'message': 'No items found in your wishlist.',
-                'response_code': status.HTTP_404_NOT_FOUND,
+                'response_code': status.HTTP_200_OK,
                 'data': []
-            }, status=status.HTTP_404_NOT_FOUND)
+            }, status=status.HTTP_200_OK)
 
 
 # #Add to wishlist view
