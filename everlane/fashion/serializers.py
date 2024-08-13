@@ -154,18 +154,20 @@ class ReturnSerializer(serializers.ModelSerializer):
         
 
 class WishlistSerializer(serializers.ModelSerializer):
+    product_image = serializers.ImageField(source='product.image', read_only=True) 
     class Meta:
         model = Wishlist
-        fields = ['id', 'product','is_active','is_deleted','created_on']
+        fields = ['id', 'product','is_active','is_deleted','created_on','product_image']
 
 
 class CartItemSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.name')
     product_price = serializers.ReadOnlyField(source='product.price')
+    product_image = serializers.ImageField(source='product.image', read_only=True) 
 
     class Meta:
         model = CartItem
-        fields = ['id', 'product','product_name', 'product_price', 'quantity','is_active','is_deleted','created_on']
+        fields = ['id', 'product','product_name', 'product_price', 'quantity','is_active','is_deleted','created_on','product_image']
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
@@ -206,11 +208,61 @@ class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = ['id','mobile','pincode','locality','address','city','state','landmark','is_default','is_active','is_deleted','created_on']
+        
 
 
+########################################     DONATION    #########################################################
+
+class DisasterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Disaster
+        fields = '__all__'
 
 
+class ImageUploadModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ImageUploadModel
+        fields = ['image']
 
+class DressDonationSerializer(serializers.ModelSerializer):
+    donor_name = serializers.CharField(source='user.username', read_only=True)
+    images = serializers.ListField(
+        child=serializers.ImageField(max_length=100, allow_empty_file=False, use_url=True),
+        allow_empty=False,
+        write_only=True
+    )
+
+    class Meta:
+        model = DressDonation
+        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images', 'pickup_location', 'donated_on', 'donor_name']
+
+    def get_images(self, obj):
+        """
+        Return URLs of the uploaded images.
+        """
+        return [image.image.url for image in obj.images.all()]
+
+
+    def validate_images(self, value):
+        """
+        Ensure at least 5 images are uploaded.
+        """
+        if len(value) < 5:
+            raise serializers.ValidationError("You must upload at least 5 dress images.")
+        return value
+
+    def create(self, validated_data):
+        images_data = validated_data.pop('images')
+
+        donation = DressDonation.objects.create(**validated_data)
+        
+        image_instances = []
+        for image_data in images_data:
+            image_instance = ImageUploadModel.objects.create(image=image_data)
+            image_instances.append(image_instance)
+        
+        donation.images.set(image_instances)
+        return donation
 
 
 
