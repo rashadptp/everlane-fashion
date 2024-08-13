@@ -1285,6 +1285,23 @@ class ProcessReturnView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
+####user profile####
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        serializer = ProfileSerializer(user)
+        return Response({
+            'status': 'success',
+            'message': 'User profile retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
+
+
+
+
 
 
 

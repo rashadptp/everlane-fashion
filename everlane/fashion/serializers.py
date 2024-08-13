@@ -253,7 +253,6 @@ class ProfileSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
 ########################################     DONATION    #########################################################
 
 class DisasterSerializer(serializers.ModelSerializer):
