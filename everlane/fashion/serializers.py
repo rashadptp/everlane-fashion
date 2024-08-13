@@ -154,18 +154,20 @@ class ReturnSerializer(serializers.ModelSerializer):
         
 
 class WishlistSerializer(serializers.ModelSerializer):
+    product_image = serializers.ImageField(source='product.image', read_only=True) 
     class Meta:
         model = Wishlist
-        fields = ['id', 'product','is_active','is_deleted','created_on']
+        fields = ['id', 'product','is_active','is_deleted','created_on','product_image']
 
 
 class CartItemSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.name')
     product_price = serializers.ReadOnlyField(source='product.price')
+    product_image = serializers.ImageField(source='product.image', read_only=True) 
 
     class Meta:
         model = CartItem
-        fields = ['id', 'product','product_name', 'product_price', 'quantity','is_active','is_deleted','created_on']
+        fields = ['id', 'product','product_name', 'product_price', 'quantity','is_active','is_deleted','created_on','product_image']
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
@@ -206,50 +208,61 @@ class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = ['id','mobile','pincode','locality','address','city','state','landmark','is_default','is_active','is_deleted','created_on']
-
-# user profile serializer
-
+        
 
 
-class ProfileSerializer(serializers.ModelSerializer):
-    address = AddressSerializer()
-    old_password = serializers.CharField(write_only=True, required=False)
-    new_password = serializers.CharField(write_only=True, required=False)
+########################################     DONATION    #########################################################
+
+class DisasterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Disaster
+        fields = '__all__'
+
+
+class ImageUploadModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ImageUploadModel
+        fields = ['image']
+
+class DressDonationSerializer(serializers.ModelSerializer):
+    donor_name = serializers.CharField(source='user.username', read_only=True)
+    images = serializers.ListField(
+        child=serializers.ImageField(max_length=100, allow_empty_file=False, use_url=True),
+        allow_empty=False,
+        write_only=True
+    )
 
     class Meta:
-        model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'mobile', 'address', 'city', 'state', 'landmark', 'old_password', 'new_password']
+        model = DressDonation
+        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images', 'pickup_location', 'donated_on', 'donor_name']
 
-    def update(self, instance, validated_data):
-        # Handle address update
-        address_data = validated_data.pop('address', None)
-        if address_data:
-            Address.objects.update_or_create(user=instance, defaults=address_data)
-
-        # Handle password change
-        old_password = validated_data.pop('old_password', None)
-        new_password = validated_data.pop('new_password', None)
-        if old_password and new_password:
-            if not instance.check_password(old_password):
-                raise serializers.ValidationError({"old_password": "Old password is not correct."})
-            if len(new_password) < 8:
-                raise serializers.ValidationError({"new_password": "New password must be at least 8 characters long."})
-            instance.set_password(new_password)
-
-        # Update other user fields
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-        return instance
+    def get_images(self, obj):
+        """
+        Return URLs of the uploaded images.
+        """
+        return [image.image.url for image in obj.images.all()]
 
 
+    def validate_images(self, value):
+        """
+        Ensure at least 5 images are uploaded.
+        """
+        if len(value) < 5:
+            raise serializers.ValidationError("You must upload at least 5 dress images.")
+        return value
 
+    def create(self, validated_data):
+        images_data = validated_data.pop('images')
 
-
-
-
-
-
+        donation = DressDonation.objects.create(**validated_data)
+        
+        image_instances = []
+        for image_data in images_data:
+            image_instance = ImageUploadModel.objects.create(image=image_data)
+            image_instances.append(image_instance)
+        
+        donation.images.set(image_instances)
+        return donation
 
 
 

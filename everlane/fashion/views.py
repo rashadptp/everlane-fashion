@@ -1190,12 +1190,111 @@ class UserProfileUpdateView(APIView):
 
 
 
+###############################################    DONATION      ##########################################################
+class DisasterListCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        disasters = Disaster.objects.filter(is_approved=True)
+        serializer = DisasterSerializer(disasters, many=True)
+        return Response({
+            'status': 'success',
+            'message': 'Disasters retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        serializer = DisasterSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(created_by=request.user)
+            return Response({
+                'status': 'success',
+                'message': 'Disaster created successfully. Awaiting approval.',
+                'response_code': status.HTTP_201_CREATED,
+                'data': serializer.data
+            }, status=status.HTTP_201_CREATED)
+        return Response({
+            'status': 'failed',
+            'message': 'Invalid data.',
+            'response_code': status.HTTP_400_BAD_REQUEST,
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
+class AdminDisasterApprovalListView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        disasters_to_approve = Disaster.objects.filter(is_approved=False)
+        serializer = DisasterSerializer(disasters_to_approve, many=True)
+        return Response({
+            'status': 'success',
+            'message': 'Disasters awaiting approval retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
+
+class ApproveDisasterView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def patch(self, request, disaster_id):
+        try:
+            disaster = Disaster.objects.get(id=disaster_id)
+        except Disaster.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Disaster not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        disaster.is_approved = True
+        disaster.save()
+
+        return Response({
+            'status': 'success',
+            'message': 'Disaster approved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': DisasterSerializer(disaster).data
+        }, status=status.HTTP_200_OK)
+
+
+class DressDonationCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = DressDonationSerializer(data=request.data)
+        if serializer.is_valid():
+            donation = serializer.save(user=request.user)
+            
+            return Response({
+                'status': 'success',
+                'message': 'Dress donation recorded successfully.',
+                'response_code': status.HTTP_201_CREATED,
+                'data': DressDonationSerializer(donation).data
+            }, status=status.HTTP_201_CREATED)
+        
+        return Response({
+            'status': 'failed',
+            'message': 'Invalid data.',
+            'response_code': status.HTTP_400_BAD_REQUEST,
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 
+class UserDonationListView(APIView):
+    permission_classes = [IsAuthenticated]
 
-
-
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        donations = user.donations.all()
+        serializer = DressDonationSerializer(donations, many=True)
+        return Response({
+            'status': 'success',
+            'message': 'User donations retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data,
+            'donation_count': donations.count()
+        }, status=status.HTTP_200_OK)
 
 
 
@@ -1204,8 +1303,58 @@ class UserProfileUpdateView(APIView):
 
     
         
+class DisasterDonationsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, disaster_id, *args, **kwargs):
+        try:
+            disaster = Disaster.objects.get(id=disaster_id)
+        except Disaster.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Disaster not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Ensure the user is the one who registered the disaster or an admin
+        if not (request.user == disaster.user or request.user.is_staff):
+            return Response({
+                'status': 'failed',
+                'message': 'You do not have permission to view these donations.',
+                'response_code': status.HTTP_403_FORBIDDEN
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        donations = DressDonation.objects.filter(disaster=disaster)
+        serializer = DressDonationSerializer(donations, many=True)
+
+        return Response({
+            'status': 'success',
+            'message': 'Donations retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
 
 
 
+class UserDisastersView(APIView):
+    permission_classes = [IsAuthenticated]
 
+    def get(self, request, *args, **kwargs):
+        # Retrieve disasters registered by the current user
+        disasters = Disaster.objects.filter(user=request.user)
 
+        if not disasters.exists():
+            return Response({
+                'status': 'success',
+                'message': 'You do not have any registered disasters.',
+                'response_code': status.HTTP_200_OK,
+                'data': []
+            }, status=status.HTTP_200_OK)
+
+        serializer = DisasterSerializer(disasters, many=True)
+        return Response({
+            'status': 'success',
+            'message': 'Disasters retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
