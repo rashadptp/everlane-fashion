@@ -124,6 +124,7 @@ class ProductItem(models.Model):
 class Disaster(models.Model):
     user = models.ForeignKey(User, related_name='disaster', on_delete=models.CASCADE,null=True)
     name = models.CharField(max_length=255)
+    adhar=models.CharField(max_length=20)
     location = models.CharField(max_length=255)
     description = models.TextField()
     is_approved = models.BooleanField(default=False)
