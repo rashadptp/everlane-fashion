@@ -134,12 +134,17 @@ class LogoutView(generics.GenericAPIView):
 
 
 
-# new product list and search
+
+#######pagination applied product list view #######
+
 
 from django.db.models import Q
 
+from .pagination import CustomPagination  # Import the custom pagination class
+
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
+    pagination_class = CustomPagination  # Use custom pagination class
 
     def get_queryset(self):
         queryset = Product.objects.all()
@@ -159,13 +164,33 @@ class ProductListView(generics.ListAPIView):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        products = self.get_queryset()
+        queryset = self.get_queryset()
+
+        # Apply pagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            product_data = []
+            for product in page:
+                product_serializer = self.get_serializer(product)
+                items = ProductItem.objects.filter(product=product)
+                item_serializer = ProductItemSerializer(items, many=True)
+                product_data.append({
+                    **product_serializer.data,
+                    'items': item_serializer.data
+                })
+            
+            return self.get_paginated_response(product_data)
+
+        # If pagination is not applied (e.g., no pagination parameters)
         product_data = []
-        for product in products:
+        for product in queryset:
             product_serializer = self.get_serializer(product)
             items = ProductItem.objects.filter(product=product)
             item_serializer = ProductItemSerializer(items, many=True)
-            product_data.append( product_serializer.data)
+            product_data.append({
+                **product_serializer.data,
+                'items': item_serializer.data
+            })
 
         return Response({
             'status': "success",
@@ -173,6 +198,8 @@ class ProductListView(generics.ListAPIView):
             'response_code': status.HTTP_200_OK,
             'data': product_data
         })
+
+
 
 class ProductDetailView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
@@ -281,6 +308,7 @@ class CategoryListView(generics.ListCreateAPIView):
         return Response(response_data)
 
 
+
 class SubcategoryListView(generics.ListCreateAPIView):
     serializer_class = SubcategorySerializer
 
@@ -299,7 +327,7 @@ class SubcategoryListView(generics.ListCreateAPIView):
             'message': "Subcategories retrieved successfully.",
             'response_code': status.HTTP_200_OK,
             'data': data
-        })
+         })
 
 class SubcategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Subcategory.objects.all()
@@ -558,53 +586,61 @@ class FlutterBannerListView(generics.ListAPIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 
-
-
-#Trending images listing api
+###### Trending images listing api with using pagination ######
 
 from rest_framework import generics, status
 from rest_framework.response import Response
 from .models import Product
 from .serializers import ProductSerializer
+from .pagination import CustomPagination  # Import your custom pagination class
 
 class TrendingProductsView(generics.ListAPIView):
     serializer_class = ProductSerializer
+    pagination_class = CustomPagination  # Apply custom pagination class
 
     def get_queryset(self):
         return Product.objects.filter(is_trending=True)
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
 
-        if queryset.exists():
+        # If no trending products are found
+        if not queryset.exists():
             return Response({
-                'status': "success",
-                'message': 'Trending products retrieved successfully.',
-                'response_code': status.HTTP_200_OK,
-                'data': serializer.data
-            }, status=status.HTTP_200_OK)
+                'status': "failed",
+                'message': 'No trending products found.',
+                'response_code': status.HTTP_404_NOT_FOUND,
+                'data': []
+            }, status=status.HTTP_404_NOT_FOUND)
 
+        # Apply pagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # If pagination is not applied (e.g., no pagination parameters)
+        serializer = self.get_serializer(queryset, many=True)
         return Response({
-            'status': "failed",
-            'message': 'No trending products found.',
-            'response_code': status.HTTP_404_NOT_FOUND,
-            'data': []
-        }, status=status.HTTP_404_NOT_FOUND)
-
-
-
-
-#seasons filteration api
+            'status': "success",
+            'message': 'Trending products retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
+        
+        
+###seasons with pagination ###
 
 
 from rest_framework import generics, status
 from rest_framework.response import Response
 from .models import Product
-from .serializers import ProductSerializer
+from .serializers import SeosonSerializer
+from .pagination import CustomPagination  # Import your custom pagination class
 
 class SeasonalProductsView(generics.ListAPIView):
     serializer_class = SeosonSerializer
+    pagination_class = CustomPagination  # Apply custom pagination class
 
     def get_queryset(self):
         season = self.kwargs.get('season')
@@ -613,14 +649,24 @@ class SeasonalProductsView(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
+
+        # If no products are found for the particular season
         if not queryset.exists():
+            season = self.kwargs.get("season")
             return Response({
                 'status': "failed",
-                'message': f'No {self.kwargs.get("season")} products found.',
+                'message': f'No {season.capitalize()} products found.',
                 'response_code': status.HTTP_404_NOT_FOUND,
                 'data': []
             }, status=status.HTTP_404_NOT_FOUND)
 
+        # Apply pagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # If pagination is not applied (e.g., no pagination parameters)
         serializer = self.get_serializer(queryset, many=True)
         return Response({
             'status': "success",
@@ -628,6 +674,7 @@ class SeasonalProductsView(generics.ListAPIView):
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         }, status=status.HTTP_200_OK)
+
 
 #Questionnaire   
 
@@ -1063,37 +1110,6 @@ class UpdateOrderStatusView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-# Search view
-
-# from django.db.models import Q
-
-# class ProductSearchAPIView(APIView):
-#     def get(self, request, format=None):
-#         query = request.GET.get('query')
-#         if query:
-#             keywords = query.split()
-#             q_objects = Q()
-#             for keyword in keywords:
-#                 q_objects |= Q(name__icontains=keyword) | Q(brand__icontains=keyword)
-
-#             results = Product.objects.filter(q_objects).distinct()
-
-#             if results.exists():
-#                 serializer = ProductSerializer(results, many=True)
-#                 return Response({
-#                     "success": True,
-#                     "message": "Products found.",
-#                     "data": serializer.data
-#                 }, status=status.HTTP_200_OK)
-#             else:
-#                 return Response({
-#                     "success": False,
-#                     "message": "No products found matching the query."
-#                 }, status=status.HTTP_404_NOT_FOUND)
-#         return Response({
-#             "success": False,
-#             "message": "No query provided."
-#         }, status=status.HTTP_400_BAD_REQUEST)
 
 
         

@@ -121,6 +121,8 @@ class ProductItem(models.Model):
     
     def __str__(self):
         return f"{self.product.name} - {self.get_size_display()}"
+
+        
 class Disaster(models.Model):
     user = models.ForeignKey(User, related_name='disaster', on_delete=models.CASCADE,null=True)
     name = models.CharField(max_length=255)
