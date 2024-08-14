@@ -255,6 +255,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 ########################################     DONATION    #########################################################
 
 class DisasterSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source='created_by.first_name', read_only=True)
     class Meta:
         model = Disaster
         fields = '__all__'
