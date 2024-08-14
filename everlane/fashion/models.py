@@ -126,6 +126,7 @@ class ProductItem(models.Model):
 class Disaster(models.Model):
     user = models.ForeignKey(User, related_name='disaster', on_delete=models.CASCADE,null=True)
     name = models.CharField(max_length=255)
+    adhar=models.CharField(max_length=20)
     location = models.CharField(max_length=255)
     description = models.TextField()
     is_approved = models.BooleanField(default=False)
@@ -335,34 +336,6 @@ class Banner(models.Model):
     def __str__(self):
         return self.image.url
 
-#address list model
-
-# class Address(models.Model):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
-#     mobile = models.CharField(max_length=15)
-#     pincode = models.CharField(max_length=10)
-#     locality = models.CharField(max_length=255)
-#     address = models.TextField()
-#     city = models.CharField(max_length=100)
-#     state = models.CharField(max_length=100)
-#     landmark = models.CharField(max_length=255, blank=True, null=True)
-#     is_default = models.BooleanField(default=False)
-#     is_active = models.BooleanField(default=True)
-#     is_deleted = models.BooleanField(default=False)
-#     created_on = models.DateTimeField(default=timezone.now)
-
-#     def save(self, *args, **kwargs):
-#         if not Address.objects.filter(user=self.user).exists():
-#             self.is_default = True
-#         elif self.is_default:
-#             Address.objects.filter(user=self.user, is_default=True).update(is_default=False)
-#         super(Address, self).save(*args, **kwargs)
-
-#     def __str__(self):
-#         return f'{self.address}, {self.city}, {self.state}, {self.pincode}'
-
-
-        
 
 
 
