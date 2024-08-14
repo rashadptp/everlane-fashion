@@ -407,13 +407,21 @@ class CartItemDeleteView(APIView):
                 'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
+        # Get the cart before deleting the item
+        cart = cart_item.cart
+
+        # Delete the cart item
         cart_item.delete()
+
+        # Recalculate the total price of the cart
+        cart.total_price = sum(item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
+        cart.save()
+
         return Response({
             'status': 'success',
             'message': 'Cart item deleted successfully.',
             'response_code': status.HTTP_200_OK
         }, status=status.HTTP_200_OK)
-
     
 class UpdateCartItemQuantityView(APIView):
     permission_classes = [IsAuthenticated]
