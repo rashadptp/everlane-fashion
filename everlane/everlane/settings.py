@@ -146,3 +146,8 @@ REST_FRAMEWORK = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'fashion.pagination.CustomPagination',  # Ensure this path is correct
+    'PAGE_SIZE': 10,  # Set the default page size
+}
