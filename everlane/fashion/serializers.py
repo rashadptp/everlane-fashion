@@ -148,7 +148,7 @@ class OrderSerializer(serializers.ModelSerializer):
     pickup_location_address = serializers.ReadOnlyField(source='pickup_location.address')
     class Meta:
         model = Order
-        fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','status','items',
+        fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','order_status','items',
                   'is_donated', 'disaster', 'disaster_name',
             'pickup_location', 'pickup_location_address', 'is_paid']
 
@@ -159,7 +159,7 @@ class ReturnSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 
-                  'payment_method', 'payment_status','status', 'items']
+                  'payment_method', 'payment_status','order_status', 'items']
         
 
 class WishlistSerializer(serializers.ModelSerializer):

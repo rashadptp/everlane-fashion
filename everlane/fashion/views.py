@@ -1150,7 +1150,7 @@ class PlaceOrderView(APIView):
                         # 'payment_url': payment_url  # Placeholder for payment URL
                     }
                 }, status=status.HTTP_201_CREATED)
-
+            order.payment_status='Completed'
             return Response({
                 'status': 'success',
                 'message': 'Order placed successfully for delivery.',
@@ -1196,23 +1196,23 @@ class UpdateOrderStatusView(APIView):
 
     def patch(self, request, order_id):
         try:
-            order = Order.objects.get(id=order_id)#, user=request.user)
+            order = Order.objects.get(id=order_id)
         except Order.DoesNotExist:
             return Response({
                 'status': 'failed',
-                'message': 'Order not found or does not belong to you.',
+                'message': 'Order not found',
                 'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
-        status = request.data.get('status')
-        if status not in dict(Order.STATUS_CHOICES):
+        order_status = request.data.get('order_status')
+        if order_status not in dict(Order.STATUS_CHOICES):
             return Response({
                 'status': 'failed',
                 'message': 'Invalid status.',
                 'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        order.status = status
+        order.order_status = order_status
         order.save()
 
         return Response({
