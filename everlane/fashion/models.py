@@ -233,7 +233,10 @@ class Order(models.Model):
         ('COD', 'Cash on Delivery'),
         ('ONLINE', 'Online Payment'),
     ]
-
+    PAYMENT_STATUS = [
+        ('Pending', 'Pending'),
+        ('Completed', 'Completed'),
+    ]
     
 
 
@@ -245,7 +248,7 @@ class Order(models.Model):
     created_on = models.DateTimeField(default=timezone.now)
     is_completed = models.BooleanField(default=False)
     payment_method = models.CharField(max_length=10, choices=PAYMENT_METHODS,default='COD')
-    payment_status = models.CharField(max_length=20, default='Pending')
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS,default='Pending')
     order_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
 
     is_donated = models.BooleanField(default=False)

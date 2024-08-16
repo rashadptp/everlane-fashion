@@ -1150,7 +1150,7 @@ class PlaceOrderView(APIView):
                         # 'payment_url': payment_url  # Placeholder for payment URL
                     }
                 }, status=status.HTTP_201_CREATED)
-
+            order.payment_status='Completed'
             return Response({
                 'status': 'success',
                 'message': 'Order placed successfully for delivery.',
