@@ -228,7 +228,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'mobile', 'old_password', 'new_password']
+        fields = ['id', 'username','first_name', 'last_name', 'email', 'mobile', 'old_password', 'new_password']
 
     def update(self, instance, validated_data):
         # Handle password change
