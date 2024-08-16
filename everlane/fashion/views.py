@@ -474,7 +474,7 @@ class AddToCartView(APIView):
         cart, created = Cart.objects.get_or_create(user=user)
 
         # Retrieve or create the cart item
-        cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product_item.product)
+        cart_item, created = CartItem.objects.get_or_create(cart=cart, product_item=product_item)
 
         if not created:
             # Item already exists in cart, update the quantity
@@ -486,7 +486,7 @@ class AddToCartView(APIView):
             cart_item.save()
             message = 'Item added to cart.'
 
-        cart.total_price = sum(item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
+        cart.total_price = sum(item.product_item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
         cart.save()
 
         return Response({
