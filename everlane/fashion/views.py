@@ -1004,6 +1004,170 @@ class AddressDeleteView(generics.DestroyAPIView):
 
 
 
+# class PlaceOrderView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request, *args, **kwargs):
+#         user = request.user
+#         payment_method = request.data.get('payment_method')
+#         order_type = request.data.get('order_type')  # 'delivery' or 'donate'
+#         address_id = request.data.get('address_id')  # For delivery option
+#         disaster_id = request.data.get('disaster_id')  # For donation option
+#         pickup_location_id = request.data.get('pickup_location_id')  # For donation option
+
+#         # Validate payment method
+#         if payment_method not in ['COD', 'ONLINE']:
+#             return Response({
+#                 'status': 'failed',
+#                 'message': 'Invalid payment method.',
+#                 'response_code': status.HTTP_400_BAD_REQUEST
+#             }, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Validate order type
+#         if order_type not in ['delivery', 'donate']:
+#             return Response({
+#                 'status': 'failed',
+#                 'message': 'Invalid order type.',
+#                 'response_code': status.HTTP_400_BAD_REQUEST
+#             }, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Restrict COD for donations
+#         if order_type == 'donate' and payment_method == 'COD':
+#             return Response({
+#                 'status': 'failed',
+#                 'message': 'COD is not available for donations.',
+#                 'response_code': status.HTTP_400_BAD_REQUEST
+#             }, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Get the user's active cart
+#         try:
+#             cart = Cart.objects.get(user=user, is_active=True, is_deleted=False)
+#         except Cart.DoesNotExist:
+#             return Response({
+#                 'status': 'failed',
+#                 'message': 'No active cart found for the user.',
+#                 'response_code': status.HTTP_404_NOT_FOUND
+#             }, status=status.HTTP_404_NOT_FOUND)
+
+#         cart_items = CartItem.objects.filter(cart=cart, is_active=True, is_deleted=False)
+#         if not cart_items.exists():
+#             return Response({
+#                 'status': 'failed',
+#                 'message': 'No items in the cart to place an order.',
+#                 'response_code': status.HTTP_400_BAD_REQUEST
+#             }, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Calculate the total amount
+#         total_amount = sum(item.product.price * item.quantity for item in cart_items)
+
+#         # Create the order
+#         order = Order.objects.create(
+#             user=user,
+#             total_amount=total_amount,
+#             payment_method=payment_method,
+#             is_completed=False if payment_method == 'ONLINE' else True,
+#             is_donated=True if order_type == 'donate' else False
+#         )
+
+#         # Create order items from cart items
+#         for item in cart_items:
+#             OrderItem.objects.create(
+#                 order=order,
+#                 product=item.product,
+#                 quantity=item.quantity,
+#                 price=item.product.price
+#             )
+
+#         # Clear the cart
+#         cart_items.delete()
+#         cart.save()
+
+#         # If the order is a donation
+#         if order_type == 'donate':
+#             try:
+#                 disaster = Disaster.objects.get(id=disaster_id)
+#                 pickup_location = PickupLocation.objects.get(id=pickup_location_id)
+#             except Disaster.DoesNotExist:
+#                 return Response({
+#                     'status': 'failed',
+#                     'message': 'Invalid disaster selected.',
+#                     'response_code': status.HTTP_400_BAD_REQUEST
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+#             except PickupLocation.DoesNotExist:
+#                 return Response({
+#                     'status': 'failed',
+#                     'message': 'Invalid pickup location selected.',
+#                     'response_code': status.HTTP_400_BAD_REQUEST
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+
+#             # Assign disaster and pickup location to the order
+#             order.disaster = disaster
+#             order.pickup_location = pickup_location
+#             order.save()
+
+#             if payment_method == 'ONLINE':
+#                 # Integrate with a payment gateway here
+#                 return Response({
+#                     'status': 'success',
+#                     'message': 'Order placed successfully as a donation. Payment will be integrated later.',
+#                     'response_code': status.HTTP_201_CREATED,
+#                     'data': {
+#                         'order': OrderSerializer(order).data,
+#                         # 'payment_url': payment_url  # Placeholder for payment URL
+#                     }
+#                 }, status=status.HTTP_201_CREATED)
+
+#             return Response({
+#                 'status': 'success',
+#                 'message': 'Order placed successfully as a donation.',
+#                 'response_code': status.HTTP_201_CREATED,
+#                 'data': OrderSerializer(order).data
+#             }, status=status.HTTP_201_CREATED)
+
+#         # If the order is for delivery
+#         if order_type == 'delivery':
+#             try:
+#                 address = Address.objects.get(id=address_id, user=user, is_deleted=False)
+#             except Address.DoesNotExist:
+#                 return Response({
+#                     'status': 'failed',
+#                     'message': 'Invalid address selected.',
+#                     'response_code': status.HTTP_400_BAD_REQUEST
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+
+#             # Assign the delivery address to the order
+#             order.delivery_address = address
+#             order.save()
+
+#             if payment_method == 'ONLINE':
+#                 # Integrate with a payment gateway here
+#                 return Response({
+#                     'status': 'success',
+#                     'message': 'Order placed successfully for delivery. Payment will be integrated later.',
+#                     'response_code': status.HTTP_201_CREATED,
+#                     'data': {
+#                         'order': OrderSerializer(order).data,
+#                         # 'payment_url': payment_url  # Placeholder for payment URL
+#                     }
+#                 }, status=status.HTTP_201_CREATED)
+#             order.payment_status='Completed'
+#             return Response({
+#                 'status': 'success',
+#                 'message': 'Order placed successfully for delivery.',
+#                 'response_code': status.HTTP_201_CREATED,
+#                 'data': OrderSerializer(order).data
+#             }, status=status.HTTP_201_CREATED)
+
+#         return Response({
+#             'status': 'failed',
+#             'message': 'Unknown error occurred.',
+#             'response_code': status.HTTP_400_BAD_REQUEST
+#         }, status=status.HTTP_400_BAD_REQUEST)
+#     # def initiate_online_payment(self, order):
+#     #     # Placeholder for initiating an online payment
+#     #     # This should be replaced with actual payment gateway integration code
+#     #     payment_url = "https://payment-gateway-url.com"
+#     #     return payment_url
 class PlaceOrderView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -1060,7 +1224,39 @@ class PlaceOrderView(APIView):
         # Calculate the total amount
         total_amount = sum(item.product.price * item.quantity for item in cart_items)
 
-        # Create the order
+        # Additional validations for donations
+        disaster = None
+        pickup_location = None
+        if order_type == 'donate':
+            try:
+                disaster = Disaster.objects.get(id=disaster_id)
+                pickup_location = PickupLocation.objects.get(id=pickup_location_id)
+            except Disaster.DoesNotExist:
+                return Response({
+                    'status': 'failed',
+                    'message': 'Invalid disaster selected.',
+                    'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
+            except PickupLocation.DoesNotExist:
+                return Response({
+                    'status': 'failed',
+                    'message': 'Invalid pickup location selected.',
+                    'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Additional validations for delivery
+        address = None
+        if order_type == 'delivery':
+            try:
+                address = Address.objects.get(id=address_id, user=user, is_deleted=False)
+            except Address.DoesNotExist:
+                return Response({
+                    'status': 'failed',
+                    'message': 'Invalid address selected.',
+                    'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        # If all validations pass, create the order
         order = Order.objects.create(
             user=user,
             total_amount=total_amount,
@@ -1082,38 +1278,19 @@ class PlaceOrderView(APIView):
         cart_items.delete()
         cart.save()
 
-        # If the order is a donation
+        # Handle donations
         if order_type == 'donate':
-            try:
-                disaster = Disaster.objects.get(id=disaster_id)
-                pickup_location = PickupLocation.objects.get(id=pickup_location_id)
-            except Disaster.DoesNotExist:
-                return Response({
-                    'status': 'failed',
-                    'message': 'Invalid disaster selected.',
-                    'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
-            except PickupLocation.DoesNotExist:
-                return Response({
-                    'status': 'failed',
-                    'message': 'Invalid pickup location selected.',
-                    'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Assign disaster and pickup location to the order
             order.disaster = disaster
             order.pickup_location = pickup_location
             order.save()
 
             if payment_method == 'ONLINE':
-                # Integrate with a payment gateway here
                 return Response({
                     'status': 'success',
                     'message': 'Order placed successfully as a donation. Payment will be integrated later.',
                     'response_code': status.HTTP_201_CREATED,
                     'data': {
                         'order': OrderSerializer(order).data,
-                        # 'payment_url': payment_url  # Placeholder for payment URL
                     }
                 }, status=status.HTTP_201_CREATED)
 
@@ -1124,33 +1301,22 @@ class PlaceOrderView(APIView):
                 'data': OrderSerializer(order).data
             }, status=status.HTTP_201_CREATED)
 
-        # If the order is for delivery
+        # Handle deliveries
         if order_type == 'delivery':
-            try:
-                address = Address.objects.get(id=address_id, user=user, is_deleted=False)
-            except Address.DoesNotExist:
-                return Response({
-                    'status': 'failed',
-                    'message': 'Invalid address selected.',
-                    'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Assign the delivery address to the order
             order.delivery_address = address
             order.save()
 
             if payment_method == 'ONLINE':
-                # Integrate with a payment gateway here
                 return Response({
                     'status': 'success',
                     'message': 'Order placed successfully for delivery. Payment will be integrated later.',
                     'response_code': status.HTTP_201_CREATED,
                     'data': {
                         'order': OrderSerializer(order).data,
-                        # 'payment_url': payment_url  # Placeholder for payment URL
                     }
                 }, status=status.HTTP_201_CREATED)
-            order.payment_status='Completed'
+
+            order.payment_status = 'Completed'
             return Response({
                 'status': 'success',
                 'message': 'Order placed successfully for delivery.',
@@ -1163,11 +1329,6 @@ class PlaceOrderView(APIView):
             'message': 'Unknown error occurred.',
             'response_code': status.HTTP_400_BAD_REQUEST
         }, status=status.HTTP_400_BAD_REQUEST)
-    # def initiate_online_payment(self, order):
-    #     # Placeholder for initiating an online payment
-    #     # This should be replaced with actual payment gateway integration code
-    #     payment_url = "https://payment-gateway-url.com"
-    #     return payment_url
 
 
 
