@@ -1200,7 +1200,7 @@ class UpdateOrderStatusView(APIView):
         except Order.DoesNotExist:
             return Response({
                 'status': 'failed',
-                'message': 'Order not found or does not belong to you.',
+                'message': 'Order not found',
                 'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
