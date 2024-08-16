@@ -1204,15 +1204,15 @@ class UpdateOrderStatusView(APIView):
                 'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
-        status = request.data.get('status')
-        if status not in dict(Order.STATUS_CHOICES):
+        order_status = request.data.get('order_status')
+        if order_status not in dict(Order.STATUS_CHOICES):
             return Response({
                 'status': 'failed',
                 'message': 'Invalid status.',
                 'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        order.status = status
+        order.order_status = order_status
         order.save()
 
         return Response({

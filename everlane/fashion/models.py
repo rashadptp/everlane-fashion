@@ -246,7 +246,7 @@ class Order(models.Model):
     is_completed = models.BooleanField(default=False)
     payment_method = models.CharField(max_length=10, choices=PAYMENT_METHODS,default='COD')
     payment_status = models.CharField(max_length=20, default='Pending')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    order_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
 
     is_donated = models.BooleanField(default=False)
     disaster = models.ForeignKey(Disaster, related_name='donated_items', null=True, blank=True, on_delete=models.SET_NULL)
