@@ -1196,7 +1196,7 @@ class UpdateOrderStatusView(APIView):
 
     def patch(self, request, order_id):
         try:
-            order = Order.objects.get(id=order_id, user=request.user)
+            order = Order.objects.get(id=order_id)
         except Order.DoesNotExist:
             return Response({
                 'status': 'failed',
