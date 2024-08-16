@@ -1245,7 +1245,6 @@ class PlaceOrderView(APIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
         # Additional validations for delivery
-        address = None
         if order_type == 'delivery':
             try:
                 address = Address.objects.get(id=address_id, user=user, is_deleted=False)
