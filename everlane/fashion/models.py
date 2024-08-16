@@ -311,14 +311,15 @@ class Cart(models.Model):
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, related_name='cart_items', on_delete=models.CASCADE)
+    # product = models.ForeignKey(Product, related_name='cart_items', on_delete=models.CASCADE)
+    product_item = models.ForeignKey(ProductItem, related_name='cart_items', on_delete=models.CASCADE,null=True)
     quantity = models.PositiveIntegerField(default=1)
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return f"{self.quantity} of {self.product.name} in {self.cart.user.username}'s cart"
+        return f"{self.quantity} of {self.product_item.product.name} ({self.product_item.get_size_display()}) in {self.cart.user.username}'s cart"
     
 #banner model
 from django.db import models

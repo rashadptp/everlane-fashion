@@ -417,24 +417,64 @@ class CartListView(generics.ListCreateAPIView):
 #     queryset = Cart.objects.all()
 #     serializer_class = CartSerializer
 
+# class AddToCartView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request, *args, **kwargs):
+#         user = request.user
+#         product_id = request.data.get('product_id')
+#         quantity = int(request.data.get('quantity', 1))  # Ensure quantity is an integer
+
+#         try:
+#             product = Product.objects.get(id=product_id)
+#         except Product.DoesNotExist:
+#             return Response({'status': 'failed', 'message': 'Product not found.', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+
+#         # Retrieve or create the cart for the user
+#         cart, created = Cart.objects.get_or_create(user=user)
+
+#         # Retrieve or create the cart item
+#         cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+
+#         if not created:
+#             # Item already exists in cart, update the quantity
+#             cart_item.quantity += quantity
+#             cart_item.save()
+#             message = 'Quantity updated for the item in cart.'
+#         else:
+#             cart_item.quantity = quantity
+#             cart_item.save()
+#             message = 'Item added to cart.'
+        
+#         cart.total_price = sum(item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
+#         cart.save()
+
+#         return Response({
+#             'status': 'success',
+#             'message': message,
+#             'response_code': status.HTTP_200_OK,
+#             'data': CartSerializer(cart).data  # Optional: Return the updated cart data
+#         }, status=status.HTTP_200_OK)
+    
 class AddToCartView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         user = request.user
         product_id = request.data.get('product_id')
+        size = request.data.get('size')
         quantity = int(request.data.get('quantity', 1))  # Ensure quantity is an integer
 
         try:
-            product = Product.objects.get(id=product_id)
-        except Product.DoesNotExist:
-            return Response({'status': 'failed', 'message': 'Product not found.', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            product_item = ProductItem.objects.get(product_id=product_id, size=size)
+        except ProductItem.DoesNotExist:
+            return Response({'status': 'failed', 'message': 'Product with this size not found.', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         # Retrieve or create the cart for the user
         cart, created = Cart.objects.get_or_create(user=user)
 
         # Retrieve or create the cart item
-        cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+        cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product_item.product)
 
         if not created:
             # Item already exists in cart, update the quantity
@@ -445,7 +485,7 @@ class AddToCartView(APIView):
             cart_item.quantity = quantity
             cart_item.save()
             message = 'Item added to cart.'
-        
+
         cart.total_price = sum(item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
         cart.save()
 
@@ -455,7 +495,6 @@ class AddToCartView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': CartSerializer(cart).data  # Optional: Return the updated cart data
         }, status=status.HTTP_200_OK)
-    
 
 class CartItemDeleteView(APIView):
     permission_classes = [IsAuthenticated]
