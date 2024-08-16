@@ -80,6 +80,7 @@ WSGI_APPLICATION = 'everlane.wsgi.application'
 load_dotenv()
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -148,5 +149,18 @@ REST_FRAMEWORK = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# #email configuration
+
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'  # Replace with your SMTP server
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'anuradhakrishnanav2002@gmail.com'  # Your email address
+# EMAIL_HOST_PASSWORD = 'ixyi qzxp gmfq zppb'  # Your email account password
+# DEFAULT_FROM_EMAIL = 'anuradhakrishnanav2002@gmail.com'
+
+
 
 

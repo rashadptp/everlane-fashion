@@ -339,6 +339,20 @@ class Banner(models.Model):
 
 
 
+# from django.db.models.signals import post_save
+# from django.dispatch import receiver
+# from .models import Order
+# from .tasks import send_order_status_email
+
+# @receiver(post_save, sender=Order)
+# def order_status_change(sender, instance, **kwargs):
+#     if instance.status in ['Pending', 'Processing', 'Completed']:
+#         send_order_status_email.delay(instance.user.email, instance.status)
+
+
+
+
+
 
 
 
