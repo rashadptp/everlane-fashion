@@ -150,7 +150,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','order_status','items',
                   'is_donated', 'disaster', 'disaster_name',
-            'pickup_location', 'pickup_location_address', 'is_paid']
+            'pickup_location', 'pickup_location_address', 'is_paid','delivery_address']
 
 
 class ReturnSerializer(serializers.ModelSerializer):
