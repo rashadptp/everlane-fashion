@@ -486,7 +486,11 @@ class AddToCartView(APIView):
             cart_item.save()
             message = 'Item added to cart.'
 
-        cart.total_price = sum(item.product_item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
+        cart.total_price = sum(
+            item.product_item.product.price * item.quantity 
+            for item in cart.items.filter(is_active=True, is_deleted=False)
+            if item.product_item  # Make sure product_item is not None
+        )
         cart.save()
 
         return Response({
