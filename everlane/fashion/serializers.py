@@ -280,7 +280,7 @@ class DressDonationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DressDonation
-        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images', 'pickup_location', 'donated_on', 'donor_name']
+        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses',  'pickup_location', 'donated_on', 'donor_name'] #'images',
 
     def get_images(self, obj):
         """
