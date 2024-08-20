@@ -7,7 +7,8 @@ from .permissions import IsAdminUser
 from .serializers import *
 import joblib
 import pandas as pd
-
+import json
+from django.core.serializers.json import DjangoJSONEncoder
 #register view
 
 class RegisterUserView(generics.CreateAPIView):
@@ -1319,7 +1320,19 @@ class PlaceOrderView(APIView):
                 quantity=item.quantity,
                 price=item.product_item.product.price
             )
-
+        cart_items_data = []
+        for item in cart_items:
+            cart_items_data.append({
+                'product_item': item.product_item.id,
+                'quantity': item.quantity,
+                'price': str(item.product_item.product.price),
+                # Add any other fields you want to store
+            })
+        
+        CartHistory.objects.create(
+            user=user,
+            cart_data=json.dumps(cart_items_data, cls=DjangoJSONEncoder)
+        )
         # Clear the cart
         cart_items.delete()
         cart.save()
