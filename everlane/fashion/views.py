@@ -1284,13 +1284,13 @@ class PlaceOrderView(APIView):
             'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        pickup_location = PickupLocation.objects.filter(id=pickup_location_id)
-        if not pickup_location.exists():
-            return Response({
-            'status': 'failed',
-            'message': 'Invalid pickup location selected.',
-            'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            pickup_location = PickupLocation.objects.filter(id=pickup_location_id)
+            if not pickup_location.exists():
+                return Response({
+                'status': 'failed',
+                'message': 'Invalid pickup location selected.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
         
         
 
