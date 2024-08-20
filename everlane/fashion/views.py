@@ -1017,8 +1017,8 @@ class AddressListView(generics.ListAPIView):
             return Response({
                 'status': 'failed',
                 'message': 'No addresses found.',
-                'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+                'response_code': status.HTTP_200_OK
+            }, status=status.HTTP_200_OK)
 
 
 class AddressCreateView(generics.CreateAPIView):
