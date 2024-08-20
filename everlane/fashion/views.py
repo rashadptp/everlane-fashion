@@ -1263,33 +1263,39 @@ class PlaceOrderView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         # Calculate the total amount
-        total_amount = sum(item.product_item.product.price * item.quantity for item in cart_items)
+        total_amount = 0 
+
+        for item in cart_items:
+            product_price = item.product_item.product.price  
+            quantity = item.quantity  
+            total_amount += product_price * quantity
+        
 
         # Additional validations for donations
         disaster = None
         pickup_location = None
-        if order_type == 'donate':
-            try:
-                disaster = Disaster.objects.get(id=disaster_id)
-                pickup_location = PickupLocation.objects.get(id=pickup_location_id)
-            except Disaster.DoesNotExist:
+        if order_type== 'donate':
+            disaster = Disaster.objects.filter(id=disaster_id)
+            if not disaster.exists():
                 return Response({
-                    'status': 'failed',
-                    'message': 'Invalid disaster selected.',
-                    'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
-            except PickupLocation.DoesNotExist:
-                return Response({
-                    'status': 'failed',
-                    'message': 'Invalid pickup location selected.',
-                    'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
+            'status': 'failed',
+            'message': 'Invalid disaster selected.',
+            'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Additional validations for delivery
+        pickup_location = PickupLocation.objects.filter(id=pickup_location_id)
+        if not pickup_location.exists():
+            return Response({
+            'status': 'failed',
+            'message': 'Invalid pickup location selected.',
+            'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+
         if order_type == 'delivery':
-            try:
-                address = Address.objects.get(id=address_id, user=user, is_deleted=False)
-            except Address.DoesNotExist:
+            address = Address.objects.filter(id=address_id, user=user, is_deleted=False)
+            if not address.exists():
                 return Response({
                     'status': 'failed',
                     'message': 'Invalid address selected.',
@@ -1357,6 +1363,7 @@ class PlaceOrderView(APIView):
                 }, status=status.HTTP_201_CREATED)
 
             order.payment_status = 'Completed'
+            order.save()
             return Response({
                 'status': 'success',
                 'message': 'Order placed successfully for delivery.',
