@@ -1277,7 +1277,7 @@ class PlaceOrderView(APIView):
         pickup_location = None
         if order_type== 'donate':
             disaster = Disaster.objects.filter(id=disaster_id).first()
-            if not disaster.exists():
+            if not disaster:
                 return Response({
             'status': 'failed',
             'message': 'Invalid disaster selected.',
@@ -1285,7 +1285,7 @@ class PlaceOrderView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
             pickup_location = PickupLocation.objects.filter(id=pickup_location_id).first()
-            if not pickup_location.exists():
+            if not pickup_location:
                 return Response({
                 'status': 'failed',
                 'message': 'Invalid pickup location selected.',
@@ -1296,7 +1296,7 @@ class PlaceOrderView(APIView):
 
         if order_type == 'delivery':
             address = Address.objects.filter(id=address_id, user=user, is_deleted=False).first()
-            if not address.exists():
+            if not address:
                 return Response({
                     'status': 'failed',
                     'message': 'Invalid address selected.',
