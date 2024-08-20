@@ -1550,13 +1550,13 @@ class RequestReturnView(APIView):
         order_item_id = request.data.get('order_item_id')
         return_reason = request.data.get('return_reason')
 
-        try:
-            order_item = OrderItem.objects.get(id=order_item_id, order__user=request.user)
-        except OrderItem.DoesNotExist:
+        order_item = OrderItem.objects.filter(id=order_item_id, order__user=request.user).first()
+
+        if not order_item:
             return Response({
-                'status': 'failed',
-                'message': 'Order item not found or does not belong to you.',
-                'response_code': status.HTTP_404_NOT_FOUND
+            'status': 'failed',
+            'message': 'Order item not found or does not belong to you.',
+            'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
         if order_item.is_returned:
@@ -1587,13 +1587,13 @@ class ProcessReturnView(APIView):
         order_item_id = request.data.get('order_item_id')
         action = request.data.get('action')  # 'approve' or 'reject'
 
-        try:
-            order_item = OrderItem.objects.get(id=order_item_id)
-        except OrderItem.DoesNotExist:
+        order_item = OrderItem.objects.filter(id=order_item_id).first()
+
+        if not order_item:
             return Response({
-                'status': 'failed',
-                'message': 'Order item not found.',
-                'response_code': status.HTTP_404_NOT_FOUND
+            'status': 'failed',
+            'message': 'Order item not found.',
+            'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
         if not order_item.is_returned:
@@ -1847,14 +1847,14 @@ class DisasterDonationsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, disaster_id, *args, **kwargs):
-        try:
-            disaster = Disaster.objects.get(id=disaster_id)
-        except Disaster.DoesNotExist:
+        disaster = Disaster.objects.filter(id=disaster_id).first()
+        if not disaster:
             return Response({
-                'status': 'failed',
-                'message': 'Disaster not found.',
-                'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            'status': 'failed',
+            'message': 'Disaster not found.',
+            'response_code': status.HTTP_404_NOT_FOUND
+        }, status=status.HTTP_404_NOT_FOUND)
+
 
         # Ensure the user is the one who registered the disaster or an admin
         if not (request.user == disaster.user or request.user.is_staff):
