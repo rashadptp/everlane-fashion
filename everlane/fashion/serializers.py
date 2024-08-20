@@ -272,43 +272,43 @@ class ImageUploadModelSerializer(serializers.ModelSerializer):
 
 class DressDonationSerializer(serializers.ModelSerializer):
     donor_name = serializers.CharField(source='user.username', read_only=True)
-    # images = serializers.ListField(
-    #     child=serializers.ImageField(max_length=100, allow_empty_file=False, use_url=True),
-    #     allow_empty=False,
-    #     write_only=True
-    # )
+    images = serializers.ListField(
+        child=serializers.ImageField(max_length=100, allow_empty_file=False, use_url=True),
+        allow_empty=False,
+        write_only=True
+    )
 
     class Meta:
         model = DressDonation
-        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses',  'pickup_location', 'donated_on', 'donor_name'] #'images',
+        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images', 'pickup_location', 'donated_on', 'donor_name']
 
-    # def get_images(self, obj):
-    #     """
-    #     Return URLs of the uploaded images.
-    #     """
-    #     return [image.image.url for image in obj.images.all()]
+    def get_images(self, obj):
+        """
+        Return URLs of the uploaded images.
+        """
+        return [image.image.url for image in obj.images.all()]
 
 
-    # def validate_images(self, value):
-    #     """
-    #     Ensure at least 5 images are uploaded.
-    #     """
-    #     if len(value) < 5:
-    #         raise serializers.ValidationError("You must upload at least 5 dress images.")
-    #     return value
+    def validate_images(self, value):
+        """
+        Ensure at least 5 images are uploaded.
+        """
+        if len(value) < 5:
+            raise serializers.ValidationError("You must upload at least 5 dress images.")
+        return value
 
-    # def create(self, validated_data):
-    #     images_data = validated_data.pop('images')
+    def create(self, validated_data):
+        images_data = validated_data.pop('images')
 
-    #     donation = DressDonation.objects.create(**validated_data)
+        donation = DressDonation.objects.create(**validated_data)
         
-    #     image_instances = []
-    #     for image_data in images_data:
-    #         image_instance = ImageUploadModel.objects.create(image=image_data)
-    #         image_instances.append(image_instance)
+        image_instances = []
+        for image_data in images_data:
+            image_instance = ImageUploadModel.objects.create(image=image_data)
+            image_instances.append(image_instance)
         
-    #     donation.images.set(image_instances)
-    #     return donation
+        donation.images.set(image_instances)
+        return donation
 
 
 
