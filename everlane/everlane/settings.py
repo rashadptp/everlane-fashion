@@ -18,6 +18,7 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -151,15 +152,16 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
-# #email configuration
+###celery settings### 
 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'  # Replace with your SMTP server
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'anuradhakrishnanav2002@gmail.com'  # Your email address
-# EMAIL_HOST_PASSWORD = 'ixyi qzxp gmfq zppb'  # Your email account password
-# DEFAULT_FROM_EMAIL = 'anuradhakrishnanav2002@gmail.com'
+# ADD
+
+
+
+
+
+
+
 
 
 

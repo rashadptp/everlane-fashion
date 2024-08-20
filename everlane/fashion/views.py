@@ -844,8 +844,9 @@ class WishlistListView(generics.ListAPIView):
                 'data': []
             }, status=status.HTTP_200_OK)
 
+#Add to wishlist view
 
-# #Add to wishlist view
+
 
 
 from rest_framework import status
@@ -1190,6 +1191,7 @@ class OrderListView(generics.ListAPIView):
             'data': serializer.data
         })
 
+# from .tasks import send_order_status_email
 
 class UpdateOrderStatusView(APIView):
     permission_classes = [IsAuthenticated,IsAdminUser]
@@ -1205,6 +1207,8 @@ class UpdateOrderStatusView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
         order_status = request.data.get('order_status')
+        
+
         if order_status not in dict(Order.STATUS_CHOICES):
             return Response({
                 'status': 'failed',
@@ -1215,6 +1219,13 @@ class UpdateOrderStatusView(APIView):
         order.order_status = order_status
         order.save()
 
+        # # Trigger the email sending task
+        # print(f"Order ID: {order.id}, User Email: {order.user.email}, Order Status: {order.order_status}")   
+        # send_order_status_email(order.id, order.user.email, order.order_status)
+        
+
+
+        
         return Response({
             'status': 'success',
             'message': 'Order status updated successfully.',
@@ -1453,6 +1464,7 @@ class ProfileUpdateView(APIView):
                 'response_code': status.HTTP_200_OK,
                 'data': serializer.data
             }, status=status.HTTP_200_OK)
+
         return Response({
             'status': 'error',
             'message': 'Profile update failed.',
@@ -1493,6 +1505,7 @@ class PasswordChangeView(APIView):
 
 
 ###############################################    DONATION      ##########################################################
+
 class DisasterListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -1557,6 +1570,107 @@ class ApproveDisasterView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': DisasterSerializer(disaster).data
         }, status=status.HTTP_200_OK)
+
+
+#Dress Donation with quality check
+
+# import tensorflow as tf
+# from rest_framework.views import APIView
+# from rest_framework.response import Response
+# from rest_framework.parsers import MultiPartParser, FormParser
+# from PIL import Image
+# import numpy as np
+# from .models import Disaster, DressDonation
+# from .serializers import DressDonationSerializer
+# from rest_framework.permissions import IsAuthenticated
+# from rest_framework import status
+
+# # Load the pre-trained models
+
+# from google.colab import drive
+# drive.mount('/content/drive')
+
+# model_dirty = tf.keras.models.load_model("/content/drive/My Drive/quality_check2.h5")
+# model_torn = tf.keras.models.load_model("/content/drive/My Drive//quality_check3.h5")
+
+# def preprocess_image(image):
+#     image = image.resize((100, 100))  # Resize the image to match the model's expected input size
+#     image = np.array(image)
+#     image = image / 255.0  # Normalize the image
+#     image = np.expand_dims(image, axis=0)
+#     return image
+
+# class DressDonationCreateView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     parser_classes = (MultiPartParser, FormParser)
+
+#     def post(self, request, *args, **kwargs):
+#         serializer = DressDonationSerializer(data=request.data)
+        
+#         if serializer.is_valid():
+#             disaster = serializer.validated_data['disaster']
+            
+#             # Handle image file
+#             image = request.FILES.get('image')
+#             if image:
+#                 img = Image.open(image)
+#                 processed_img = preprocess_image(img)
+                
+#                 # Predict using the models
+#                 dirty_prediction = model_dirty.predict(processed_img)[0][0]
+#                 torn_prediction = model_torn.predict(processed_img)[0][0]
+                
+#                 # Determine the quality based on the model predictions
+#                 quality = "Normal Dress"
+#                 if dirty_prediction > 0.5:
+#                     quality = "Dirty Dress"
+#                 elif torn_prediction > 0.5:
+#                     quality = "Torn Dress"
+                
+#                 # Optionally, include the quality in the donation record
+#                 serializer.validated_data['quality'] = quality
+#             else:
+#                 return Response({"error": "No image provided"}, status=status.HTTP_400_BAD_REQUEST)
+            
+#             men_dresses = serializer.validated_data.get('men_dresses', 0)
+#             women_dresses = serializer.validated_data.get('women_dresses', 0)
+#             kids_dresses = serializer.validated_data.get('kids_dresses', 0)
+            
+#             if (disaster.fulfilled_men_dresses + men_dresses > disaster.required_men_dresses or
+#                 disaster.fulfilled_women_dresses + women_dresses > disaster.required_women_dresses or
+#                 disaster.fulfilled_kids_dresses + kids_dresses > disaster.required_kids_dresses):
+#                 return Response({
+#                     'status': 'failed',
+#                     'message': 'Donation exceeds the required dresses for this disaster.',
+#                     'response_code': status.HTTP_400_BAD_REQUEST
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+            
+#             # Record the donation
+#             donation = serializer.save(user=request.user)
+
+#             # Update the disaster's fulfillment status
+#             disaster.update_fulfillment(men_dresses, women_dresses, kids_dresses)
+
+#             return Response({
+#                 'status': 'success',
+#                 'message': 'Dress donation recorded successfully.',
+#                 'response_code': status.HTTP_201_CREATED,
+#                 'data': DressDonationSerializer(donation).data
+#             }, status=status.HTTP_201_CREATED)
+
+#         return Response({
+#             'status': 'failed',
+#             'message': 'Invalid data.',
+#             'response_code': status.HTTP_400_BAD_REQUEST,
+#             'errors': serializer.errors
+#         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+#Dress Donation without using quality check
 
 
 class DressDonationCreateView(APIView):
@@ -1679,3 +1793,16 @@ class UserDisastersView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         }, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
+
+
+
