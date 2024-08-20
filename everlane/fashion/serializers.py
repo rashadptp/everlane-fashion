@@ -135,12 +135,15 @@ class SeosonSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','winter','summer','rainy','autumn']
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product_name = serializers.ReadOnlyField(source='product.name')
+    product_name = serializers.ReadOnlyField(source='product_item.product.name')
+    product_price = serializers.ReadOnlyField(source='product_item.product.price')
+    product_image = serializers.ImageField(source='product_item.product.image', read_only=True)
+    size = serializers.ReadOnlyField(source='product_item.size')
     
     
     class Meta:
         model = OrderItem
-        fields = ['id', 'product','product_name', 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
+        fields = ['id', 'product_item','product_name', 'quantity', 'price','return_status','size','product_image','product_price','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
     
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -151,7 +154,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','order_status','items',
                   'is_donated', 'disaster', 'disaster_name',
-            'pickup_location', 'pickup_location_address', 'is_paid']
+            'pickup_location', 'pickup_location_address', 'is_paid','delivery_address']
 
 
 class ReturnSerializer(serializers.ModelSerializer):
@@ -174,13 +177,14 @@ class WishlistSerializer(serializers.ModelSerializer):
 
 
 class CartItemSerializer(serializers.ModelSerializer):
-    product_name = serializers.ReadOnlyField(source='product.name')
-    product_price = serializers.ReadOnlyField(source='product.price')
-    product_image = serializers.ImageField(source='product.image', read_only=True) 
+    product_name = serializers.ReadOnlyField(source='product_item.product.name')
+    product_price = serializers.ReadOnlyField(source='product_item.product.price')
+    product_image = serializers.ImageField(source='product_item.product.image', read_only=True)
+    size = serializers.ReadOnlyField(source='product_item.size')
 
     class Meta:
         model = CartItem
-        fields = ['id', 'product','product_name', 'product_price', 'quantity','is_active','is_deleted','created_on','product_image']
+        fields = ['id', 'product_item', 'product_name', 'product_price', 'quantity', 'is_active', 'is_deleted', 'created_on', 'product_image', 'size']
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
@@ -229,7 +233,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'mobile', 'old_password', 'new_password']
+        fields = ['id', 'username','first_name', 'last_name', 'email', 'mobile', 'old_password', 'new_password']
 
     def update(self, instance, validated_data):
         # Handle password change

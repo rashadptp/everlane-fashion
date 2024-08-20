@@ -7,7 +7,8 @@ from .permissions import IsAdminUser
 from .serializers import *
 import joblib
 import pandas as pd
-
+import json
+from django.core.serializers.json import DjangoJSONEncoder
 #register view
 
 class RegisterUserView(generics.CreateAPIView):
@@ -417,24 +418,64 @@ class CartListView(generics.ListCreateAPIView):
 #     queryset = Cart.objects.all()
 #     serializer_class = CartSerializer
 
+# class AddToCartView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request, *args, **kwargs):
+#         user = request.user
+#         product_id = request.data.get('product_id')
+#         quantity = int(request.data.get('quantity', 1))  # Ensure quantity is an integer
+
+#         try:
+#             product = Product.objects.get(id=product_id)
+#         except Product.DoesNotExist:
+#             return Response({'status': 'failed', 'message': 'Product not found.', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+
+#         # Retrieve or create the cart for the user
+#         cart, created = Cart.objects.get_or_create(user=user)
+
+#         # Retrieve or create the cart item
+#         cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+
+#         if not created:
+#             # Item already exists in cart, update the quantity
+#             cart_item.quantity += quantity
+#             cart_item.save()
+#             message = 'Quantity updated for the item in cart.'
+#         else:
+#             cart_item.quantity = quantity
+#             cart_item.save()
+#             message = 'Item added to cart.'
+        
+#         cart.total_price = sum(item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
+#         cart.save()
+
+#         return Response({
+#             'status': 'success',
+#             'message': message,
+#             'response_code': status.HTTP_200_OK,
+#             'data': CartSerializer(cart).data  # Optional: Return the updated cart data
+#         }, status=status.HTTP_200_OK)
+    
 class AddToCartView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         user = request.user
         product_id = request.data.get('product_id')
+        size = request.data.get('size')
         quantity = int(request.data.get('quantity', 1))  # Ensure quantity is an integer
 
         try:
-            product = Product.objects.get(id=product_id)
-        except Product.DoesNotExist:
-            return Response({'status': 'failed', 'message': 'Product not found.', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            product_item = ProductItem.objects.get(product_id=product_id, size=size)
+        except ProductItem.DoesNotExist:
+            return Response({'status': 'failed', 'message': 'Please select the size', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         # Retrieve or create the cart for the user
         cart, created = Cart.objects.get_or_create(user=user)
 
         # Retrieve or create the cart item
-        cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+        cart_item, created = CartItem.objects.get_or_create(cart=cart, product_item=product_item)
 
         if not created:
             # Item already exists in cart, update the quantity
@@ -445,8 +486,12 @@ class AddToCartView(APIView):
             cart_item.quantity = quantity
             cart_item.save()
             message = 'Item added to cart.'
-        
-        cart.total_price = sum(item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
+
+        cart.total_price = sum(
+            item.product_item.product.price * item.quantity 
+            for item in cart.items.filter(is_active=True, is_deleted=False)
+            if item.product_item  # Make sure product_item is not None
+        )
         cart.save()
 
         return Response({
@@ -455,7 +500,6 @@ class AddToCartView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': CartSerializer(cart).data  # Optional: Return the updated cart data
         }, status=status.HTTP_200_OK)
-    
 
 class CartItemDeleteView(APIView):
     permission_classes = [IsAuthenticated]
@@ -480,7 +524,7 @@ class CartItemDeleteView(APIView):
         cart_item.delete()
 
         # Recalculate the total price of the cart
-        cart.total_price = sum(item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
+        cart.total_price = sum(item.product_item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
         cart.save()
 
         return Response({
@@ -530,7 +574,7 @@ class UpdateCartItemQuantityView(APIView):
 
         # Update the total price of the cart
         cart = cart_item.cart
-        cart.total_price = sum(item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
+        cart.total_price = sum(item.product_item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
         cart.save()
 
         return Response({
@@ -539,8 +583,6 @@ class UpdateCartItemQuantityView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': CartSerializer(cart).data  # Return the updated cart data
         }, status=status.HTTP_200_OK)
-
-
 
 #Banner views
 
@@ -859,40 +901,67 @@ class AddWishlistView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        serializer = WishlistSerializer(data=request.data)
-        if serializer.is_valid():
-            
-            wishlist = serializer.save(user=request.user)
+        product_id = request.data.get('product_id')
+        
+        if not product_id:
             return Response({
-                'status': 'success',
-                'message': 'Product added to wishlist successfully.',
-                'response_code': status.HTTP_201_CREATED,
-                'data': WishlistSerializer(wishlist).data
-            }, status=status.HTTP_201_CREATED)
+                'status': 'failed',
+                'message': 'Product ID is required.',
+                'response_code': status.HTTP_400_BAD_REQUEST,
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Product not found.',
+                'response_code': status.HTTP_404_NOT_FOUND,
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Check if the product is already in the wishlist
+        if Wishlist.objects.filter(user=request.user, product=product).exists():
+            return Response({
+                'status': 'failed',
+                'message': 'Product already in wishlist.',
+                'response_code': status.HTTP_400_BAD_REQUEST,
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Create a wishlist item
+        wishlist = Wishlist.objects.create(user=request.user, product=product)
         
         return Response({
-            'status': 'failed',
-            'message': 'Failed to add product to wishlist.',
-            'response_code': status.HTTP_400_BAD_REQUEST,
-            'data': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+            'status': 'success',
+            'message': 'Product added to wishlist successfully.',
+            'response_code': status.HTTP_201_CREATED,
+            'data': WishlistSerializer(wishlist).data
+        }, status=status.HTTP_201_CREATED)
 
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from .models import Wishlist, Product  # Import the Wishlist and Product models
 
 class DeleteWishlistView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def delete(self, request, pk, *args, **kwargs):
+    def delete(self, request, product_id, *args, **kwargs):
         try:
-        
-            wishlist_item = Wishlist.objects.get(pk=pk, user=request.user)
+            product = Product.objects.get(id=product_id)
+            wishlist_item = Wishlist.objects.get(product=product, user=request.user)
+        except Product.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Product not found.',
+                'response_code': status.HTTP_404_NOT_FOUND,
+            }, status=status.HTTP_404_NOT_FOUND)
         except Wishlist.DoesNotExist:
-          
             return Response({
                 'status': 'failed',
                 'message': 'Wishlist item not found.',
                 'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
-        
         
         wishlist_item.delete()
         
@@ -901,7 +970,6 @@ class DeleteWishlistView(APIView):
             'message': 'Wishlist item deleted successfully.',
             'response_code': status.HTTP_200_OK
         }, status=status.HTTP_200_OK)
-
 
 #Address view
 
@@ -950,8 +1018,8 @@ class AddressListView(generics.ListAPIView):
             return Response({
                 'status': 'failed',
                 'message': 'No addresses found.',
-                'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+                'response_code': status.HTTP_200_OK
+            }, status=status.HTTP_200_OK)
 
 
 class AddressCreateView(generics.CreateAPIView):
@@ -1005,6 +1073,170 @@ class AddressDeleteView(generics.DestroyAPIView):
 
 
 
+# class PlaceOrderView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request, *args, **kwargs):
+#         user = request.user
+#         payment_method = request.data.get('payment_method')
+#         order_type = request.data.get('order_type')  # 'delivery' or 'donate'
+#         address_id = request.data.get('address_id')  # For delivery option
+#         disaster_id = request.data.get('disaster_id')  # For donation option
+#         pickup_location_id = request.data.get('pickup_location_id')  # For donation option
+
+#         # Validate payment method
+#         if payment_method not in ['COD', 'ONLINE']:
+#             return Response({
+#                 'status': 'failed',
+#                 'message': 'Invalid payment method.',
+#                 'response_code': status.HTTP_400_BAD_REQUEST
+#             }, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Validate order type
+#         if order_type not in ['delivery', 'donate']:
+#             return Response({
+#                 'status': 'failed',
+#                 'message': 'Invalid order type.',
+#                 'response_code': status.HTTP_400_BAD_REQUEST
+#             }, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Restrict COD for donations
+#         if order_type == 'donate' and payment_method == 'COD':
+#             return Response({
+#                 'status': 'failed',
+#                 'message': 'COD is not available for donations.',
+#                 'response_code': status.HTTP_400_BAD_REQUEST
+#             }, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Get the user's active cart
+#         try:
+#             cart = Cart.objects.get(user=user, is_active=True, is_deleted=False)
+#         except Cart.DoesNotExist:
+#             return Response({
+#                 'status': 'failed',
+#                 'message': 'No active cart found for the user.',
+#                 'response_code': status.HTTP_404_NOT_FOUND
+#             }, status=status.HTTP_404_NOT_FOUND)
+
+#         cart_items = CartItem.objects.filter(cart=cart, is_active=True, is_deleted=False)
+#         if not cart_items.exists():
+#             return Response({
+#                 'status': 'failed',
+#                 'message': 'No items in the cart to place an order.',
+#                 'response_code': status.HTTP_400_BAD_REQUEST
+#             }, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Calculate the total amount
+#         total_amount = sum(item.product.price * item.quantity for item in cart_items)
+
+#         # Create the order
+#         order = Order.objects.create(
+#             user=user,
+#             total_amount=total_amount,
+#             payment_method=payment_method,
+#             is_completed=False if payment_method == 'ONLINE' else True,
+#             is_donated=True if order_type == 'donate' else False
+#         )
+
+#         # Create order items from cart items
+#         for item in cart_items:
+#             OrderItem.objects.create(
+#                 order=order,
+#                 product=item.product,
+#                 quantity=item.quantity,
+#                 price=item.product.price
+#             )
+
+#         # Clear the cart
+#         cart_items.delete()
+#         cart.save()
+
+#         # If the order is a donation
+#         if order_type == 'donate':
+#             try:
+#                 disaster = Disaster.objects.get(id=disaster_id)
+#                 pickup_location = PickupLocation.objects.get(id=pickup_location_id)
+#             except Disaster.DoesNotExist:
+#                 return Response({
+#                     'status': 'failed',
+#                     'message': 'Invalid disaster selected.',
+#                     'response_code': status.HTTP_400_BAD_REQUEST
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+#             except PickupLocation.DoesNotExist:
+#                 return Response({
+#                     'status': 'failed',
+#                     'message': 'Invalid pickup location selected.',
+#                     'response_code': status.HTTP_400_BAD_REQUEST
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+
+#             # Assign disaster and pickup location to the order
+#             order.disaster = disaster
+#             order.pickup_location = pickup_location
+#             order.save()
+
+#             if payment_method == 'ONLINE':
+#                 # Integrate with a payment gateway here
+#                 return Response({
+#                     'status': 'success',
+#                     'message': 'Order placed successfully as a donation. Payment will be integrated later.',
+#                     'response_code': status.HTTP_201_CREATED,
+#                     'data': {
+#                         'order': OrderSerializer(order).data,
+#                         # 'payment_url': payment_url  # Placeholder for payment URL
+#                     }
+#                 }, status=status.HTTP_201_CREATED)
+
+#             return Response({
+#                 'status': 'success',
+#                 'message': 'Order placed successfully as a donation.',
+#                 'response_code': status.HTTP_201_CREATED,
+#                 'data': OrderSerializer(order).data
+#             }, status=status.HTTP_201_CREATED)
+
+#         # If the order is for delivery
+#         if order_type == 'delivery':
+#             try:
+#                 address = Address.objects.get(id=address_id, user=user, is_deleted=False)
+#             except Address.DoesNotExist:
+#                 return Response({
+#                     'status': 'failed',
+#                     'message': 'Invalid address selected.',
+#                     'response_code': status.HTTP_400_BAD_REQUEST
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+
+#             # Assign the delivery address to the order
+#             order.delivery_address = address
+#             order.save()
+
+#             if payment_method == 'ONLINE':
+#                 # Integrate with a payment gateway here
+#                 return Response({
+#                     'status': 'success',
+#                     'message': 'Order placed successfully for delivery. Payment will be integrated later.',
+#                     'response_code': status.HTTP_201_CREATED,
+#                     'data': {
+#                         'order': OrderSerializer(order).data,
+#                         # 'payment_url': payment_url  # Placeholder for payment URL
+#                     }
+#                 }, status=status.HTTP_201_CREATED)
+#             order.payment_status='Completed'
+#             return Response({
+#                 'status': 'success',
+#                 'message': 'Order placed successfully for delivery.',
+#                 'response_code': status.HTTP_201_CREATED,
+#                 'data': OrderSerializer(order).data
+#             }, status=status.HTTP_201_CREATED)
+
+#         return Response({
+#             'status': 'failed',
+#             'message': 'Unknown error occurred.',
+#             'response_code': status.HTTP_400_BAD_REQUEST
+#         }, status=status.HTTP_400_BAD_REQUEST)
+#     # def initiate_online_payment(self, order):
+#     #     # Placeholder for initiating an online payment
+#     #     # This should be replaced with actual payment gateway integration code
+#     #     payment_url = "https://payment-gateway-url.com"
+#     #     return payment_url
 class PlaceOrderView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -1059,9 +1291,46 @@ class PlaceOrderView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         # Calculate the total amount
-        total_amount = sum(item.product.price * item.quantity for item in cart_items)
+        total_amount = 0 
 
-        # Create the order
+        for item in cart_items:
+            product_price = item.product_item.product.price  
+            quantity = item.quantity  
+            total_amount += product_price * quantity
+        
+
+        # Additional validations for donations
+        disaster = None
+        pickup_location = None
+        if order_type== 'donate':
+            disaster = Disaster.objects.filter(id=disaster_id).first()
+            if not disaster:
+                return Response({
+            'status': 'failed',
+            'message': 'Invalid disaster selected.',
+            'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+            pickup_location = PickupLocation.objects.filter(id=pickup_location_id).first()
+            if not pickup_location:
+                return Response({
+                'status': 'failed',
+                'message': 'Invalid pickup location selected.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+
+        if order_type == 'delivery':
+            address = Address.objects.filter(id=address_id, user=user, is_deleted=False).first()
+            if not address:
+                return Response({
+                    'status': 'failed',
+                    'message': 'Invalid address selected.',
+                    'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        # If all validations pass, create the order
         order = Order.objects.create(
             user=user,
             total_amount=total_amount,
@@ -1074,47 +1343,38 @@ class PlaceOrderView(APIView):
         for item in cart_items:
             OrderItem.objects.create(
                 order=order,
-                product=item.product,
+                product_item=item.product_item,
                 quantity=item.quantity,
-                price=item.product.price
+                price=item.product_item.product.price
             )
+        cart_items_data = {}
+        for item in cart_items:
+            cart_items_data[item.product_item.id] = {
+            'quantity': item.quantity,
+            'price': str(item.product_item.product.price),   
+    }
 
+        CartHistory.objects.create(
+        user=user,
+        cart_data=json.dumps(cart_items_data, cls=DjangoJSONEncoder)
+    )
         # Clear the cart
         cart_items.delete()
         cart.save()
 
-        # If the order is a donation
+        # Handle donations
         if order_type == 'donate':
-            try:
-                disaster = Disaster.objects.get(id=disaster_id)
-                pickup_location = PickupLocation.objects.get(id=pickup_location_id)
-            except Disaster.DoesNotExist:
-                return Response({
-                    'status': 'failed',
-                    'message': 'Invalid disaster selected.',
-                    'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
-            except PickupLocation.DoesNotExist:
-                return Response({
-                    'status': 'failed',
-                    'message': 'Invalid pickup location selected.',
-                    'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Assign disaster and pickup location to the order
             order.disaster = disaster
             order.pickup_location = pickup_location
             order.save()
 
             if payment_method == 'ONLINE':
-                # Integrate with a payment gateway here
                 return Response({
                     'status': 'success',
                     'message': 'Order placed successfully as a donation. Payment will be integrated later.',
                     'response_code': status.HTTP_201_CREATED,
                     'data': {
                         'order': OrderSerializer(order).data,
-                        # 'payment_url': payment_url  # Placeholder for payment URL
                     }
                 }, status=status.HTTP_201_CREATED)
 
@@ -1125,33 +1385,23 @@ class PlaceOrderView(APIView):
                 'data': OrderSerializer(order).data
             }, status=status.HTTP_201_CREATED)
 
-        # If the order is for delivery
+        # Handle deliveries
         if order_type == 'delivery':
-            try:
-                address = Address.objects.get(id=address_id, user=user, is_deleted=False)
-            except Address.DoesNotExist:
-                return Response({
-                    'status': 'failed',
-                    'message': 'Invalid address selected.',
-                    'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Assign the delivery address to the order
             order.delivery_address = address
             order.save()
 
             if payment_method == 'ONLINE':
-                # Integrate with a payment gateway here
                 return Response({
                     'status': 'success',
                     'message': 'Order placed successfully for delivery. Payment will be integrated later.',
                     'response_code': status.HTTP_201_CREATED,
                     'data': {
                         'order': OrderSerializer(order).data,
-                        # 'payment_url': payment_url  # Placeholder for payment URL
                     }
                 }, status=status.HTTP_201_CREATED)
-            order.payment_status='Completed'
+
+            order.payment_status = 'Completed'
+            order.save()
             return Response({
                 'status': 'success',
                 'message': 'Order placed successfully for delivery.',
@@ -1164,11 +1414,6 @@ class PlaceOrderView(APIView):
             'message': 'Unknown error occurred.',
             'response_code': status.HTTP_400_BAD_REQUEST
         }, status=status.HTTP_400_BAD_REQUEST)
-    # def initiate_online_payment(self, order):
-    #     # Placeholder for initiating an online payment
-    #     # This should be replaced with actual payment gateway integration code
-    #     payment_url = "https://payment-gateway-url.com"
-    #     return payment_url
 
 
 
@@ -1342,13 +1587,13 @@ class RequestReturnView(APIView):
         order_item_id = request.data.get('order_item_id')
         return_reason = request.data.get('return_reason')
 
-        try:
-            order_item = OrderItem.objects.get(id=order_item_id, order__user=request.user)
-        except OrderItem.DoesNotExist:
+        order_item = OrderItem.objects.filter(id=order_item_id, order__user=request.user).first()
+
+        if not order_item:
             return Response({
-                'status': 'failed',
-                'message': 'Order item not found or does not belong to you.',
-                'response_code': status.HTTP_404_NOT_FOUND
+            'status': 'failed',
+            'message': 'Order item not found or does not belong to you.',
+            'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
         if order_item.is_returned:
@@ -1379,13 +1624,13 @@ class ProcessReturnView(APIView):
         order_item_id = request.data.get('order_item_id')
         action = request.data.get('action')  # 'approve' or 'reject'
 
-        try:
-            order_item = OrderItem.objects.get(id=order_item_id)
-        except OrderItem.DoesNotExist:
+        order_item = OrderItem.objects.filter(id=order_item_id).first()
+
+        if not order_item:
             return Response({
-                'status': 'failed',
-                'message': 'Order item not found.',
-                'response_code': status.HTTP_404_NOT_FOUND
+            'status': 'failed',
+            'message': 'Order item not found.',
+            'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
         if not order_item.is_returned:
@@ -1742,14 +1987,14 @@ class DisasterDonationsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, disaster_id, *args, **kwargs):
-        try:
-            disaster = Disaster.objects.get(id=disaster_id)
-        except Disaster.DoesNotExist:
+        disaster = Disaster.objects.filter(id=disaster_id).first()
+        if not disaster:
             return Response({
-                'status': 'failed',
-                'message': 'Disaster not found.',
-                'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            'status': 'failed',
+            'message': 'Disaster not found.',
+            'response_code': status.HTTP_404_NOT_FOUND
+        }, status=status.HTTP_404_NOT_FOUND)
+
 
         # Ensure the user is the one who registered the disaster or an admin
         if not (request.user == disaster.user or request.user.is_staff):
