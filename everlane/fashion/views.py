@@ -322,6 +322,55 @@ class ProductDeleteView(generics.DestroyAPIView):
             'response_code': status.HTTP_204_NO_CONTENT,
             'data': None
         }, status=status.HTTP_204_NO_CONTENT)
+    
+class AddProductItemView(generics.CreateAPIView):
+    serializer_class = ProductItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        product_id = request.data.get('product')
+        size = request.data.get('size')
+        stock = request.data.get('stock')
+
+        # Validate that product exists
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Product not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Validate size
+        if size not in [choice[0] for choice in ProductItem.SIZES]:
+            return Response({
+                'status': 'failed',
+                'message': 'Invalid size.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate stock
+        if stock is None or int(stock) < 0:
+            return Response({
+                'status': 'failed',
+                'message': 'Stock must be a non-negative integer.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create ProductItem
+        product_item = ProductItem.objects.create(
+            product=product,
+            size=size,
+            stock=stock
+        )
+
+        return Response({
+            'status': 'success',
+            'message': 'Product item added successfully.',
+            'response_code': status.HTTP_201_CREATED,
+            'data': ProductItemSerializer(product_item).data
+        }, status=status.HTTP_201_CREATED)
 
 class OrderListView(generics.ListCreateAPIView):
     queryset = Order.objects.all()
