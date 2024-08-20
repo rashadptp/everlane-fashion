@@ -523,7 +523,7 @@ class CartItemDeleteView(APIView):
         cart_item.delete()
 
         # Recalculate the total price of the cart
-        cart.total_price = sum(item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
+        cart.total_price = sum(item.product_item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
         cart.save()
 
         return Response({
@@ -573,7 +573,7 @@ class UpdateCartItemQuantityView(APIView):
 
         # Update the total price of the cart
         cart = cart_item.cart
-        cart.total_price = sum(item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
+        cart.total_price = sum(item.product_item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
         cart.save()
 
         return Response({
@@ -582,8 +582,6 @@ class UpdateCartItemQuantityView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': CartSerializer(cart).data  # Return the updated cart data
         }, status=status.HTTP_200_OK)
-
-
 
 #Banner views
 
@@ -1265,7 +1263,7 @@ class PlaceOrderView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         # Calculate the total amount
-        total_amount = sum(item.product.price * item.quantity for item in cart_items)
+        total_amount = sum(item.product_item.product.price * item.quantity for item in cart_items)
 
         # Additional validations for donations
         disaster = None
@@ -1311,9 +1309,9 @@ class PlaceOrderView(APIView):
         for item in cart_items:
             OrderItem.objects.create(
                 order=order,
-                product=item.product,
+                product_item=item.product_item,
                 quantity=item.quantity,
-                price=item.product.price
+                price=item.product_item.product.price
             )
 
         # Clear the cart
