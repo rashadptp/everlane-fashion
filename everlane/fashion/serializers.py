@@ -134,12 +134,15 @@ class SeosonSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','winter','summer','rainy','autumn']
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product_name = serializers.ReadOnlyField(source='product.name')
+    product_name = serializers.ReadOnlyField(source='product_item.product.name')
+    product_price = serializers.ReadOnlyField(source='product_item.product.price')
+    product_image = serializers.ImageField(source='product_item.product.image', read_only=True)
+    size = serializers.ReadOnlyField(source='product_item.size')
     
     
     class Meta:
         model = OrderItem
-        fields = ['id', 'product','product_name', 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
+        fields = ['id', 'product_item','product_name', 'quantity', 'price','return_status','size','product_image','product_price','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
     
 
 class OrderSerializer(serializers.ModelSerializer):

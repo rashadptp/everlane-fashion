@@ -269,7 +269,7 @@ class OrderItem(models.Model):
         ('REJECTED', 'Return Rejected'),
     ]
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, related_name='order_items', on_delete=models.CASCADE)
+    product_item = models.ForeignKey(ProductItem, related_name='order_items', on_delete=models.CASCADE,null=True) 
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
