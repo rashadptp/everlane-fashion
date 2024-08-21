@@ -1902,7 +1902,7 @@ class UserDonationListView(APIView):
     def get(self, request, *args, **kwargs):
         user = request.user
         donations = user.donations.all()
-        serializer = DressDonationSerializer(donations, many=True)
+        serializer = DressDonationListSerializer(donations, many=True)
         return Response({
             'status': 'success',
             'message': 'User donations retrieved successfully.',
@@ -1940,7 +1940,7 @@ class DisasterDonationsView(APIView):
             }, status=status.HTTP_403_FORBIDDEN)
 
         donations = DressDonation.objects.filter(disaster=disaster)
-        serializer = DressDonationSerializer(donations, many=True)
+        serializer = DressDonationListSerializer(donations, many=True)
 
         return Response({
             'status': 'success',
