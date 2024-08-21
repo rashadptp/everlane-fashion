@@ -1919,7 +1919,7 @@ class UserDonationListView(APIView):
     
         
 class DisasterDonationsView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated,IsAdminUser]
 
     def get(self, request, disaster_id, *args, **kwargs):
         disaster = Disaster.objects.filter(id=disaster_id).first()
