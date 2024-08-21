@@ -179,11 +179,12 @@ class CartItemSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product_item.product.name')
     product_price = serializers.ReadOnlyField(source='product_item.product.price')
     product_image = serializers.ImageField(source='product_item.product.image', read_only=True)
+    product_id=serializers.ReadOnlyField(source='product_item.product.id', read_only=True)
     size = serializers.ReadOnlyField(source='product_item.size')
 
     class Meta:
         model = CartItem
-        fields = ['id', 'product_item', 'product_name', 'product_price', 'quantity', 'is_active', 'is_deleted', 'created_on', 'product_image', 'size']
+        fields = ['id', 'product_item', 'product_id','product_name', 'product_price', 'quantity', 'is_active', 'is_deleted', 'created_on', 'product_image', 'size']
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
