@@ -315,7 +315,7 @@ class DressDonationSerializer(serializers.ModelSerializer):
 
 class DressDonationListSerializer(serializers.ModelSerializer):
     donor_name = serializers.CharField(source='user.username', read_only=True)
-    image = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
     # images = serializers.ListField(
     #     child=serializers.ImageField(max_length=100, allow_empty_file=False, use_url=True),
     #     allow_empty=False,
