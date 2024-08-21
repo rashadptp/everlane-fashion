@@ -1932,7 +1932,7 @@ class DisasterDonationsView(APIView):
 
 
         # Ensure the user is the one who registered the disaster or an admin
-        if not (request.user == disaster.user or request.user.is_staff):
+        if not (request.user == disaster.user or request.user.is_admin):
             return Response({
                 'status': 'failed',
                 'message': 'You do not have permission to view these donations.',
