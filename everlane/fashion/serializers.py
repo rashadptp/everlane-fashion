@@ -180,11 +180,12 @@ class CartItemSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product_item.product.name')
     product_price = serializers.ReadOnlyField(source='product_item.product.price')
     product_image = serializers.ImageField(source='product_item.product.image', read_only=True)
+    product_id=serializers.ReadOnlyField(source='product_item.product.id', read_only=True)
     size = serializers.ReadOnlyField(source='product_item.size')
 
     class Meta:
         model = CartItem
-        fields = ['id', 'product_item', 'product_name', 'product_price', 'quantity', 'is_active', 'is_deleted', 'created_on', 'product_image', 'size']
+        fields = ['id', 'product_item', 'product_id','product_name', 'product_price', 'quantity', 'is_active', 'is_deleted', 'created_on', 'product_image', 'size']
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
@@ -281,7 +282,7 @@ class DressDonationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DressDonation
-        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images', 'pickup_location', 'donated_on', 'donor_name']
+        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images','pickup_location', 'donated_on', 'donor_name']
 
     def get_images(self, obj):
         """
@@ -313,3 +314,16 @@ class DressDonationSerializer(serializers.ModelSerializer):
 
 
 
+class DressDonationListSerializer(serializers.ModelSerializer):
+    donor_name = serializers.CharField(source='user.username', read_only=True)
+    images = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DressDonation
+        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images','pickup_location', 'donated_on', 'donor_name']
+
+    def get_images(self, obj):
+        """
+        Return URLs of the uploaded images.
+        """
+        return [image.image.url for image in obj.images.all()]

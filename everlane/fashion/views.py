@@ -105,7 +105,7 @@ class LogoutView(generics.GenericAPIView):
         try:
            
             token = Token.objects.get(user=request.user)
-           
+            
             token.delete()
             
             return Response({
@@ -323,6 +323,55 @@ class ProductDeleteView(generics.DestroyAPIView):
             'response_code': status.HTTP_204_NO_CONTENT,
             'data': None
         }, status=status.HTTP_204_NO_CONTENT)
+    
+class AddProductItemView(generics.CreateAPIView):
+    serializer_class = ProductItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        product_id = request.data.get('product')
+        size = request.data.get('size')
+        stock = request.data.get('stock')
+
+        # Validate that product exists
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Product not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Validate size
+        if size not in [choice[0] for choice in ProductItem.SIZES]:
+            return Response({
+                'status': 'failed',
+                'message': 'Invalid size.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate stock
+        if stock is None or int(stock) < 0:
+            return Response({
+                'status': 'failed',
+                'message': 'Stock must be a non-negative integer.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create ProductItem
+        product_item = ProductItem.objects.create(
+            product=product,
+            size=size,
+            stock=stock
+        )
+
+        return Response({
+            'status': 'success',
+            'message': 'Product item added successfully.',
+            'response_code': status.HTTP_201_CREATED,
+            'data': ProductItemSerializer(product_item).data
+        }, status=status.HTTP_201_CREATED)
 
 class OrderListView(generics.ListCreateAPIView):
     queryset = Order.objects.all()
@@ -1449,13 +1498,13 @@ class UpdateOrderStatusView(APIView):
     permission_classes = [IsAuthenticated,IsAdminUser]
 
     def patch(self, request, order_id):
-        try:
-            order = Order.objects.get(id=order_id)
-        except Order.DoesNotExist:
+        order = Order.objects.filter(id=order_id).first()
+
+        if not order:
             return Response({
-                'status': 'failed',
-                'message': 'Order not found',
-                'response_code': status.HTTP_404_NOT_FOUND
+            'status': 'failed',
+            'message': 'Order not found',
+            'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
         order_status = request.data.get('order_status')
@@ -1775,21 +1824,46 @@ class DisasterListCreateView(APIView):
         }, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
-        serializer = DisasterSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(created_by=request.user)
+        # Extract the data from the request
+        data = request.data
+        user=request.user
+
+        # Validate the required fields
+        required_fields = ['name', 'adhar', 'location', 'description', 'required_men_dresses', 'required_women_dresses', 'required_kids_dresses']
+        missing_fields = [field for field in required_fields if field not in data]
+
+        if missing_fields:
             return Response({
-                'status': 'success',
-                'message': 'Disaster created successfully. Awaiting approval.',
-                'response_code': status.HTTP_201_CREATED,
-                'data': serializer.data
-            }, status=status.HTTP_201_CREATED)
+                'status': 'failed',
+                'message': f'Missing fields: {", ".join(missing_fields)}.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create the Disaster instance
+        disaster = Disaster(
+            name=data['name'],
+            user=user,
+            adhar=data['adhar'],
+            location=data['location'],
+            description=data['description'],
+            required_men_dresses=int(data.get('required_men_dresses', 0)),
+            required_women_dresses=int(data.get('required_women_dresses', 0)),
+            required_kids_dresses=int(data.get('required_kids_dresses', 0)),
+            created_by=request.user
+        )
+        disaster.save()
+
+        # Serialize the created disaster for the response
+        serializer = DisasterSerializer(disaster)
         return Response({
-            'status': 'failed',
-            'message': 'Invalid data.',
-            'response_code': status.HTTP_400_BAD_REQUEST,
-            'errors': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+            'status': 'success',
+            'message': 'Disaster created successfully. Awaiting approval.',
+            'response_code': status.HTTP_201_CREATED,
+            'data': serializer.data
+        }, status=status.HTTP_201_CREATED)
+    
+
+
 class AdminDisasterApprovalListView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -1826,12 +1900,38 @@ class ApproveDisasterView(APIView):
             'data': DisasterSerializer(disaster).data
         }, status=status.HTTP_200_OK)
 
+############################################################    AI    #############################################################################
+import tensorflow as tf
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from PIL import Image
+import numpy as np
 
-#Dress Donation without using quality check
-
-
+torn_model = tf.keras.models.load_model('quality_check_dirty.h5')
+dirty_model = tf.keras.models.load_model('quality_check_torn.h5')
 class DressDonationCreateView(APIView):
     permission_classes = [IsAuthenticated]
+    def preprocess_image(self, image_file: InMemoryUploadedFile):
+        """Preprocess the image for prediction."""
+        image = Image.open(image_file)
+        image = image.resize((100,100))  
+        image = np.array(image) / 255.0  
+        image = np.expand_dims(image, axis=0)  
+        return image
+
+    def check_quality(self, image_file):
+        """Check if the image is torn or dirty."""
+        preprocessed_image = self.preprocess_image(image_file)
+        
+        # Predict using the torn and dirty models
+        is_torn = torn_model.predict(preprocessed_image)[0][0] > 0.5
+        is_dirty = dirty_model.predict(preprocessed_image)[0][0] > 0.5
+        
+        return is_torn, is_dirty
+        
 
     def post(self, request, *args, **kwargs):
         serializer = DressDonationSerializer(data=request.data)
@@ -1841,15 +1941,33 @@ class DressDonationCreateView(APIView):
             men_dresses = serializer.validated_data.get('men_dresses', 0)
             women_dresses = serializer.validated_data.get('women_dresses', 0)
             kids_dresses = serializer.validated_data.get('kids_dresses', 0)
+
+            # Perform the quality check
+            images = request.FILES.getlist('images')
+            for image in images:
+                is_torn, is_dirty = self.check_quality(image)
+                if is_dirty or is_torn:
+                    return Response({
+                        'status': 'sucess',
+                        'message': 'One or more dresses are dirty or torn. Please upload clean dresses and goo condition.',
+                        'response_code': status.HTTP_200_OK
+                    }, status=status.HTTP_200_OK)
+                
+                # if is_torn:
+                #     return Response({
+                #         'status': 'failed',
+                #         'message': 'One or more dresses are torn. Please upload dresses in good condition.',
+                #         'response_code': status.HTTP_400_BAD_REQUEST
+                #     }, status=status.HTTP_400_BAD_REQUEST)
             
             if (disaster.fulfilled_men_dresses + men_dresses > disaster.required_men_dresses or
                 disaster.fulfilled_women_dresses + women_dresses > disaster.required_women_dresses or
                 disaster.fulfilled_kids_dresses + kids_dresses > disaster.required_kids_dresses):
                 return Response({
-                    'status': 'failed',
+                    'status': 'success',
                     'message': 'Donation exceeds the required dresses for this disaster.',
-                    'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
+                    'response_code': status.HTTP_200_OK
+                }, status=status.HTTP_200_OK)
             
             # Record the donation
             donation = serializer.save(user=request.user)
@@ -1879,7 +1997,7 @@ class UserDonationListView(APIView):
     def get(self, request, *args, **kwargs):
         user = request.user
         donations = user.donations.all()
-        serializer = DressDonationSerializer(donations, many=True)
+        serializer = DressDonationListSerializer(donations, many=True)
         return Response({
             'status': 'success',
             'message': 'User donations retrieved successfully.',
@@ -1896,7 +2014,7 @@ class UserDonationListView(APIView):
     
         
 class DisasterDonationsView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated,IsAdminUser]
 
     def get(self, request, disaster_id, *args, **kwargs):
         disaster = Disaster.objects.filter(id=disaster_id).first()
@@ -1909,7 +2027,7 @@ class DisasterDonationsView(APIView):
 
 
         # Ensure the user is the one who registered the disaster or an admin
-        if not (request.user == disaster.user or request.user.is_staff):
+        if not (request.user == disaster.user or request.user.is_admin):
             return Response({
                 'status': 'failed',
                 'message': 'You do not have permission to view these donations.',
@@ -1917,7 +2035,7 @@ class DisasterDonationsView(APIView):
             }, status=status.HTTP_403_FORBIDDEN)
 
         donations = DressDonation.objects.filter(disaster=disaster)
-        serializer = DressDonationSerializer(donations, many=True)
+        serializer = DressDonationListSerializer(donations, many=True)
 
         return Response({
             'status': 'success',
