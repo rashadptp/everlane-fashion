@@ -1926,7 +1926,7 @@ class DressDonationCreateView(APIView):
         """Check if the image is torn or dirty."""
         preprocessed_image = self.preprocess_image(image_file)
         
-        # Predict using the torn and dirty models
+        # Prediction
         is_torn = torn_model.predict(preprocessed_image)[0][0] > 0.5
         is_dirty = dirty_model.predict(preprocessed_image)[0][0] > 0.5
         
@@ -1942,7 +1942,7 @@ class DressDonationCreateView(APIView):
             women_dresses = serializer.validated_data.get('women_dresses', 0)
             kids_dresses = serializer.validated_data.get('kids_dresses', 0)
 
-            # Perform the quality check
+            #  the quality check
             images = request.FILES.getlist('images')
             for image in images:
                 is_torn, is_dirty = self.check_quality(image)
@@ -1969,10 +1969,10 @@ class DressDonationCreateView(APIView):
                     'response_code': status.HTTP_200_OK
                 }, status=status.HTTP_200_OK)
             
-            # Record the donation
+            
             donation = serializer.save(user=request.user)
 
-            # Update the disaster's fulfillment status
+            
             disaster.update_fulfillment(men_dresses, women_dresses, kids_dresses)
 
             return Response({
@@ -2045,12 +2045,12 @@ class DisasterDonationsView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-
+# Display disasters registered by the current user 
 class UserDisastersView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        # Retrieve disasters registered by the current user
+        
         disasters = Disaster.objects.filter(user=request.user)
 
         if not disasters.exists():
