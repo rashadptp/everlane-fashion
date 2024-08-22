@@ -1605,6 +1605,7 @@ class RecommendationAPIView(APIView):
         # Add dynamic filters for user attributes
         if skin_color:
             filters['skin_colors__icontains'] = skin_color
+            
         if height:
             filters['heights__icontains'] = height
         if gender:
