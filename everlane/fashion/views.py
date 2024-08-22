@@ -105,7 +105,7 @@ class LogoutView(generics.GenericAPIView):
         try:
             # Get the user's token
             token = Token.objects.get(user=request.user)
-            # Delete the token to log the user out
+            
             token.delete()
             
             return Response({
@@ -1489,13 +1489,13 @@ class UpdateOrderStatusView(APIView):
     permission_classes = [IsAuthenticated,IsAdminUser]
 
     def patch(self, request, order_id):
-        try:
-            order = Order.objects.get(id=order_id)
-        except Order.DoesNotExist:
+        order = Order.objects.filter(id=order_id).first()
+
+        if not order:
             return Response({
-                'status': 'failed',
-                'message': 'Order not found',
-                'response_code': status.HTTP_404_NOT_FOUND
+            'status': 'failed',
+            'message': 'Order not found',
+            'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
         order_status = request.data.get('order_status')
@@ -1801,21 +1801,46 @@ class DisasterListCreateView(APIView):
         }, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
-        serializer = DisasterSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(created_by=request.user)
+        # Extract the data from the request
+        data = request.data
+        user=request.user
+
+        # Validate the required fields
+        required_fields = ['name', 'adhar', 'location', 'description', 'required_men_dresses', 'required_women_dresses', 'required_kids_dresses']
+        missing_fields = [field for field in required_fields if field not in data]
+
+        if missing_fields:
             return Response({
-                'status': 'success',
-                'message': 'Disaster created successfully. Awaiting approval.',
-                'response_code': status.HTTP_201_CREATED,
-                'data': serializer.data
-            }, status=status.HTTP_201_CREATED)
+                'status': 'failed',
+                'message': f'Missing fields: {", ".join(missing_fields)}.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create the Disaster instance
+        disaster = Disaster(
+            name=data['name'],
+            user=user,
+            adhar=data['adhar'],
+            location=data['location'],
+            description=data['description'],
+            required_men_dresses=int(data.get('required_men_dresses', 0)),
+            required_women_dresses=int(data.get('required_women_dresses', 0)),
+            required_kids_dresses=int(data.get('required_kids_dresses', 0)),
+            created_by=request.user
+        )
+        disaster.save()
+
+        # Serialize the created disaster for the response
+        serializer = DisasterSerializer(disaster)
         return Response({
-            'status': 'failed',
-            'message': 'Invalid data.',
-            'response_code': status.HTTP_400_BAD_REQUEST,
-            'errors': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+            'status': 'success',
+            'message': 'Disaster created successfully. Awaiting approval.',
+            'response_code': status.HTTP_201_CREATED,
+            'data': serializer.data
+        }, status=status.HTTP_201_CREATED)
+    
+
+
 class AdminDisasterApprovalListView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -1900,10 +1925,10 @@ class DressDonationCreateView(APIView):
                 is_torn, is_dirty = self.check_quality(image)
                 if is_dirty or is_torn:
                     return Response({
-                        'status': 'failed',
+                        'status': 'sucess',
                         'message': 'One or more dresses are dirty or torn. Please upload clean dresses and goo condition.',
-                        'response_code': status.HTTP_400_BAD_REQUEST
-                    }, status=status.HTTP_400_BAD_REQUEST)
+                        'response_code': status.HTTP_200_OK
+                    }, status=status.HTTP_200_OK)
                 
                 # if is_torn:
                 #     return Response({
@@ -1916,10 +1941,10 @@ class DressDonationCreateView(APIView):
                 disaster.fulfilled_women_dresses + women_dresses > disaster.required_women_dresses or
                 disaster.fulfilled_kids_dresses + kids_dresses > disaster.required_kids_dresses):
                 return Response({
-                    'status': 'failed',
+                    'status': 'success',
                     'message': 'Donation exceeds the required dresses for this disaster.',
-                    'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
+                    'response_code': status.HTTP_200_OK
+                }, status=status.HTTP_200_OK)
             
             # Record the donation
             donation = serializer.save(user=request.user)
