@@ -519,7 +519,7 @@ class AddToCartView(APIView):
         try:
             product_item = ProductItem.objects.get(product_id=product_id, size=size)
         except ProductItem.DoesNotExist:
-            return Response({'status': 'failed', 'message': 'Please select the size', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'status': 'failed', 'message': 'Product id with size or product not found', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         # Retrieve or create the cart for the user
         cart, created = Cart.objects.get_or_create(user=user)
