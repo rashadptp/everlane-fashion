@@ -1901,7 +1901,7 @@ class ApproveDisasterView(APIView):
         }, status=status.HTTP_200_OK)
 
 ############################################################    AI    #############################################################################
-# import tensorflow as tf
+import tensorflow as tf
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -1910,27 +1910,27 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image
 import numpy as np
 
-# torn_model = tf.keras.models.load_model('quality_check_dirty.h5')
-# dirty_model = tf.keras.models.load_model('quality_check_torn.h5')
+torn_model = tf.keras.models.load_model('quality_check_dirty.h5')
+dirty_model = tf.keras.models.load_model('quality_check_torn.h5')
 class DressDonationCreateView(APIView):
     permission_classes = [IsAuthenticated]
-    # def preprocess_image(self, image_file: InMemoryUploadedFile):
-    #     """Preprocess the image for prediction."""
-    #     image = Image.open(image_file)
-    #     image = image.resize((100,100))  
-    #     image = np.array(image) / 255.0  
-    #     image = np.expand_dims(image, axis=0)  
-    #     return image
+    def preprocess_image(self, image_file: InMemoryUploadedFile):
+        """Preprocess the image for prediction."""
+        image = Image.open(image_file)
+        image = image.resize((100,100))  
+        image = np.array(image) / 255.0  
+        image = np.expand_dims(image, axis=0)  
+        return image
 
-    # def check_quality(self, image_file):
-    #     """Check if the image is torn or dirty."""
-    #     preprocessed_image = self.preprocess_image(image_file)
+    def check_quality(self, image_file):
+        """Check if the image is torn or dirty."""
+        preprocessed_image = self.preprocess_image(image_file)
         
-    #     # Predict using the torn and dirty models
-    #     is_torn = torn_model.predict(preprocessed_image)[0][0] > 0.5
-    #     is_dirty = dirty_model.predict(preprocessed_image)[0][0] > 0.5
+        # Predict using the torn and dirty models
+        is_torn = torn_model.predict(preprocessed_image)[0][0] > 0.5
+        is_dirty = dirty_model.predict(preprocessed_image)[0][0] > 0.5
         
-    #     return is_torn, is_dirty
+        return is_torn, is_dirty
         
 
     def post(self, request, *args, **kwargs):
@@ -1942,16 +1942,16 @@ class DressDonationCreateView(APIView):
             women_dresses = serializer.validated_data.get('women_dresses', 0)
             kids_dresses = serializer.validated_data.get('kids_dresses', 0)
 
-            # # Perform the quality check
-            # images = request.FILES.getlist('images')
-            # for image in images:
-            #     is_torn, is_dirty = self.check_quality(image)
-            #     if is_dirty or is_torn:
-            #         return Response({
-            #             'status': 'sucess',
-            #             'message': 'One or more dresses are dirty or torn. Please upload clean dresses and goo condition.',
-            #             'response_code': status.HTTP_200_OK
-            #         }, status=status.HTTP_200_OK)
+            # Perform the quality check
+            images = request.FILES.getlist('images')
+            for image in images:
+                is_torn, is_dirty = self.check_quality(image)
+                if is_dirty or is_torn:
+                    return Response({
+                        'status': 'sucess',
+                        'message': 'One or more dresses are dirty or torn. Please upload clean dresses and goo condition.',
+                        'response_code': status.HTTP_200_OK
+                    }, status=status.HTTP_200_OK)
                 
                 # if is_torn:
                 #     return Response({
