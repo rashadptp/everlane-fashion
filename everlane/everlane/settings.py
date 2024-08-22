@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'fashion',
     'rest_framework.authtoken',
     'corsheaders',
+    
 ]
 
 MIDDLEWARE = [
@@ -154,7 +155,22 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 ###celery settings### 
 
-# ADD
+
+ 
+
+
+# CELERY_BROKER_URL = 'amqp://guest:guest@127.0.0.1:5672//' 
+CELERY_BROKER_URL="amqp://localhost"
+CELERY_RESULT_BACKEND = 'rpc://'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+
+
+
+
 
 
 

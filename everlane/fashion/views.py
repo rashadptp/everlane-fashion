@@ -103,9 +103,9 @@ class LogoutView(generics.GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         try:
-            # Get the user's token
+           
             token = Token.objects.get(user=request.user)
-            # Delete the token to log the user out
+           
             token.delete()
             
             return Response({
@@ -277,6 +277,7 @@ class ProductCreateView(generics.CreateAPIView):
             'response_code': status.HTTP_201_CREATED,
             'data': serializer.data
         }, status=status.HTTP_201_CREATED)
+        
 
 class ProductUpdateView(generics.UpdateAPIView):
     queryset = Product.objects.all()
@@ -745,12 +746,6 @@ class TrendingProductsView(generics.ListAPIView):
 ##seasons without pagination###
 
 
-
-from rest_framework import generics, status
-from rest_framework.response import Response
-from .models import Product
-from .serializers import SeosonSerializer
-
 class SeasonalProductsView(generics.ListAPIView):
     serializer_class = SeosonSerializer
 
@@ -937,6 +932,8 @@ class AddWishlistView(APIView):
             'data': WishlistSerializer(wishlist).data
         }, status=status.HTTP_201_CREATED)
 
+#wishlist filter
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -947,29 +944,39 @@ class DeleteWishlistView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, product_id, *args, **kwargs):
-        try:
-            product = Product.objects.get(id=product_id)
-            wishlist_item = Wishlist.objects.get(product=product, user=request.user)
-        except Product.DoesNotExist:
+        # Attempt to retrieve the product
+        products = Product.objects.filter(id=product_id)
+        
+        if not products.exists():
             return Response({
                 'status': 'failed',
                 'message': 'Product not found.',
                 'response_code': status.HTTP_404_NOT_FOUND,
             }, status=status.HTTP_404_NOT_FOUND)
-        except Wishlist.DoesNotExist:
+        
+        # Assume only one product should match
+        product = products.first()
+        
+        # Filter Wishlist items based on the product and the current user
+        wishlist_items = Wishlist.objects.filter(product=product, user=request.user)
+        
+        if not wishlist_items.exists():
             return Response({
                 'status': 'failed',
                 'message': 'Wishlist item not found.',
                 'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
         
-        wishlist_item.delete()
+        # Delete all matching wishlist items
+        wishlist_items.delete()
+        
         
         return Response({
             'status': 'success',
             'message': 'Wishlist item deleted successfully.',
             'response_code': status.HTTP_200_OK
         }, status=status.HTTP_200_OK)
+
 
 #Address view
 
@@ -1718,6 +1725,9 @@ class ProfileUpdateView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
+
+
+
 class PasswordChangeView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -1815,104 +1825,6 @@ class ApproveDisasterView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': DisasterSerializer(disaster).data
         }, status=status.HTTP_200_OK)
-
-
-#Dress Donation with quality check
-
-# import tensorflow as tf
-# from rest_framework.views import APIView
-# from rest_framework.response import Response
-# from rest_framework.parsers import MultiPartParser, FormParser
-# from PIL import Image
-# import numpy as np
-# from .models import Disaster, DressDonation
-# from .serializers import DressDonationSerializer
-# from rest_framework.permissions import IsAuthenticated
-# from rest_framework import status
-
-# # Load the pre-trained models
-
-# from google.colab import drive
-# drive.mount('/content/drive')
-
-# model_dirty = tf.keras.models.load_model("/content/drive/My Drive/quality_check2.h5")
-# model_torn = tf.keras.models.load_model("/content/drive/My Drive//quality_check3.h5")
-
-# def preprocess_image(image):
-#     image = image.resize((100, 100))  # Resize the image to match the model's expected input size
-#     image = np.array(image)
-#     image = image / 255.0  # Normalize the image
-#     image = np.expand_dims(image, axis=0)
-#     return image
-
-# class DressDonationCreateView(APIView):
-#     permission_classes = [IsAuthenticated]
-#     parser_classes = (MultiPartParser, FormParser)
-
-#     def post(self, request, *args, **kwargs):
-#         serializer = DressDonationSerializer(data=request.data)
-        
-#         if serializer.is_valid():
-#             disaster = serializer.validated_data['disaster']
-            
-#             # Handle image file
-#             image = request.FILES.get('image')
-#             if image:
-#                 img = Image.open(image)
-#                 processed_img = preprocess_image(img)
-                
-#                 # Predict using the models
-#                 dirty_prediction = model_dirty.predict(processed_img)[0][0]
-#                 torn_prediction = model_torn.predict(processed_img)[0][0]
-                
-#                 # Determine the quality based on the model predictions
-#                 quality = "Normal Dress"
-#                 if dirty_prediction > 0.5:
-#                     quality = "Dirty Dress"
-#                 elif torn_prediction > 0.5:
-#                     quality = "Torn Dress"
-                
-#                 # Optionally, include the quality in the donation record
-#                 serializer.validated_data['quality'] = quality
-#             else:
-#                 return Response({"error": "No image provided"}, status=status.HTTP_400_BAD_REQUEST)
-            
-#             men_dresses = serializer.validated_data.get('men_dresses', 0)
-#             women_dresses = serializer.validated_data.get('women_dresses', 0)
-#             kids_dresses = serializer.validated_data.get('kids_dresses', 0)
-            
-#             if (disaster.fulfilled_men_dresses + men_dresses > disaster.required_men_dresses or
-#                 disaster.fulfilled_women_dresses + women_dresses > disaster.required_women_dresses or
-#                 disaster.fulfilled_kids_dresses + kids_dresses > disaster.required_kids_dresses):
-#                 return Response({
-#                     'status': 'failed',
-#                     'message': 'Donation exceeds the required dresses for this disaster.',
-#                     'response_code': status.HTTP_400_BAD_REQUEST
-#                 }, status=status.HTTP_400_BAD_REQUEST)
-            
-#             # Record the donation
-#             donation = serializer.save(user=request.user)
-
-#             # Update the disaster's fulfillment status
-#             disaster.update_fulfillment(men_dresses, women_dresses, kids_dresses)
-
-#             return Response({
-#                 'status': 'success',
-#                 'message': 'Dress donation recorded successfully.',
-#                 'response_code': status.HTTP_201_CREATED,
-#                 'data': DressDonationSerializer(donation).data
-#             }, status=status.HTTP_201_CREATED)
-
-#         return Response({
-#             'status': 'failed',
-#             'message': 'Invalid data.',
-#             'response_code': status.HTTP_400_BAD_REQUEST,
-#             'errors': serializer.errors
-#         }, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
 
 
 #Dress Donation without using quality check
