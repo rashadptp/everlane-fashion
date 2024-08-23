@@ -10,6 +10,9 @@ import pandas as pd
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 from .variables import STATUS_CHOICES
+import uuid
+
+
 
 #register view
 
@@ -1516,11 +1519,29 @@ class PlaceOrderView(APIView):
 
             order.payment_status = 'Completed'
             order.save()
+            invoice_number = str(uuid.uuid4()).replace('-', '').upper()[:10]
+            invoice = Invoice.objects.create(
+            order=order,
+            user=user,
+            invoice_number=invoice_number,
+            total_amount=total_amount,
+            )
+            generate_invoice_pdf(invoice)
+
+
             return Response({
                 'status': 'success',
                 'message': 'Order placed successfully for delivery.',
                 'response_code': status.HTTP_201_CREATED,
-                'data': OrderSerializer(order).data
+                'data': {
+                    'order': OrderSerializer(order).data,
+                        'invoice': {
+                            'invoice_number': invoice.invoice_number,
+                            'total_amount': str(invoice.total_amount),
+                            'created_at': invoice.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                            'pdf_url': invoice.pdf.url if invoice.pdf else None  # Include the PDF URL if generated
+        }
+    }
             }, status=status.HTTP_201_CREATED)
 
         return Response({
@@ -2187,3 +2208,35 @@ class UserDisastersView(APIView):
 
 
 
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from django.core.files.base import ContentFile
+
+def generate_invoice_pdf(invoice):
+    # Define the file name for the PDF
+    file_name = f'invoice_{invoice.invoice_number}.pdf'
+    
+    # Create a file-like buffer to receive PDF data
+    buffer = BytesIO()
+    
+    # Create a canvas and set the PDF file size
+    pdf = canvas.Canvas(buffer, pagesize=letter)
+    
+    # Draw text and other elements on the PDF
+    pdf.drawString(100, 750, f"Invoice Number: {invoice.invoice_number}")
+    pdf.drawString(100, 730, f"Total Amount: {invoice.total_amount}")
+    pdf.drawString(100, 710, f"Created At: {invoice.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    # Add more invoice details as needed...
+    
+    # Finalize the PDF
+    pdf.showPage()
+    pdf.save()
+    
+    # Get the PDF from the buffer
+    buffer.seek(0)
+    pdf_file = ContentFile(buffer.getvalue())
+    
+    # Save the PDF file to the invoice model
+    invoice.pdf.save(file_name, pdf_file)
