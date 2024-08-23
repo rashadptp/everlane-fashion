@@ -9,7 +9,7 @@ import joblib
 import pandas as pd
 import json
 from django.core.serializers.json import DjangoJSONEncoder
-from .variables import *
+from .variables import STATUS_CHOICES
 
 #register view
 
@@ -1551,7 +1551,7 @@ class OrderListView(generics.ListAPIView):
         })
 
 # from .tasks import send_order_status_email
-
+from .variables import STATUS_CHOICES
 class UpdateOrderStatusView(APIView):
     permission_classes = [IsAuthenticated,IsAdminUser]
 
