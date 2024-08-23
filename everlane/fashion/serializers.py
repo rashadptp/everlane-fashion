@@ -322,7 +322,7 @@ class DressDonationSerializer(serializers.ModelSerializer):
         return donation
 
 
-
+#Listing ofdress donation
 class DressDonationListSerializer(serializers.ModelSerializer):
     donor_name = serializers.CharField(source='user.username', read_only=True)
     images = serializers.SerializerMethodField()
