@@ -7,7 +7,7 @@ from .resources import *
 
 admin.site.register(User)
 admin.site.register(Product)
-admin.site.register(Order)
+admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderItem)
 admin.site.register(Category)
 admin.site.register(Subcategory)
@@ -21,6 +21,7 @@ admin.site.register(Disaster)
 admin.site.register(DressDonation)
 admin.site.register(PickupLocation)
 admin.site.register(CartHistory, CartHistoryAdmin)
+
 
 
 
