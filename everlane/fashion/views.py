@@ -1604,27 +1604,28 @@ class RecommendationAPIView(APIView):
 
         # Add dynamic filters for user attributes using JSON fields
         if skin_color:
-            filters['skin_colors__contains'] = {skin_color: True}
+            filters['skin_colors__contains'] = {skin_color.title(): True}
 
         if height:
-            filters['heights__contains'] = {height: True}
+            filters['heights__contains'] = {height.title(): True}
 
         # Add gender filter as a choice field
         if gender:
-            filters['genders'] = gender
+            filters['genders__contains'] = gender.upper()
 
         if usage_of_dress:
-            filters['usages__contains'] = {usage_of_dress: True}
+            filters['usages__contains'] = {usage_of_dress.title(): True}
 
         # Apply filters
         recommended_products = Product.objects.filter(**filters).distinct()
 
-        # Log filters and results
-        print(f"Applied filters: {filters}")
-        print(f"Recommended products: {recommended_products}")
+        # # Log filters and results
+        # print(f"Applied filters: {filters}")
+        # print(f"Recommended products: {recommended_products}")
 
         # Serialize the filtered products
         serializer = RecommendSerializer(recommended_products, many=True)
+        
 
         return Response({
             'status': 'success',
