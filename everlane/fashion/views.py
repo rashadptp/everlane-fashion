@@ -1397,7 +1397,7 @@ class PlaceOrderView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
         cart_items = CartItem.objects.filter(cart=cart, is_active=True, is_deleted=False).first()
-        if not cart_items.exists():
+        if not cart_items:
             return Response({
                 'status': 'failed',
                 'message': 'No items in the cart to place an order.',
