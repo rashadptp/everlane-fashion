@@ -149,8 +149,13 @@ class OrderItemSerializer(serializers.ModelSerializer):
         fields = ['id', 'product_item','product_name', 'quantity', 'price','return_status','size','product_image',
                 'product_price','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
     
+class InvoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invoice
+        fields = ['invoice_number', 'total_amount', 'created_at', 'pdf']
 
 class OrderSerializer(serializers.ModelSerializer):
+    invoice = InvoiceSerializer(read_only=True)
     items = OrderItemSerializer(many=True, read_only=True)
     disaster_name = serializers.ReadOnlyField(source='disaster.name')
     pickup_location_address = serializers.ReadOnlyField(source='pickup_location.address')
@@ -158,7 +163,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ['id', 'order_code','user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','order_status','items',
                   'is_donated', 'disaster', 'disaster_name',
-            'pickup_location', 'pickup_location_address', 'is_paid','delivery_address']
+            'pickup_location', 'pickup_location_address', 'is_paid','delivery_address','invoice']
 
 
 class ReturnSerializer(serializers.ModelSerializer):
