@@ -1602,20 +1602,23 @@ class RecommendationAPIView(APIView):
         elif preferred_season == 'AUTUMN':
             filters['autumn'] = True
 
-        # Add dynamic filters for user attributes
+        # Add dynamic filters for user attributes using JSON fields
         if skin_color:
-            filters['skin_colors__icontains'] = skin_color
-            
+            filters['skin_colors__contains'] = {skin_color: True}
+
         if height:
-            filters['heights__icontains'] = height
+            filters['heights__contains'] = {height: True}
+
+        # Add gender filter as a choice field
         if gender:
-            filters['genders__icontains'] = gender
+            filters['genders'] = gender
+
         if usage_of_dress:
-            filters['usages__icontains'] = usage_of_dress
+            filters['usages__contains'] = {usage_of_dress: True}
 
         # Apply filters
         recommended_products = Product.objects.filter(**filters).distinct()
-        
+
         # Log filters and results
         print(f"Applied filters: {filters}")
         print(f"Recommended products: {recommended_products}")
@@ -1629,7 +1632,6 @@ class RecommendationAPIView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         }, status=status.HTTP_200_OK)
-
 
 
         

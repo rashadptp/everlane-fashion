@@ -42,6 +42,11 @@ class Subcategory(models.Model):
         return self.name
 
 class Product(models.Model):
+
+    GENDER_CHOICES = [
+        ('M', 'Male'),
+        ('F', 'Female'),
+    ]
     
     name = models.CharField(max_length=255)
     description = models.TextField()
@@ -58,11 +63,11 @@ class Product(models.Model):
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
 
+    skin_colors = JSONField(blank=True, default=dict)  # e.g., {"Fair": True, "Dark": True}
+    heights = JSONField(blank=True, default=dict)      # e.g., {"Short": True, "Tall": True}
+    genders = models.CharField(max_length=1, choices=GENDER_CHOICES,null=True,blank=True)
+    usages = JSONField(blank=True, default=dict)       # e.g., {"Casual": True, "Formal": True}
 
-    skin_colors = models.CharField(max_length=255, blank=True)  # e.g., "Fair,Dark"
-    heights = models.CharField(max_length=255, blank=True)       # e.g., "Short,Tall"
-    genders = models.CharField(max_length=255, blank=True)       # e.g., "M,F"
-    usages = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return self.name
