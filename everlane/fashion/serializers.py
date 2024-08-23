@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import *
+from .variables import STATUS_CHOICES 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
