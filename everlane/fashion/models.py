@@ -6,6 +6,7 @@ from django.db.models import JSONField
 from .variables import *
 from django.utils.crypto import get_random_string
 import base64
+##view##
 
 
 class User(AbstractUser):
