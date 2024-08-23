@@ -39,17 +39,19 @@ urlpatterns = [
     path('products/winter/', SeasonalProductsView.as_view(), {'season': 'winter'}, name='winter-products'),
     path('products/rainy/', SeasonalProductsView.as_view(), {'season': 'rainy'}, name='rainy-products'),
     path('products/autumn/', SeasonalProductsView.as_view(), {'season': 'autumn'}, name='autumn-products'),
+    path('add-product-item/', AddProductItemView.as_view(), name='add-product-item'),
     path('questionnaire/', QuestionnaireCreateView.as_view(), name='questionnaire'),
     path('wishlist/', WishlistListView.as_view(), name='wishlist'),
     path('wishlist/add/', AddWishlistView.as_view(), name='add-wishlist'),
-    path('wishlist/delete/<int:pk>/', DeleteWishlistView.as_view(), name='delete-wishlist'),
+    path('wishlist/delete/<int:product_id>/', DeleteWishlistView.as_view(), name='delete-wishlist'),
     path('addresses/default/', DefaultAddressView.as_view(), name='default-address'),
     path('addresses/', AddressListView.as_view(), name='address-list'),
     path('addresses/create/', AddressCreateView.as_view(), name='address-create'),
     path('addresses/<int:pk>/delete/', AddressDeleteView.as_view(), name='address-delete'),
     path('recommendations/', RecommendationAPIView.as_view(), name='recommendations'),
-  # path('search/', ProductSearchAPIView.as_view(), name='product-search'),
-
+    path('profile/', UserProfileView.as_view(), name='user-profile-detail'), 
+    path('profile/update/',ProfileUpdateView.as_view(), name='user-profile-update'),
+    path('profile/change-password/',PasswordChangeView.as_view(), name='change-password'),
 
 
     #######################################  DONATIONS      #############################
@@ -58,10 +60,11 @@ urlpatterns = [
     path('disasters/approve/<int:disaster_id>/', ApproveDisasterView.as_view(), name='disaster-approve'),
     path('disasters/pending/', AdminDisasterApprovalListView.as_view(), name='admin-disaster-approval-list'),
     path('donations/', DressDonationCreateView.as_view(), name='dress-donation-create'),
-     path('user-donations/', UserDonationListView.as_view(), name='user-donation-list'),
-     path('disasters/<int:disaster_id>/donations/', DisasterDonationsView.as_view(), name='disaster-donations'),
-     path('my-disasters/', UserDisastersView.as_view(), name='user-disasters'),
-     
+    path('user-donations/', UserDonationListView.as_view(), name='user-donation-list'),
+    path('disasters/<int:disaster_id>/donations/', DisasterDonationsView.as_view(), name='disaster-donations'),
+    path('my-disasters/', UserDisastersView.as_view(), name='user-disasters'),
+
+    
 
     
 

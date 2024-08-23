@@ -18,6 +18,7 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
     'fashion',
     'rest_framework.authtoken',
     'corsheaders',
+    
 ]
 
 MIDDLEWARE = [
@@ -80,6 +82,7 @@ WSGI_APPLICATION = 'everlane.wsgi.application'
 load_dotenv()
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -141,8 +144,41 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
+    # 'DEFAULT_PAGINATION_CLASS': 'fashion.pagination.CustomPagination',  # Ensure this path is correct
+    # 'PAGE_SIZE': 10, 
   
 }
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+###celery settings### 
+
+
+ 
+
+
+# CELERY_BROKER_URL = 'amqp://guest:guest@127.0.0.1:5672//' 
+CELERY_BROKER_URL="amqp://localhost"
+CELERY_RESULT_BACKEND = 'rpc://'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -50,6 +50,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user
 
 class AdminRegistrationSerializer(UserRegistrationSerializer):
+    
     class Meta(UserRegistrationSerializer.Meta):
         fields = UserRegistrationSerializer.Meta.fields + ['is_admin',]
     
@@ -94,11 +95,15 @@ class SubcategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'category','image','is_active','is_deleted','created_on']
 
 
-
+class PickupLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PickupLocation
+        fields = ['id', 'city', 'address']
 
 
 class ProductItemSerializer(serializers.ModelSerializer):
     is_out_of_stock = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductItem
         fields = ['id', 'product', 'size', 'stock','is_out_of_stock']
@@ -119,7 +124,8 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','is_trending']
+        fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','is_trending','skin_colors','heights','genders','usages']
+        
 class RecommendSerializer(serializers.ModelSerializer):
     class Meta:
         model=Product
@@ -131,17 +137,27 @@ class SeosonSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','winter','summer','rainy','autumn']
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.ReadOnlyField(source='product_item.product.name')
+    product_price = serializers.ReadOnlyField(source='product_item.product.price')
+    product_image = serializers.ImageField(source='product_item.product.image', read_only=True)
+    size = serializers.ReadOnlyField(source='product_item.size')
+    
     
     class Meta:
         model = OrderItem
-        fields = ['id', 'product', 'quantity', 'price','return_status','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
+        fields = ['id', 'product_item','product_name', 'quantity', 'price','return_status','size','product_image',
+                'product_price','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
     
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
+    disaster_name = serializers.ReadOnlyField(source='disaster.name')
+    pickup_location_address = serializers.ReadOnlyField(source='pickup_location.address')
     class Meta:
         model = Order
-        fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','status','items']
+        fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','order_status','items',
+                  'is_donated', 'disaster', 'disaster_name',
+            'pickup_location', 'pickup_location_address', 'is_paid','delivery_address']
 
 
 class ReturnSerializer(serializers.ModelSerializer):
@@ -150,28 +166,34 @@ class ReturnSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'user', 'total_amount','is_active','is_deleted','created_on','is_completed', 
-                  'payment_method', 'payment_status','status', 'items']
+                  'payment_method', 'payment_status','order_status', 'items']
         
 
 class WishlistSerializer(serializers.ModelSerializer):
     product_image = serializers.ImageField(source='product.image', read_only=True) 
+    product_name = serializers.ReadOnlyField(source='product.name')
+    product_price = serializers.ReadOnlyField(source='product.price')
+    product_description=serializers.ReadOnlyField(source='product.description')
     class Meta:
         model = Wishlist
-        fields = ['id', 'product','is_active','is_deleted','created_on','product_image']
+        fields = ['id', 'product','is_active','is_deleted','created_on','product_image','product_name', 'product_price','product_description']
 
 
 class CartItemSerializer(serializers.ModelSerializer):
-    product_name = serializers.ReadOnlyField(source='product.name')
-    product_price = serializers.ReadOnlyField(source='product.price')
-    product_image = serializers.ImageField(source='product.image', read_only=True) 
+    product_name = serializers.ReadOnlyField(source='product_item.product.name')
+    product_price = serializers.ReadOnlyField(source='product_item.product.price')
+    product_image = serializers.ImageField(source='product_item.product.image', read_only=True)
+    product_id=serializers.ReadOnlyField(source='product_item.product.id', read_only=True)
+    size = serializers.ReadOnlyField(source='product_item.size')
 
     class Meta:
         model = CartItem
-        fields = ['id', 'product','product_name', 'product_price', 'quantity','is_active','is_deleted','created_on','product_image']
+        fields = ['id', 'product_item', 'product_id','product_name', 'product_price', 'quantity', 'is_active', 'is_deleted', 'created_on', 'product_image', 'size']
 
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
     total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    # total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     class Meta:
         model = Cart
@@ -210,10 +232,40 @@ class AddressSerializer(serializers.ModelSerializer):
         fields = ['id','mobile','pincode','locality','address','city','state','landmark','is_default','is_active','is_deleted','created_on']
         
 
+class ProfileSerializer(serializers.ModelSerializer):
+    old_password = serializers.CharField(write_only=True, required=False)
+    new_password = serializers.CharField(write_only=True, required=False)
 
+    class Meta:
+        model = User
+        fields = ['id', 'username','first_name', 'last_name', 'email', 'mobile', 'old_password', 'new_password']
+
+    def update(self, instance, validated_data):
+        # Handle password change
+        old_password = validated_data.pop('old_password', None)
+        new_password = validated_data.pop('new_password', None)
+        
+        if old_password and new_password:
+            if not instance.check_password(old_password):
+                raise serializers.ValidationError({"old_password": "Old password is not correct."})
+            if len(new_password) < 8:
+                raise serializers.ValidationError({"new_password": "New password must be at least 8 characters long."})
+            if not any(char.isdigit() for char in new_password):
+                raise serializers.ValidationError({"new_password": "New password must contain at least one digit."})
+            if not any(char.isalpha() for char in new_password):
+                raise serializers.ValidationError({"new_password": "New password must contain at least one letter."})
+            instance.set_password(new_password)
+        
+        # Update other user fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+        
 ########################################     DONATION    #########################################################
 
 class DisasterSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source='created_by.first_name', read_only=True)
     class Meta:
         model = Disaster
         fields = '__all__'
@@ -234,7 +286,7 @@ class DressDonationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DressDonation
-        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images', 'pickup_location', 'donated_on', 'donor_name']
+        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images','pickup_location', 'donated_on', 'donor_name']
 
     def get_images(self, obj):
         """
@@ -266,3 +318,16 @@ class DressDonationSerializer(serializers.ModelSerializer):
 
 
 
+class DressDonationListSerializer(serializers.ModelSerializer):
+    donor_name = serializers.CharField(source='user.username', read_only=True)
+    images = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DressDonation
+        fields = ['disaster', 'men_dresses', 'women_dresses', 'kids_dresses', 'images','pickup_location', 'donated_on', 'donor_name']
+
+    def get_images(self, obj):
+        """
+        Return URLs of the uploaded images.
+        """
+        return [image.image.url for image in obj.images.all()]
