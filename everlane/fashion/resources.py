@@ -15,3 +15,8 @@ class CartHistoryAdmin(admin.ModelAdmin):
             return 'Invalid JSON'
     
     formatted_cart_data.short_description = 'Cart Data'
+
+
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ('order_code', 'user', 'total_amount', 'created_on', 'order_status')
+    readonly_fields = ('order_code',)  # To make order_code non-editable

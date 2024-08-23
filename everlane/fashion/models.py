@@ -5,6 +5,7 @@ from django.core.validators import RegexValidator
 from django.db.models import JSONField
 from .variables import *
 from django_cryptography.fields import encrypt
+from django.utils.crypto import get_random_string
 
 
 class User(AbstractUser):
@@ -184,6 +185,7 @@ class Address(models.Model):
     
 class Order(models.Model):
     user = models.ForeignKey(User, related_name='orders', on_delete=models.CASCADE)
+    order_code = models.CharField(max_length=20, unique=True, blank=True, editable=False)
     product = models.ManyToManyField(Product)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     is_active = models.BooleanField(default=True)
@@ -202,7 +204,16 @@ class Order(models.Model):
 
 
     def __str__(self):
-        return f"Order {self.id} by {self.user.username}"
+        return f"Order {self.order_code} by {self.user.username}"
+    
+    def save(self, *args, **kwargs):
+        if not self.order_code:
+            self.order_code = self.generate_order_code()
+        super().save(*args, **kwargs)
+
+    def generate_order_code(self):
+        """Generate a unique order code."""
+        return f"ORD-{get_random_string(8).upper()}"
       
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
