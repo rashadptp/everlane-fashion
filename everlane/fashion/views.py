@@ -9,6 +9,7 @@ import joblib
 import pandas as pd
 import json
 from django.core.serializers.json import DjangoJSONEncoder
+from .variables import *
 
 #register view
 
