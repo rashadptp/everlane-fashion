@@ -1387,7 +1387,7 @@ class PlaceOrderView(APIView):
 
         # Get the user's active cart
         try:
-            cart = Cart.objects.filter(user=user, is_active=True, is_deleted=False).first()
+            cart = Cart.objects.filter(user=user, is_active=True, is_deleted=False).first()   #addded
           
         except Cart.DoesNotExist:
             return Response({
@@ -1396,8 +1396,8 @@ class PlaceOrderView(APIView):
                 'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
-        cart_items = CartItem.objects.filter(cart=cart, is_active=True, is_deleted=False).first()
-        if not cart_items:
+        cart_items = CartItem.objects.filter(cart=cart, is_active=True, is_deleted=False)
+        if not cart_items.exists():
             return Response({
                 'status': 'failed',
                 'message': 'No items in the cart to place an order.',
