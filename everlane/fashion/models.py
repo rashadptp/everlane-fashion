@@ -185,7 +185,7 @@ class Address(models.Model):
 class Order(models.Model):
     user = models.ForeignKey(User, related_name='orders', on_delete=models.CASCADE)
     order_code = models.CharField(max_length=20, unique=True, blank=True, editable=False)
-    product = models.ManyToManyField(Product)
+    # product = models.ManyToManyField(Product)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
