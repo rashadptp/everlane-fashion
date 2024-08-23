@@ -182,11 +182,6 @@ class Address(models.Model):
 
     
 class Order(models.Model):
-    STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Processing', 'Processing'),
-        ('Completed', 'Completed'),
-    ]
     user = models.ForeignKey(User, related_name='orders', on_delete=models.CASCADE)
     product = models.ManyToManyField(Product)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)

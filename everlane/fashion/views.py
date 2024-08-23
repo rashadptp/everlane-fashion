@@ -1551,7 +1551,7 @@ class OrderListView(generics.ListAPIView):
         })
 
 # from .tasks import send_order_status_email
-from .variables import STATUS_CHOICES
+
 class UpdateOrderStatusView(APIView):
     permission_classes = [IsAuthenticated,IsAdminUser]
 
@@ -1568,7 +1568,7 @@ class UpdateOrderStatusView(APIView):
         order_status = request.data.get('order_status')
         
 
-        if order_status not in dict(Order.STATUS_CHOICES):
+        if order_status not in dict(STATUS_CHOICES):
             return Response({
                 'status': 'failed',
                 'message': 'Invalid status.',
