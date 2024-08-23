@@ -8,9 +8,6 @@ urlpatterns = [
     path('logout/',LogoutView.as_view(),name='logout'),
 
 
-
-    # path('users/', UserListView.as_view(), name='user-list'),
-    # path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
     path('products/', ProductListView.as_view(), name='product-list'),
     path('products/create/', ProductCreateView.as_view(), name='product-create'),
     path('products/<int:pk>/update/', ProductUpdateView.as_view(), name='product-update'),
@@ -21,11 +18,9 @@ urlpatterns = [
     path('request-return/', RequestReturnView.as_view(), name='request-return'),
     path('process-return/', ProcessReturnView.as_view(), name='process-return'),
     path('categories/', CategoryListView.as_view(), name='category-list'),
-    # path('categories/<int:pk>/', CategoryDetailView.as_view(), name='category-detail'),
     path('subcategories/', SubcategoryListView.as_view(), name='subcategory-list'),
     path('subcategories/<int:pk>/', SubcategoryDetailView.as_view(), name='subcategory-detail'),
     path('carts/', CartListView.as_view(), name='cart-list'),
-    # path('carts/<int:pk>/', CartDetailView.as_view(), name='cart-detail'),
     path('add-to-cart/', AddToCartView.as_view(), name='add-to-cart'),
     path('update-cart-item-quantity/', UpdateCartItemQuantityView.as_view(), name='update-cart-item-quantity'),
     path('cart-item/<int:item_id>/delete/', CartItemDeleteView.as_view(), name='cart-item-delete'),
@@ -59,7 +54,7 @@ urlpatterns = [
     path('disasters/', DisasterListCreateView.as_view(), name='disaster-list-create'),
     path('disasters/approve/<int:disaster_id>/', ApproveDisasterView.as_view(), name='disaster-approve'),
     path('disasters/pending/', AdminDisasterApprovalListView.as_view(), name='admin-disaster-approval-list'),
-    path('donations/', DressDonationCreateView.as_view(), name='dress-donation-create'),
+    # path('donations/', DressDonationCreateView.as_view(), name='dress-donation-create'),
     path('user-donations/', UserDonationListView.as_view(), name='user-donation-list'),
     path('disasters/<int:disaster_id>/donations/', DisasterDonationsView.as_view(), name='disaster-donations'),
     path('my-disasters/', UserDisastersView.as_view(), name='user-disasters'),

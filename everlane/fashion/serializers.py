@@ -140,7 +140,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product_item.product.name')
     product_price = serializers.ReadOnlyField(source='product_item.product.price')
     product_image = serializers.ImageField(source='product_item.product.image', read_only=True)
-    size = serializers.ReadOnlyField(source='product_item.size')
+    size = serializers.ReadOnlyField(source='product_item.size')    
     
     
     class Meta:
@@ -170,13 +170,18 @@ class ReturnSerializer(serializers.ModelSerializer):
         
 
 class WishlistSerializer(serializers.ModelSerializer):
+    
+
     product_image = serializers.ImageField(source='product.image', read_only=True) 
     product_name = serializers.ReadOnlyField(source='product.name')
     product_price = serializers.ReadOnlyField(source='product.price')
     product_description=serializers.ReadOnlyField(source='product.description')
+
+   
     class Meta:
         model = Wishlist
         fields = ['id', 'product','is_active','is_deleted','created_on','product_image','product_name', 'product_price','product_description']
+
 
 
 class CartItemSerializer(serializers.ModelSerializer):
@@ -317,7 +322,7 @@ class DressDonationSerializer(serializers.ModelSerializer):
         return donation
 
 
-
+#Listing ofdress donation
 class DressDonationListSerializer(serializers.ModelSerializer):
     donor_name = serializers.CharField(source='user.username', read_only=True)
     images = serializers.SerializerMethodField()

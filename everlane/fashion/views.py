@@ -9,6 +9,7 @@ import joblib
 import pandas as pd
 import json
 from django.core.serializers.json import DjangoJSONEncoder
+
 #register view
 
 class RegisterUserView(generics.CreateAPIView):
@@ -1077,31 +1078,78 @@ class AddressListView(generics.ListAPIView):
                 'response_code': status.HTTP_200_OK
             }, status=status.HTTP_200_OK)
 
-
-class AddressCreateView(generics.CreateAPIView):
+##Address creation##
+class AddressCreateView(APIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = AddressSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-    
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            self.perform_create(serializer)
-            return Response({
-                'status': 'success',
-                'message': 'Address created successfully.',
-                'response_code': status.HTTP_201_CREATED,
-                'data': serializer.data
-            }, status=status.HTTP_201_CREATED)
-        else:
+        # Extract the data from the request
+        data = request.data
+        user = request.user
+
+        # Validate the required fields
+        required_fields = ['mobile', 'pincode', 'locality', 'address', 'city', 'state']
+        missing_fields = [field for field in required_fields if field not in data]
+
+        if missing_fields:
             return Response({
                 'status': 'failed',
-                'message': 'Address creation failed.',
-                'response_code': status.HTTP_400_BAD_REQUEST,
-                'errors': serializer.errors
+                'message': f'Missing fields: {", ".join(missing_fields)}.',
+                'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create the Address instance
+        address = Address.objects.create(
+            user=user,
+            mobile=data['mobile'],
+            pincode=data['pincode'],
+            locality=data['locality'],
+            address=data['address'],
+            city=data['city'],
+            state=data['state'],
+            landmark=data.get('landmark', ''),  # Optional field
+            is_default=data.get('is_default', False),
+            is_active=data.get('is_active', True),
+            is_deleted=data.get('is_deleted', False)
+        )
+
+        # Serialize the created address for the response
+        serializer = AddressSerializer(address)
+        return Response({
+            'status': 'success',
+            'message': 'Address created successfully.',
+            'response_code': status.HTTP_201_CREATED,
+            'data': serializer.data
+        }, status=status.HTTP_201_CREATED)
+
+
+
+
+
+# class AddressCreateView(generics.CreateAPIView):
+#     permission_classes = [IsAuthenticated]
+#     serializer_class = AddressSerializer
+
+#     def perform_create(self, serializer):
+#         serializer.save(user=self.request.user)
+    
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+#         if serializer.is_valid():
+#             self.perform_create(serializer)
+#             return Response({
+#                 'status': 'success',
+#                 'message': 'Address created successfully.',
+#                 'response_code': status.HTTP_201_CREATED,
+#                 'data': serializer.data
+#             }, status=status.HTTP_201_CREATED)
+#         else:
+#             return Response({
+#                 'status': 'failed',
+#                 'message': 'Address creation failed.',
+#                 'response_code': status.HTTP_400_BAD_REQUEST,
+#                 'errors': serializer.errors
+#             }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AddressDeleteView(generics.DestroyAPIView):
@@ -1293,17 +1341,20 @@ class AddressDeleteView(generics.DestroyAPIView):
 #     #     # This should be replaced with actual payment gateway integration code
 #     #     payment_url = "https://payment-gateway-url.com"
 #     #     return payment_url
+
 class PlaceOrderView(APIView):
+    
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         user = request.user
+        
         payment_method = request.data.get('payment_method')
         order_type = request.data.get('order_type')  # 'delivery' or 'donate'
         address_id = request.data.get('address_id')  # For delivery option
         disaster_id = request.data.get('disaster_id')  # For donation option
         pickup_location_id = request.data.get('pickup_location_id')  # For donation option
-
+      
         # Validate payment method
         if payment_method not in ['COD', 'ONLINE']:
             return Response({
@@ -1330,7 +1381,8 @@ class PlaceOrderView(APIView):
 
         # Get the user's active cart
         try:
-            cart = Cart.objects.get(user=user, is_active=True, is_deleted=False)
+            cart = Cart.objects.filter(user=user, is_active=True, is_deleted=False)
+          
         except Cart.DoesNotExist:
             return Response({
                 'status': 'failed',
@@ -1520,10 +1572,7 @@ class UpdateOrderStatusView(APIView):
         order.order_status = order_status
         order.save()
 
-        # # Trigger the email sending task
-        # print(f"Order ID: {order.id}, User Email: {order.user.email}, Order Status: {order.order_status}")   
-        # send_order_status_email(order.id, order.user.email, order.order_status)
-        
+
 
 
         
@@ -1754,29 +1803,65 @@ class UserProfileView(APIView):
             'data': serializer.data
         }, status=status.HTTP_200_OK)
 
+#Without serializer.valid 
+
 class ProfileUpdateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, *args, **kwargs):
+        # Extract the data from the request
+        data = request.data
         user = request.user
-        serializer = ProfileSerializer(user, data=request.data, partial=True)
 
-        if serializer.is_valid():
-            serializer.save()
+        # Define the fields that can be updated
+        updateable_fields = ['username', 'first_name', 'last_name', 'email', 'mobile'] # Adjust these fields as per your model
+        updated_data = {field: data[field] for field in updateable_fields if field in data}
+
+        # Check if any fields to update
+        if not updated_data:
             return Response({
-                'status': 'success',
-                'message': 'User profile updated successfully',
-                'response_code': status.HTTP_200_OK,
-                'data': serializer.data
-            }, status=status.HTTP_200_OK)
+                'status': 'failed',
+                'message': 'No valid fields provided for update.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
 
+        # Update the user profile fields
+        for field, value in updated_data.items():
+            setattr(user, field, value)
+        user.save()
+
+        # Serialize the updated user data for the response
+        serializer = ProfileSerializer(user)
         return Response({
-            'status': 'error',
-            'message': 'Profile update failed.',
-            'response_code': status.HTTP_400_BAD_REQUEST,
-            'errors': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+            'status': 'success',
+            'message': 'User profile updated successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
 
+
+# class ProfileUpdateView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def patch(self, request, *args, **kwargs):
+#         user = request.user
+#         serializer = ProfileSerializer(user, data=request.data, partial=True)
+
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response({
+#                 'status': 'success',
+#                 'message': 'User profile updated successfully',
+#                 'response_code': status.HTTP_200_OK,
+#                 'data': serializer.data
+#             }, status=status.HTTP_200_OK)
+
+#         return Response({
+#             'status': 'error',
+#             'message': 'Profile update failed.',
+#             'response_code': status.HTTP_400_BAD_REQUEST,
+#             'errors': serializer.errors
+#         }, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -1785,29 +1870,38 @@ class PasswordChangeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, *args, **kwargs):
+        # Extract the data from the request
+        data = request.data
         user = request.user
-        serializer = ProfileSerializer(user, data=request.data, partial=True)
-        
-        if serializer.is_valid():
-            if 'old_password' not in request.data or 'new_password' not in request.data:
-                return Response({
-                    'status': 'error',
-                    'message': 'Both old_password and new_password fields are required',
-                    'response_code': status.HTTP_400_BAD_REQUEST,
-                }, status=status.HTTP_400_BAD_REQUEST)
 
-            serializer.save()
+        # Validate the required fields
+        required_fields = ['old_password', 'new_password']
+        missing_fields = [field for field in required_fields if field not in data]
+
+        if missing_fields:
             return Response({
-                'status': 'success',
-                'message': 'Password updated successfully',
-                'response_code': status.HTTP_200_OK
-            }, status=status.HTTP_200_OK)
+                'status': 'error',
+                'message': f'Missing fields: {", ".join(missing_fields)}.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if the old password is correct
+        if not user.check_password(data['old_password']):
+            return Response({
+                'status': 'error',
+                'message': 'Old password is incorrect.',
+                'response_code': status.HTTP_400_BAD_REQUEST
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Set the new password
+        user.set_password(data['new_password'])
+        user.save()
+
         return Response({
-            'status': 'error',
-            'message': 'Password update failed',
-            'response_code': status.HTTP_400_BAD_REQUEST,
-            'errors': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+            'status': 'success',
+            'message': 'Password updated successfully.',
+            'response_code': status.HTTP_200_OK
+        }, status=status.HTTP_200_OK)
 
 
 
@@ -1904,7 +1998,9 @@ class ApproveDisasterView(APIView):
             'data': DisasterSerializer(disaster).data
         }, status=status.HTTP_200_OK)
 
+
 ############################################################    AI    #############################################################################
+
 import tensorflow as tf
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
