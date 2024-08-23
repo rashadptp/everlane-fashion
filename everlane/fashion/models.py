@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.core.validators import RegexValidator
 from django.db.models import JSONField
 from .variables import *
+from django_cryptography.fields import encrypt
 from django.utils.crypto import get_random_string
 import base64
 
@@ -87,7 +88,7 @@ class ProductItem(models.Model):
 class Disaster(models.Model):
     user = models.ForeignKey(User, related_name='disaster', on_delete=models.CASCADE,null=True)
     name = models.CharField(max_length=255)
-    adhar =models.CharField(max_length=20)
+    adhar = models.CharField(max_length=20)  # Encrypting the adhar field
     location = models.CharField(max_length=255)
     description = models.TextField()
     is_approved = models.BooleanField(default=False)
@@ -202,7 +203,7 @@ class Address(models.Model):
 class Order(models.Model):
     user = models.ForeignKey(User, related_name='orders', on_delete=models.CASCADE)
     order_code = models.CharField(max_length=20, unique=True, blank=True, editable=False)
-    product = models.ManyToManyField(Product)
+    # product = models.ManyToManyField(Product)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
@@ -228,7 +229,6 @@ class Order(models.Model):
         super().save(*args, **kwargs)
 
     def generate_order_code(self):
-        """Generate a unique order code."""
         return f"ORD-{get_random_string(8).upper()}"
       
 class OrderItem(models.Model):
@@ -322,3 +322,15 @@ class CartHistory(models.Model):
 
     def __str__(self):
         return f"Cart History for {self.user.username} on {self.created_at}"
+
+
+class Invoice(models.Model):
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='invoice')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    invoice_number = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    pdf = models.FileField(upload_to='invoices/', null=True, blank=True)  # Optional: To store PDF file if needed
+
+    def __str__(self):
+        return f"Invoice {self.invoice_number} for Order {self.order.id}"
