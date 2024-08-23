@@ -520,7 +520,7 @@ class AddToCartView(APIView):
         try:
             product_item = ProductItem.objects.get(product_id=product_id, size=size)
         except ProductItem.DoesNotExist:
-            return Response({'status': 'failed', 'message': 'Please select the size', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'status': 'failed', 'message': 'Product id with size or product not found', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
         # Retrieve or create the cart for the user
         cart, created = Cart.objects.get_or_create(user=user)
@@ -1651,25 +1651,30 @@ class RecommendationAPIView(APIView):
         elif preferred_season == 'AUTUMN':
             filters['autumn'] = True
 
-        # Add dynamic filters for user attributes
+        # Add dynamic filters for user attributes using JSON fields
         if skin_color:
-            filters['skin_colors__icontains'] = skin_color
+            filters['skin_colors__contains'] = {skin_color.title(): True}
+
         if height:
-            filters['heights__icontains'] = height
+            filters['heights__contains'] = {height.title(): True}
+
+        # Add gender filter as a choice field
         if gender:
-            filters['genders__icontains'] = gender
+            filters['genders__contains'] = gender.upper()
+
         if usage_of_dress:
-            filters['usages__icontains'] = usage_of_dress
+            filters['usages__contains'] = {usage_of_dress.title(): True}
 
         # Apply filters
         recommended_products = Product.objects.filter(**filters).distinct()
-        
-        # Log filters and results
-        print(f"Applied filters: {filters}")
-        print(f"Recommended products: {recommended_products}")
+
+        # # Log filters and results
+        # print(f"Applied filters: {filters}")
+        # print(f"Recommended products: {recommended_products}")
 
         # Serialize the filtered products
         serializer = RecommendSerializer(recommended_products, many=True)
+        
 
         return Response({
             'status': 'success',
@@ -1677,7 +1682,6 @@ class RecommendationAPIView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         }, status=status.HTTP_200_OK)
-
 
 
         
@@ -2022,7 +2026,7 @@ class DressDonationCreateView(APIView):
         """Check if the image is torn or dirty."""
         preprocessed_image = self.preprocess_image(image_file)
         
-        # Predict using the torn and dirty models
+        # Prediction
         is_torn = torn_model.predict(preprocessed_image)[0][0] > 0.5
         is_dirty = dirty_model.predict(preprocessed_image)[0][0] > 0.5
         
@@ -2038,13 +2042,13 @@ class DressDonationCreateView(APIView):
             women_dresses = serializer.validated_data.get('women_dresses', 0)
             kids_dresses = serializer.validated_data.get('kids_dresses', 0)
 
-            # Perform the quality check
+            #  the quality check
             images = request.FILES.getlist('images')
             for image in images:
                 is_torn, is_dirty = self.check_quality(image)
                 if is_dirty or is_torn:
                     return Response({
-                        'status': 'sucess',
+                        'status': 'success',
                         'message': 'One or more dresses are dirty or torn. Please upload clean dresses and goo condition.',
                         'response_code': status.HTTP_200_OK
                     }, status=status.HTTP_200_OK)
@@ -2065,10 +2069,10 @@ class DressDonationCreateView(APIView):
                     'response_code': status.HTTP_200_OK
                 }, status=status.HTTP_200_OK)
             
-            # Record the donation
+            
             donation = serializer.save(user=request.user)
 
-            # Update the disaster's fulfillment status
+            
             disaster.update_fulfillment(men_dresses, women_dresses, kids_dresses)
 
             return Response({
@@ -2141,12 +2145,12 @@ class DisasterDonationsView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-
+# Display disasters registered by the current user 
 class UserDisastersView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        # Retrieve disasters registered by the current user
+        
         disasters = Disaster.objects.filter(user=request.user)
 
         if not disasters.exists():

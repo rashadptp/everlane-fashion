@@ -50,6 +50,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return user
 
 class AdminRegistrationSerializer(UserRegistrationSerializer):
+    
     class Meta(UserRegistrationSerializer.Meta):
         fields = UserRegistrationSerializer.Meta.fields + ['is_admin',]
     
@@ -102,6 +103,7 @@ class PickupLocationSerializer(serializers.ModelSerializer):
 
 class ProductItemSerializer(serializers.ModelSerializer):
     is_out_of_stock = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductItem
         fields = ['id', 'product', 'size', 'stock','is_out_of_stock']
@@ -143,7 +145,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = OrderItem
-        fields = ['id', 'product_item','product_name', 'quantity', 'price','return_status','size','product_image','product_price','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
+        fields = ['id', 'product_item','product_name', 'quantity', 'price','return_status','size','product_image',
+                'product_price','is_returned','return_reason','return_requested_on','return_status', 'refund_amount', 'refund_date']
     
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -195,6 +198,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
     total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    # total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     class Meta:
         model = Cart

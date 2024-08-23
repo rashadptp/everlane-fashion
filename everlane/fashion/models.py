@@ -3,59 +3,18 @@ from django.db import models
 from django.utils import timezone
 from django.core.validators import RegexValidator
 from django.db.models import JSONField
+from .variables import *
 
 
 class User(AbstractUser):
-    SKIN_COLOR_CHOICES = [
-        ('FAIR', 'Fair'),
-        ('MEDIUM', 'Medium'),
-        ('DARK', 'Dark'),
-    ]
 
-    HEIGHT_CHOICES = [
-        ('SHORT', 'Short'),
-        ('MEDIUM', 'Medium'),
-        ('TALL', 'Tall'),
-    ]
-
-    GENDER_CHOICES = [
-        ('M', 'Male'),
-        ('F', 'Female'),
-    ]
-
-    SEASON_CHOICES = [
-        ('SUMMER', 'Summer'),
-        ('WINTER', 'Winter'),
-        ('MONSOON', 'Monsoon'),
-        ('AUTUMN', 'Autumn'),
-    ]
-
-    USAGE_CHOICES = [
-        ('CASUAL', 'Casual'),
-        ('FORMAL', 'Formal'),
-        ('SPORTS', 'Sports'),
-        ('PARTY', 'Party'),
-    ]
-    
-
-    mobile = models.CharField(
-        max_length=15,
-        null=True,
-        blank=True,
-        validators=[
-            RegexValidator(
-                regex='^\d{0,15}$',
-                message='Mobile number must be numeric and can contain up to 15 digits',
-                code='invalid_mobile_number'
-            ),
-        ]
-    )
+    mobile = models.CharField(max_length=15,null=True,blank=True)
     skin_color = models.CharField(max_length=10, choices=SKIN_COLOR_CHOICES, null=True, blank=True)
     height = models.CharField(max_length=10, choices=HEIGHT_CHOICES, null=True, blank=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True, blank=True)
     preferred_season = models.CharField(max_length=10, choices=SEASON_CHOICES, null=True, blank=True)
     usage_of_dress = models.CharField(max_length=10, choices=USAGE_CHOICES, null=True, blank=True)
-    is_admin=models.BooleanField(default='False')
+    is_admin=models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
@@ -83,6 +42,11 @@ class Subcategory(models.Model):
         return self.name
 
 class Product(models.Model):
+
+    GENDER_CHOICES = [
+        ('M', 'Male'),
+        ('F', 'Female'),
+    ]
     
     name = models.CharField(max_length=255)
     description = models.TextField()
@@ -90,31 +54,25 @@ class Product(models.Model):
     brand=models.CharField(null=True, max_length=50)
     subcategory = models.ForeignKey(Subcategory, related_name='products', on_delete=models.CASCADE)
     image =models.ImageField(upload_to='products/',null=True)
-    is_trending=models.BooleanField(default='False')
-    summer=models.BooleanField(default='False')
-    winter=models.BooleanField(default='False')
-    rainy=models.BooleanField(default='False')
-    autumn=models.BooleanField(default='False')
+    is_trending=models.BooleanField(default=False)
+    summer=models.BooleanField(default=False)
+    winter=models.BooleanField(default=False)
+    rainy=models.BooleanField(default=False)
+    autumn=models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     created_on = models.DateTimeField(default=timezone.now)
 
+    skin_colors = JSONField(blank=True, default=dict)  # e.g., {"Fair": True, "Dark": True}
+    heights = JSONField(blank=True, default=dict)      # e.g., {"Short": True, "Tall": True}
+    genders = models.CharField(max_length=1, choices=GENDER_CHOICES,null=True,blank=True)
+    usages = JSONField(blank=True, default=dict)       # e.g., {"Casual": True, "Formal": True}
 
-    skin_colors = models.CharField(max_length=255, blank=True)  # e.g., "Fair,Dark"
-    heights = models.CharField(max_length=255, blank=True)       # e.g., "Short,Tall"
-    genders = models.CharField(max_length=255, blank=True)       # e.g., "M,F"
-    usages = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return self.name
 
 class ProductItem(models.Model):
-    SIZES = [
-        ('S', 'Small'),
-        ('M', 'Medium'),
-        ('L', 'Large'),
-        ('XL', 'Extra Large'),
-    ]
     
     product = models.ForeignKey(Product, related_name='items', on_delete=models.CASCADE)
     size = models.CharField(max_length=2, choices=SIZES)
@@ -224,23 +182,6 @@ class Address(models.Model):
 
     
 class Order(models.Model):
-    STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Processing', 'Processing'),
-        ('Completed', 'Completed'),
-    ]
-
-    PAYMENT_METHODS = [
-        ('COD', 'Cash on Delivery'),
-        ('ONLINE', 'Online Payment'),
-    ]
-    PAYMENT_STATUS = [
-        ('Pending', 'Pending'),
-        ('Completed', 'Completed'),
-    ]
-    
-
-
     user = models.ForeignKey(User, related_name='orders', on_delete=models.CASCADE)
     product = models.ManyToManyField(Product)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -263,12 +204,6 @@ class Order(models.Model):
         return f"Order {self.id} by {self.user.username}"
       
 class OrderItem(models.Model):
-    RETURN_STATUS_CHOICES = [
-        ('NO_RETURN', 'No Return'),
-        ('PENDING', 'Return Pending'),
-        ('APPROVED', 'Return Approved'),
-        ('REJECTED', 'Return Rejected'),
-    ]
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product_item = models.ForeignKey(ProductItem, related_name='order_items', on_delete=models.CASCADE,null=True) 
     quantity = models.PositiveIntegerField()
@@ -282,9 +217,6 @@ class OrderItem(models.Model):
     return_status = models.CharField(max_length=10, choices=RETURN_STATUS_CHOICES, default='NO_RETURN')
     refund_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     refund_date = models.DateTimeField(null=True, blank=True)
-
-
-    
 
     def __str__(self):
         return f"{self.product.name} ({self.quantity})"
@@ -326,10 +258,6 @@ class CartItem(models.Model):
 from django.db import models
 
 class Banner(models.Model):
-    VIEW = [
-        ('A', 'Angular'),
-        ('F', 'Flutter'),
-    ]
     image = models.ImageField(upload_to='banners/')
     category = models.ForeignKey(Category, related_name='banners', on_delete=models.CASCADE,null=True)
     is_active = models.BooleanField(default=True)
@@ -366,14 +294,3 @@ class CartHistory(models.Model):
 
     def __str__(self):
         return f"Cart History for {self.user.username} on {self.created_at}"
-
-
-
-
-
-
-
-
-
-
-
