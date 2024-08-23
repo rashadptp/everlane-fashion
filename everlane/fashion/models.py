@@ -211,7 +211,6 @@ class Order(models.Model):
         super().save(*args, **kwargs)
 
     def generate_order_code(self):
-        """Generate a unique order code."""
         return f"ORD-{get_random_string(8).upper()}"
       
 class OrderItem(models.Model):
