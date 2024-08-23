@@ -1342,6 +1342,11 @@ class AddressDeleteView(generics.DestroyAPIView):
 #     #     payment_url = "https://payment-gateway-url.com"
 #     #     return payment_url
 
+
+
+#cccccOMMENT
+
+
 class PlaceOrderView(APIView):
     
     permission_classes = [IsAuthenticated]
