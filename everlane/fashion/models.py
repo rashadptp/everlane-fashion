@@ -4,7 +4,6 @@ from django.utils import timezone
 from django.core.validators import RegexValidator
 from django.db.models import JSONField
 from .variables import *
-from django_cryptography.fields import encrypt
 from django.utils.crypto import get_random_string
 import base64
 
@@ -296,24 +295,6 @@ class Banner(models.Model):
 
     def __str__(self):
         return self.image.url
-
-
-
-
-# from django.db.models.signals import post_save
-# from django.dispatch import receiver
-# from .models import Order
-# from .tasks import send_order_status_email
-
-# @receiver(post_save, sender=Order)
-# def order_status_change(sender, instance, **kwargs):
-#     if instance.status in ['Pending', 'Processing', 'Completed']:
-#         send_order_status_email.delay(instance.user.email, instance.status)
-
-
-
-
-
 
 class CartHistory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
