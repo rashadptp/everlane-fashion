@@ -4,8 +4,8 @@ from django.utils import timezone
 from django.core.validators import RegexValidator
 from django.db.models import JSONField
 from .variables import *
-from django_cryptography.fields import encrypt
 from django.utils.crypto import get_random_string
+import base64
 
 
 class User(AbstractUser):
@@ -87,7 +87,7 @@ class ProductItem(models.Model):
 class Disaster(models.Model):
     user = models.ForeignKey(User, related_name='disaster', on_delete=models.CASCADE,null=True)
     name = models.CharField(max_length=255)
-    adhar = encrypt(models.CharField(max_length=20))  # Encrypting the adhar field
+    adhar =models.CharField(max_length=20)
     location = models.CharField(max_length=255)
     description = models.TextField()
     is_approved = models.BooleanField(default=False)
@@ -104,6 +104,22 @@ class Disaster(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        self.adhar = self.encrypt_data(self.adhar)
+        super().save(*args, **kwargs)
+
+    def encrypt_data(self, data):
+        return base64.b64encode(data.encode()).decode()
+
+    def decrypt_data(self, data):
+        return base64.b64decode(data.encode()).decode()
+
+    @property
+    def decrypted_adhar(self):
+        return self.decrypt_data(self.adhar)
+
+    
 
     def update_fulfillment(self, men_dresses, women_dresses, kids_dresses):
         self.fulfilled_men_dresses += men_dresses
