@@ -296,14 +296,6 @@ class Banner(models.Model):
     def __str__(self):
         return self.image.url
 
-
-
-
-
-
-
-
-
 class CartHistory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     cart_data = JSONField()
