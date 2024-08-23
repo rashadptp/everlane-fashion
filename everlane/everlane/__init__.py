@@ -6,4 +6,6 @@
 
 # __all__ = ('celery_app',)
 
+default_app_config = 'fashion.apps.YourAppConfig'
+
 
