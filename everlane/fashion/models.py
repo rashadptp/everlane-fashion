@@ -245,10 +245,13 @@ class OrderItem(models.Model):
     is_returned = models.BooleanField(default=False)
     return_reason = models.TextField(null=True, blank=True)
     return_requested_on = models.DateTimeField(null=True, blank=True)
+    returned_quantity = models.PositiveIntegerField(default=0)
 
     return_status = models.CharField(max_length=10, choices=RETURN_STATUS_CHOICES, default='NO_RETURN')
     refund_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     refund_date = models.DateTimeField(null=True, blank=True)
+
+    is_fully_returned = models.BooleanField(default=False)
 
     #old
     # def __str__(self):
@@ -256,6 +259,9 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.product_item.product.name} ({self.quantity})"
+    @property
+    def is_fully_returned(self):
+        return self.returned_quantity >= self.quantity
     
 class Wishlist(models.Model):
     user = models.ForeignKey(User, related_name='wishlists', on_delete=models.CASCADE)
