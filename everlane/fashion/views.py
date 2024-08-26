@@ -2199,7 +2199,7 @@ class DressDonationCreateView(APIView):
                 is_torn, is_dirty = self.check_quality(image)
                 if is_dirty or is_torn:
                     return Response({
-                        'status': 'success',
+                        'status': 'error',
                         'message': 'One or more dresses are dirty or torn. Please upload clean dresses and goo condition.',
                         'response_code': status.HTTP_200_OK
                     }, status=status.HTTP_200_OK)
