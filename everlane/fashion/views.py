@@ -1704,7 +1704,7 @@ class RecommendationAPIView(APIView):
         # print(f"Recommended products: {recommended_products}")
 
         # Serialize the filtered products
-        serializer = RecommendSerializer(recommended_products, many=True)
+        serializer = RecommendSerializer(recommended_products, many=True,context={'request': request})
         
 
         return Response({
