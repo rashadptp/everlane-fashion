@@ -17,6 +17,7 @@ urlpatterns = [
     path('orders/<int:pk>/', OrderDetailView.as_view(), name='order-detail'),
     path('request-return/', RequestReturnView.as_view(), name='request-return'),
     path('process-return/', ProcessReturnView.as_view(), name='process-return'),
+    # path('returned-items/', ReturnedItemsListView.as_view(), name='returned-items-list'),
     path('categories/', CategoryListView.as_view(), name='category-list'),
     path('subcategories/', SubcategoryListView.as_view(), name='subcategory-list'),
     path('subcategories/<int:pk>/', SubcategoryDetailView.as_view(), name='subcategory-detail'),

@@ -106,6 +106,7 @@ class Disaster(models.Model):
     def __str__(self):
         return self.name
 
+
     def save(self, *args, **kwargs):
         self.adhar = self.encrypt_data(self.adhar)
         super().save(*args, **kwargs)
@@ -119,6 +120,9 @@ class Disaster(models.Model):
     @property
     def decrypted_adhar(self):
         return self.decrypt_data(self.adhar)
+
+   
+
 
     
 
@@ -246,8 +250,12 @@ class OrderItem(models.Model):
     refund_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     refund_date = models.DateTimeField(null=True, blank=True)
 
+    #old
+    # def __str__(self):
+    #     return f"{self.product.name} ({self.quantity})"
+
     def __str__(self):
-        return f"{self.product.name} ({self.quantity})"
+        return f"{self.product_item.product.name} ({self.quantity})"
     
 class Wishlist(models.Model):
     user = models.ForeignKey(User, related_name='wishlists', on_delete=models.CASCADE)

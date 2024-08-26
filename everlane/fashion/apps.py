@@ -7,3 +7,5 @@ class FashionConfig(AppConfig):
 
     def ready(self):
         import fashion.signals
+
+
