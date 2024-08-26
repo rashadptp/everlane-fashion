@@ -279,7 +279,12 @@ class DisasterSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='created_by.first_name', read_only=True)
     class Meta:
         model = Disaster
-        fields = '__all__'
+        # fields = '__all__'
+        fields=['id', 'name', 'location', 'description', 'is_approved', 
+                  'created_by', 'created_on', 'required_men_dresses', 
+                  'required_women_dresses', 'required_kids_dresses', 
+                  'fulfilled_men_dresses', 'fulfilled_women_dresses', 
+                  'fulfilled_kids_dresses', 'decrypted_adhar',"first_name"]
 
 
 class ImageUploadModelSerializer(serializers.ModelSerializer):
