@@ -23,6 +23,4 @@ def order_status_updated(sender, instance, **kwargs):
         print(f"Failed to send email: {e}")
 
 
-        
-
 

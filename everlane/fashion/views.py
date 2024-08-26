@@ -1711,11 +1711,9 @@ class RecommendationAPIView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-        
+ ############ RETURN ################
 
 
-
-############ RETURN ################
 class RequestReturnView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -2041,6 +2039,7 @@ torn_model = tf.keras.models.load_model('quality_check_dirty.h5')
 dirty_model = tf.keras.models.load_model('quality_check_torn.h5')
 class DressDonationCreateView(APIView):
     permission_classes = [IsAuthenticated]
+    
     def preprocess_image(self, image_file: InMemoryUploadedFile):
         """Preprocess the image for prediction."""
         image = Image.open(image_file)
