@@ -2087,6 +2087,11 @@ class DisasterListCreateView(APIView):
                 'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
+            
+
+        # serializer = DisasterSerializer(data=data)
+        # if serializer.is_valid():
+
         # Create the Disaster instance
         disaster = Disaster(
             name=data['name'],
