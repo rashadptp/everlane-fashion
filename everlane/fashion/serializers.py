@@ -128,6 +128,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','is_trending','skin_colors','heights','genders','usages']
         
 class RecommendSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model=Product
         fields = ['id', 'name', 'description', 'price','brand', 'subcategory', 'image','is_active','created_on','is_deleted','is_trending','winter','summer','rainy','autumn','skin_colors', 'heights', 'genders', 'usages']
