@@ -11,7 +11,14 @@ import json
 from django.core.serializers.json import DjangoJSONEncoder
 from .variables import STATUS_CHOICES
 import uuid
-
+from io import BytesIO
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.units import inch
+from reportlab.pdfgen import canvas
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from django.core.files.base import ContentFile
+from decimal import Decimal
 
 
 #register view
@@ -1488,6 +1495,14 @@ class PlaceOrderView(APIView):
             order.disaster = disaster
             order.pickup_location = pickup_location
             order.save()
+            invoice_number = str(uuid.uuid4()).replace('-', '').upper()[:10]
+            invoice = Invoice.objects.create(
+            order=order,
+            user=user,
+            invoice_number=invoice_number,
+            total_amount=total_amount,
+            )
+            generate_invoice_pdf(invoice)
 
             if payment_method == 'ONLINE':
                 return Response({
@@ -1537,15 +1552,8 @@ class PlaceOrderView(APIView):
                 'status': 'success',
                 'message': 'Order placed successfully for delivery.',
                 'response_code': status.HTTP_201_CREATED,
-                'data': {
-                    'order': OrderSerializer(order).data,
-                        'invoice': {
-                            'invoice_number': invoice.invoice_number,
-                            'total_amount': str(invoice.total_amount),
-                            'created_at': invoice.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                            'pdf_url': invoice.pdf.url if invoice.pdf else None  # Include the PDF URL if generated
-        }
-    }
+                'data':  OrderSerializer(order).data
+    
             }, status=status.HTTP_201_CREATED)
 
         return Response({
@@ -2337,6 +2345,13 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from django.core.files.base import ContentFile
 
+from io import BytesIO
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+from django.core.files.base import ContentFile
+from decimal import Decimal
+
 def generate_invoice_pdf(invoice):
     # Define the file name for the PDF
     file_name = f'invoice_{invoice.invoice_number}.pdf'
@@ -2344,19 +2359,92 @@ def generate_invoice_pdf(invoice):
     # Create a file-like buffer to receive PDF data
     buffer = BytesIO()
     
-    # Create a canvas and set the PDF file size
-    pdf = canvas.Canvas(buffer, pagesize=letter)
+    # Create a PDF document
+    doc = SimpleDocTemplate(buffer, pagesize=A4)
+    story = []
     
-    # Draw text and other elements on the PDF
-    pdf.drawString(100, 750, f"Invoice Number: {invoice.invoice_number}")
-    pdf.drawString(100, 730, f"Total Amount: {invoice.total_amount}")
-    pdf.drawString(100, 710, f"Created At: {invoice.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+    # Define styles
+    styles = getSampleStyleSheet()
+    title_style = styles['Title']
+    heading_style = styles['Heading2']
+    normal_style = styles['Normal']
     
-    # Add more invoice details as needed...
+    # Get order and user details
+    order = invoice.order
+    user = order.user
     
-    # Finalize the PDF
-    pdf.showPage()
-    pdf.save()
+    # Add company information
+    company_info = """
+    <font size=12><b>Everlane Style</b></font><br/>
+    Near MP Tower<br/>
+    Thondayad<br/>
+    Calicut, Kerala, 670601<br/>
+    Phone: (+91) 456-7890<br/>
+    Email: contact@everlane.com
+    """
+    story.append(Paragraph(company_info, normal_style))
+    
+    # Add invoice header
+    header_data = [
+        ['Invoice Number:', invoice.invoice_number],
+        ['Date:', invoice.created_at.strftime('%Y-%m-%d')],
+        ['Due Date:', invoice.created_at.strftime('%Y-%m-%d')],  # Modify if you have a due date
+        ['Customer Name:', user.get_full_name() or user.username],
+    ]
+    
+    header_table = Table(header_data, colWidths=[2.5*inch, 4.5*inch])
+    header_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), (0, 0, 1)), ('TEXTCOLOR', (0, 0), (-1, 0), (1, 1, 1))]))
+    story.append(header_table)
+    
+    # Add invoice items
+    item_data = [['Description', 'Quantity', 'Unit Price', 'Total']]
+    
+    # Use the related name 'items' to get order items
+    for item in order.items.all():
+        item_data.append([
+            item.product_item.product.name,
+            item.quantity,
+            f"Rs.{item.price:.2f}",
+            f"Rs. {(Decimal(item.quantity) * item.price).quantize(Decimal('0.01')):.2f}"
+        ])
+    
+    item_table = Table(item_data, colWidths=[3*inch, 1.5*inch, 1.5*inch, 1.5*inch])
+    item_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), (0, 0, 0.8)),
+        ('TEXTCOLOR', (0, 0), (-1, 0), (1, 1, 1)),
+        ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),
+        ('LINEBELOW', (0, 0), (-1, 0), 1, (0, 0, 0))
+    ]))
+    story.append(item_table)
+    
+    # Add totals
+    totals_data = [
+        ['Subtotal', f"Rs. {invoice.total_amount:.2f}"],
+        ['Tax (5%)', f"Rs. {(invoice.total_amount * Decimal('0.05')).quantize(Decimal('0.01')):.2f}"],  # Assuming 5% tax, adjust as needed
+        ['Total', f"Rs. {(invoice.total_amount+((invoice.total_amount * Decimal('0.05')).quantize(Decimal('0.01')))):.2f}"]
+    ]
+    
+    totals_table = Table(totals_data, colWidths=[3*inch, 1.5*inch])
+    totals_table.setStyle(TableStyle([
+        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
+        ('BACKGROUND', (0, 0), (-1, 0), (0, 0, 0.8)),
+        ('TEXTCOLOR', (0, 0), (-1, 0), (1, 1, 1)),
+        ('LINEABOVE', (0, 0), (-1, 0), 1, (0, 0, 0))
+    ]))
+    story.append(totals_table)
+    
+    # Add footer
+    footer_info = """
+    <font size=10>
+    <b>Thank you for your business!</b><br/>
+    Please make payment if not.<br/>
+    For any queries, contact us at (123) 456-7890 or email us at contact@company.com.
+    </font>
+    """
+    story.append(Paragraph(footer_info, normal_style))
+    
+    # Build the PDF
+    doc.build(story)
     
     # Get the PDF from the buffer
     buffer.seek(0)
