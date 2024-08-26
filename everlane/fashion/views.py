@@ -444,6 +444,9 @@ class CartListView(generics.ListCreateAPIView):
     def get(self, request, *args, **kwargs):
         carts = self.get_queryset()
         serializer = self.get_serializer(carts, many=True)
+        for cart in serializer.data:
+            cart['items'] = sorted(cart['items'], key=lambda item: item['id'])
+        
         return Response({
             'status': 'success',
             'message': 'Cart list retrieved successfully.',
@@ -598,6 +601,7 @@ class UpdateCartItemQuantityView(APIView):
 
         try:
             cart_item = CartItem.objects.get(id=cart_item_id, cart__user=user, is_active=True, is_deleted=False)
+            
         except CartItem.DoesNotExist:
             return Response({
                 'status': 'failed',
