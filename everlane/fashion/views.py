@@ -1741,6 +1741,7 @@ class RequestReturnView(APIView):
         refund_amount = return_quantity * order_item.price
         order_item.refund_amount = refund_amount
         order_item.refund_date = timezone.now()
+        order_item.save()
 
         return Response({
             'status': 'success',
