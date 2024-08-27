@@ -2088,9 +2088,18 @@ class DressDonationCreateView(APIView):
             men_dresses = serializer.validated_data.get('men_dresses', 0)
             women_dresses = serializer.validated_data.get('women_dresses', 0)
             kids_dresses = serializer.validated_data.get('kids_dresses', 0)
+            total_dresses = men_dresses + women_dresses + kids_dresses
 
             #  the quality check
             images = request.FILES.getlist('images')
+            print(len(images))
+            if total_dresses != len(images):
+                return Response({
+                    'status': 'failed',
+                    'message': 'The number of dresses does not match the number of images uploaded.',
+                    'response_code': status.HTTP_200_OK
+                }, status=status.HTTP_200_OK)
+
             for image in images:
                 is_torn, is_dirty = self.check_quality(image)
                 if is_dirty or is_torn:
