@@ -2243,13 +2243,15 @@ from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from django.core.files.base import ContentFile
-
+from reportlab.lib import colors
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
 from django.core.files.base import ContentFile
 from decimal import Decimal
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 
 def generate_invoice_pdf(invoice):
     # Define the file name for the PDF
@@ -2264,15 +2266,37 @@ def generate_invoice_pdf(invoice):
     
     # Define styles
     styles = getSampleStyleSheet()
-    title_style = styles['Title']
-    heading_style = styles['Heading2']
-    normal_style = styles['Normal']
+    
+    # Custom styles
+    title_style = ParagraphStyle(
+        'Title',
+        parent=styles['Title'],
+        fontSize=24,
+        spaceAfter=20,
+        textColor=colors.HexColor('#0d47a1')  # Dark blue
+    )
+    
+    heading_style = ParagraphStyle(
+        'Heading2',
+        parent=styles['Heading2'],
+        fontSize=16,
+        spaceAfter=12,
+        textColor=colors.HexColor('#424242')  # Dark gray
+    )
+    
+    normal_style = ParagraphStyle(
+        'Normal',
+        parent=styles['Normal'],
+        fontSize=12,
+        spaceAfter=8,
+        textColor=colors.HexColor('#212121')  # Gray black
+    )
     
     # Get order and user details
     order = invoice.order
     user = order.user
     
-    # Add company information
+    # Add company information with spacing and bold text
     company_info = """
     <font size=12><b>Everlane Style</b></font><br/>
     Near MP Tower<br/>
@@ -2282,8 +2306,9 @@ def generate_invoice_pdf(invoice):
     Email: contact@everlane.com
     """
     story.append(Paragraph(company_info, normal_style))
+    story.append(Spacer(1, 12))  # Add space between sections
     
-    # Add invoice header
+    # Add invoice header with a background color
     header_data = [
         ['Invoice Number:', invoice.invoice_number],
         ['Date:', invoice.created_at.strftime('%Y-%m-%d')],
@@ -2292,10 +2317,20 @@ def generate_invoice_pdf(invoice):
     ]
     
     header_table = Table(header_data, colWidths=[2.5*inch, 4.5*inch])
-    header_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), (0, 0, 1)), ('TEXTCOLOR', (0, 0), (-1, 0), (1, 1, 1))]))
+    header_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d47a1')),  # Dark blue background
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#212121')),  # Gray black text
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Bold font for header
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # Add padding to header row
+        ('TOPPADDING', (0, 0), (-1, 0), 12),
+    ]))
     story.append(header_table)
+    story.append(Spacer(1, 12))  # Add space between sections
     
-    # Add invoice items
+    # Add invoice items with alternating row colors
     item_data = [['Description', 'Quantity', 'Unit Price', 'Total']]
     
     # Use the related name 'items' to get order items
@@ -2309,14 +2344,18 @@ def generate_invoice_pdf(invoice):
     
     item_table = Table(item_data, colWidths=[3*inch, 1.5*inch, 1.5*inch, 1.5*inch])
     item_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), (0, 0, 0.8)),
-        ('TEXTCOLOR', (0, 0), (-1, 0), (1, 1, 1)),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d47a1')),  # Dark blue header
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text for header
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#212121')),  # Gray black text for rows
         ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),
-        ('LINEBELOW', (0, 0), (-1, 0), 1, (0, 0, 0))
+        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.whitesmoke, colors.lightgrey]),  # Alternating row colors
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),  # Grid lines
     ]))
     story.append(item_table)
+    story.append(Spacer(1, 12))  # Add space between sections
     
-    # Add totals
+    # Add totals with bold text
     totals_data = [
         ['Subtotal', f"Rs. {invoice.total_amount:.2f}"],
         ['Tax (5%)', f"Rs. {(invoice.total_amount * Decimal('0.05')).quantize(Decimal('0.01')):.2f}"],  # Assuming 5% tax, adjust as needed
@@ -2326,18 +2365,22 @@ def generate_invoice_pdf(invoice):
     totals_table = Table(totals_data, colWidths=[3*inch, 1.5*inch])
     totals_table.setStyle(TableStyle([
         ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
-        ('BACKGROUND', (0, 0), (-1, 0), (0, 0, 0.8)),
-        ('TEXTCOLOR', (0, 0), (-1, 0), (1, 1, 1)),
-        ('LINEABOVE', (0, 0), (-1, 0), 1, (0, 0, 0))
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d47a1')),  # Dark blue background for subtotal row
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text for subtotal row
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#212121')),  # Gray black text for other rows
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),  # Bold font
+        ('LINEABOVE', (0, 0), (-1, 0), 1, colors.black),
+        ('LINEABOVE', (0, 2), (-1, 2), 2, colors.black),  # Thick line above total
     ]))
     story.append(totals_table)
+    story.append(Spacer(1, 24))  # Add space before the footer
     
-    # Add footer
+    # Add footer with thank you note and contact info
     footer_info = """
     <font size=10>
     <b>Thank you for your business!</b><br/>
     Please make payment if not.<br/>
-    For any queries, contact us at (123) 456-7890 or email us at contact@company.com.
+    For any queries, contact us at (123) 456-7890 or email us at contact@everlane.com.
     </font>
     """
     story.append(Paragraph(footer_info, normal_style))
@@ -2351,8 +2394,6 @@ def generate_invoice_pdf(invoice):
     
     # Save the PDF file to the invoice model
     invoice.pdf.save(file_name, pdf_file)
-
-
 
 
 
@@ -2373,10 +2414,21 @@ class ExecutePaymentView(APIView):
                 order.is_completed = True
                 order.save()
 
+                # Generate the invoice for the completed payment
+                invoice_number = str(uuid.uuid4()).replace('-', '').upper()[:10]
+                invoice = Invoice.objects.create(
+                    order=order,
+                    user=order.user,
+                    invoice_number=invoice_number,
+                    total_amount=order.total_amount,
+                )
+                generate_invoice_pdf(invoice)
+
                 return Response({
                     'status': 'success',
-                    'message': 'Payment completed successfully and order Placed.',
-                    'response_code': status.HTTP_200_OK
+                    'message': 'Payment completed successfully and order placed.',
+                    'response_code': status.HTTP_200_OK,
+                    'data': OrderSerializer(order).data
                 }, status=status.HTTP_200_OK)
             else:
                 return Response({
@@ -2398,6 +2450,7 @@ class ExecutePaymentView(APIView):
                 'message': str(e),
                 'response_code': status.HTTP_500_INTERNAL_SERVER_ERROR
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class CancelPaymentView(APIView):
     permission_classes = [IsAuthenticated]
