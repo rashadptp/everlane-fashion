@@ -2643,3 +2643,20 @@ class CancelPaymentView(APIView):
                 'message': 'Payment Canceled.',
                 'response_code': status.HTTP_200_OK
             }, status=status.HTTP_200_OK)
+    
+
+
+class PickupListView(generics.ListCreateAPIView):
+    queryset = PickupLocation.objects.all()
+    serializer_class = PickupLocationSerializer
+
+    def get(self, request, *args, **kwargs):
+        pickups = self.get_queryset()
+        serializer = self.get_serializer(pickups, many=True)
+        response_data = {
+            'status': 'success',
+            'message': 'Pickup Location retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }
+        return Response(response_data)

@@ -18,6 +18,7 @@ urlpatterns = [
     path('process-return/', ProcessReturnView.as_view(), name='process-return'),
     path('return-pending/', ReturnPendingView.as_view(), name='return-pending'),
     path('categories/', CategoryListView.as_view(), name='category-list'),
+    path('pickups/',PickupListView.as_view(),name='pickup-list'),
     path('subcategories/', SubcategoryListView.as_view(), name='subcategory-list'),
     path('subcategories/<int:pk>/', SubcategoryDetailView.as_view(), name='subcategory-detail'),
     path('carts/', CartListView.as_view(), name='cart-list'),
