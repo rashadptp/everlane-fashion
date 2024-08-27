@@ -1682,6 +1682,7 @@ class OrderListView(generics.ListAPIView):
 
 # from .tasks import send_order_status_email
 
+
 class UpdateOrderStatusView(APIView):
     permission_classes = [IsAuthenticated,IsAdminUser]
 
@@ -1705,9 +1706,10 @@ class UpdateOrderStatusView(APIView):
                 'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        
         order.order_status = order_status
         order.save()
-
+        
 
 
 
@@ -1718,7 +1720,6 @@ class UpdateOrderStatusView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': OrderSerializer(order).data
         }, status=status.HTTP_200_OK)
-
 
 
 
@@ -1983,7 +1984,7 @@ class ReturnPendingView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get(self, request, *args, **kwargs):
-        return_to_approve = OrderItem.objects.filter(is_returned=False)
+        return_to_approve = OrderItem.objects.filter(is_returned=True,order_status="PENDING")
         serializer = OrderItemSerializer(return_to_approve, many=True)
         return Response({
             'status': 'success',

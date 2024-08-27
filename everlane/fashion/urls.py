@@ -53,6 +53,7 @@ urlpatterns = [
     path('payment/cancel/', CancelPaymentView.as_view(), name='payment-cancel'),
 
 
+
     #######################################  DONATIONS      #############################
 
     path('disasters/', DisasterListCreateView.as_view(), name='disaster-list-create'),
@@ -62,7 +63,7 @@ urlpatterns = [
     path('user-donations/', UserDonationListView.as_view(), name='user-donation-list'),
     path('disasters/<int:disaster_id>/donations/', DisasterDonationsView.as_view(), name='disaster-donations'),
     path('my-disasters/', UserDisastersView.as_view(), name='user-disasters'),
-
+     
     
 
     
