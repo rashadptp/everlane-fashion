@@ -22,6 +22,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from django.core.files.base import ContentFile
 from decimal import Decimal
+from django.db.models import F
 
 
 #register view
@@ -1955,7 +1956,11 @@ class DisasterListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        disasters = Disaster.objects.filter(is_approved=True)
+        disasters = Disaster.objects.filter(is_approved=True).exclude(
+            fulfilled_men_dresses__gte=F('required_men_dresses'),
+            fulfilled_women_dresses__gte=F('required_women_dresses'),
+            fulfilled_kids_dresses__gte=F('required_kids_dresses')
+        )
         serializer = DisasterSerializer(disasters, many=True)
         return Response({
             'status': 'success',
