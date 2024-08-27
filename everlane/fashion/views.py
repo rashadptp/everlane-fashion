@@ -1733,7 +1733,7 @@ class RequestReturnView(APIView):
 
         # Check if fully returned
         if order_item.is_fully_returned:
-            order_item.return_status = 'RETURNED'
+            order_item.return_status = 'PENDING'
         
         order_item.save()
 
