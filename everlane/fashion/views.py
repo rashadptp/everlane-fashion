@@ -11,8 +11,8 @@ import json
 from django.core.serializers.json import DjangoJSONEncoder
 from .variables import STATUS_CHOICES
 import uuid
-import paypalrestsdk
 from paypalrestsdk import Payment,configure
+import paypalrestsdk
 from django.conf import settings
 from io import BytesIO
 from reportlab.lib.pagesizes import letter, A4
@@ -1143,33 +1143,6 @@ class AddressCreateView(APIView):
 
 
 
-
-# class AddressCreateView(generics.CreateAPIView):
-#     permission_classes = [IsAuthenticated]
-#     serializer_class = AddressSerializer
-
-#     def perform_create(self, serializer):
-#         serializer.save(user=self.request.user)
-    
-#     def post(self, request, *args, **kwargs):
-#         serializer = self.get_serializer(data=request.data)
-#         if serializer.is_valid():
-#             self.perform_create(serializer)
-#             return Response({
-#                 'status': 'success',
-#                 'message': 'Address created successfully.',
-#                 'response_code': status.HTTP_201_CREATED,
-#                 'data': serializer.data
-#             }, status=status.HTTP_201_CREATED)
-#         else:
-#             return Response({
-#                 'status': 'failed',
-#                 'message': 'Address creation failed.',
-#                 'response_code': status.HTTP_400_BAD_REQUEST,
-#                 'errors': serializer.errors
-#             }, status=status.HTTP_400_BAD_REQUEST)
-
-
 class AddressDeleteView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
     queryset = Address.objects.all()
@@ -1556,41 +1529,6 @@ class UpdateOrderStatusView(APIView):
 
 
         
-
-# class RecommendDressView(APIView):
-#     def post(self, request, *args, **kwargs):
-#         skin_color = request.data.get('skin_color')
-#         height = request.data.get('height')
-#         gender = request.data.get('gender')
-#         preferred_season = request.data.get('preferred_season')
-#         usage_of_dress = request.data.get('usage_of_dress')
-
-#         # Load the pre-trained model
-#         model_path = 'recommendation_model.pkl'
-#         clf = joblib.load(model_path)
-
-#         # Create the input DataFrame
-#         input_data = pd.DataFrame({
-#             'skin_type': [skin_color],
-#             'height': [height],
-#             'gender': [gender],
-#             'season': [preferred_season],
-#             'usage': [usage_of_dress]
-#         })
-#         input_data = pd.get_dummies(input_data)
-
-#         # Predict the recommended dress
-#         dress_ids = clf.predict(input_data)
-#         recommended_dresses = Product.objects.filter(id__in=dress_ids)
-
-#         serializer = ProductSerializer(recommended_dresses, many=True)
-#         return Response({
-#             'status': 'success',
-#             'message': 'Dresses recommended successfully.',
-#             'response_code': status.HTTP_200_OK,
-#             'data': serializer.data
-#         })
-
 class RecommendationAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -1795,7 +1733,7 @@ class RequestReturnView(APIView):
 
         # Check if fully returned
         if order_item.is_fully_returned:
-            order_item.return_status = 'RETURNED'
+            order_item.return_status = 'PENDING'
         
         order_item.save()
 
@@ -2150,9 +2088,18 @@ class DressDonationCreateView(APIView):
             men_dresses = serializer.validated_data.get('men_dresses', 0)
             women_dresses = serializer.validated_data.get('women_dresses', 0)
             kids_dresses = serializer.validated_data.get('kids_dresses', 0)
+            total_dresses = men_dresses + women_dresses + kids_dresses
 
             #  the quality check
             images = request.FILES.getlist('images')
+            print(len(images))
+            if total_dresses != len(images):
+                return Response({
+                    'status': 'failed',
+                    'message': 'The number of dresses does not match the number of images uploaded.',
+                    'response_code': status.HTTP_200_OK
+                }, status=status.HTTP_200_OK)
+
             for image in images:
                 is_torn, is_dirty = self.check_quality(image)
                 if is_dirty or is_torn:
