@@ -349,4 +349,16 @@ class DressDonationListSerializer(serializers.ModelSerializer):
         return [image.image.url for image in obj.images.all()]
 
 
+# from rest_framework import serializers
+# from notifications.models import Notification
+
+# class NotificationSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Notification
+#         fields = ['id', 'verb', 'description', 'timestamp']
+
+
+    
+
+
 
