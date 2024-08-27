@@ -341,7 +341,7 @@ class Invoice(models.Model):
         return f"Invoice {self.invoice_number} for Order {self.order.id}"
 
 
-#Notification
+######Notification######
 
 # class Notification(models.Model):
 #     recipient = models.ForeignKey(User, related_name='notifications', on_delete=models.CASCADE)
