@@ -49,6 +49,9 @@ urlpatterns = [
     path('profile/change-password/',PasswordChangeView.as_view(), name='change-password'),
     
 
+    path('payment/execute/', ExecutePaymentView.as_view(), name='payment-execute'),
+    path('payment/cancel/', CancelPaymentView.as_view(), name='payment-cancel'),
+
 
     #######################################  DONATIONS      #############################
 

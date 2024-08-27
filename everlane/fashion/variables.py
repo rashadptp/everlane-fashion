@@ -52,6 +52,7 @@ PAYMENT_METHODS = [
 PAYMENT_STATUS = [
         ('Pending', 'Pending'),
         ('Completed', 'Completed'),
+        ('Canceled', 'Canceled')
     ]
 
 RETURN_STATUS_CHOICES = [

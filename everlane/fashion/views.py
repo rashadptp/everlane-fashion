@@ -1361,11 +1361,22 @@ class AddressDeleteView(generics.DestroyAPIView):
 
 #cccccOMMENT
 
+from paypalrestsdk import Payment,configure
+import paypalrestsdk
+from django.conf import settings
 
 class PlaceOrderView(APIView):
     
     permission_classes = [IsAuthenticated]
-
+    @staticmethod
+    def initialize_paypal():
+        configure({
+            "mode": settings.PAYPAL_MODE,
+            "client_id": settings.PAYPAL_CLIENT_ID,
+            "client_secret": settings.PAYPAL_CLIENT_SECRET
+        })
+        
+        
     def post(self, request, *args, **kwargs):
         user = request.user
         
@@ -1505,14 +1516,57 @@ class PlaceOrderView(APIView):
             generate_invoice_pdf(invoice)
 
             if payment_method == 'ONLINE':
-                return Response({
-                    'status': 'success',
-                    'message': 'Order placed successfully as a donation. Payment will be integrated later.',
-                    'response_code': status.HTTP_201_CREATED,
-                    'data': {
-                        'order': OrderSerializer(order).data,
-                    }
-                }, status=status.HTTP_201_CREATED)
+                # Integrate PayPal payment
+                PlaceOrderView.initialize_paypal()
+
+                payment = Payment({
+                    "intent": "sale",
+                    "payer": {
+                        "payment_method": "paypal"
+                    },
+                    "redirect_urls": {
+                        "return_url": "http://localhost:8000/api/payment/execute/",
+                        "cancel_url": "http://localhost:8000/api/payment/cancel/"
+                    },
+                    "transactions": [{
+                        "item_list": {
+                            "items": [{
+                                "name": "Cart Items",
+                                "sku": "001",
+                                "price": str(total_amount),
+                                "currency": "USD",
+                                "quantity": 1
+                            }]
+                        },
+                        "amount": {
+                            "total": str(total_amount),
+                            "currency": "USD"
+                        },
+                        "description": "This is the payment transaction description."
+                    }]
+                })
+
+                if payment.create():
+                    # Save payment ID for further use
+                    order.paypal_payment_id = payment.id
+                    order.save()
+
+                    for link in payment.links:
+                        if link.rel == "approval_url":
+                            order.payment_status = 'Pending'
+                            order.save()
+                            return Response({
+                                'status': 'success',
+                                'message': 'Order placed successfully. Redirecting to PayPal.',
+                                'approval_url': link.href,
+                                'response_code': status.HTTP_201_CREATED
+                            }, status=status.HTTP_201_CREATED)
+                else:
+                    return Response({
+                        'status': 'failed',
+                        'message': 'Error occurred while processing PayPal payment.',
+                        'response_code': status.HTTP_400_BAD_REQUEST
+                    }, status=status.HTTP_400_BAD_REQUEST)
 
             return Response({
                 'status': 'success',
@@ -1527,14 +1581,57 @@ class PlaceOrderView(APIView):
             order.save()
 
             if payment_method == 'ONLINE':
-                return Response({
-                    'status': 'success',
-                    'message': 'Order placed successfully for delivery. Payment will be integrated later.',
-                    'response_code': status.HTTP_201_CREATED,
-                    'data': {
-                        'order': OrderSerializer(order).data,
-                    }
-                }, status=status.HTTP_201_CREATED)
+                # Integrate PayPal payment
+                PlaceOrderView.initialize_paypal()
+
+                payment = Payment({
+                    "intent": "sale",
+                    "payer": {
+                        "payment_method": "paypal"
+                    },
+                    "redirect_urls": {
+                        "return_url": "http://localhost:8000/api/payment/execute/",
+                        "cancel_url": "http://localhost:8000/api/payment/cancel/"
+                    },
+                    "transactions": [{
+                        "item_list": {
+                            "items": [{
+                                "name": "Cart Items",
+                                "sku": "001",
+                                "price": str(total_amount),
+                                "currency": "USD",
+                                "quantity": 1
+                            }]
+                        },
+                        "amount": {
+                            "total": str(total_amount),
+                            "currency": "USD"
+                        },
+                        "description": "This is the payment transaction description."
+                    }]
+                })
+
+                if payment.create():
+                    # Save payment ID for further use
+                    order.paypal_payment_id = payment.id
+                    order.save()
+
+                    for link in payment.links:
+                        if link.rel == "approval_url":
+                            order.payment_status = 'Pending'
+                            order.save()
+                            return Response({
+                                'status': 'success',
+                                'message': 'Order placed successfully. Redirecting to PayPal.',
+                                'approval_url': link.href,
+                                'response_code': status.HTTP_201_CREATED
+                            }, status=status.HTTP_201_CREATED)
+                else:
+                    return Response({
+                        'status': 'failed',
+                        'message': 'Error occurred while processing PayPal payment.',
+                        'response_code': status.HTTP_400_BAD_REQUEST
+                    }, status=status.HTTP_400_BAD_REQUEST)
 
             order.payment_status = 'Completed'
             order.save()
@@ -2472,3 +2569,77 @@ def generate_invoice_pdf(invoice):
     
     # Save the PDF file to the invoice model
     invoice.pdf.save(file_name, pdf_file)
+
+
+
+
+
+
+class ExecutePaymentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        payment_id = request.GET.get('paymentId')
+        payer_id = request.GET.get('PayerID')
+
+        try:
+            payment = Payment.find(payment_id)
+
+            if payment.execute({"payer_id": payer_id}):
+                order = Order.objects.get(paypal_payment_id=payment_id)
+                order.payment_status = 'Completed'
+                order.is_completed = True
+                order.save()
+
+                return Response({
+                    'status': 'success',
+                    'message': 'Payment completed successfully and order updated.',
+                    'response_code': status.HTTP_200_OK
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    'status': 'failed',
+                    'message': 'Payment execution failed.',
+                    'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        except Order.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Order not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({
+                'status': 'error',
+                'message': str(e),
+                'response_code': status.HTTP_500_INTERNAL_SERVER_ERROR
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class CancelPaymentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        # Extract the payment ID from the request
+        payment_id = request.GET.get('token')
+        
+        # Log the cancellation or update order status if needed
+        # For example, you might want to set an order status to "Canceled"
+        # or delete an order if you keep track of such cases
+        
+        # Here is an optional step to update the order status
+        try:
+            order = Order.objects.get(paypal_payment_id=payment_id)
+            order.payment_status = 'Canceled'
+            order.save()
+        except Order.DoesNotExist:
+            # Handle the case where the order was not found
+            pass
+        
+        # Provide feedback to the user
+        return Response({
+                'status': 'failed',
+                'message': 'Payment Canceled.',
+                'response_code': status.HTTP_200_OK
+            }, status=status.HTTP_200_OK)

@@ -211,6 +211,11 @@ class Order(models.Model):
     delivery_address = models.ForeignKey(Address, related_name='orders', null=True, blank=True, on_delete=models.SET_NULL)
 
 
+    paypal_order_id = models.CharField(max_length=50, null=True, blank=True)
+    paypal_payment_id = models.CharField(max_length=50, null=True, blank=True)
+    paypal_payer_id = models.CharField(max_length=50, null=True, blank=True)
+
+
     def __str__(self):
         return f"Order {self.order_code} by {self.user.username}"
     
