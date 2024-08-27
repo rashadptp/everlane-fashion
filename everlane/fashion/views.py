@@ -1756,7 +1756,7 @@ class ReturnPendingView(APIView):
 
     def get(self, request, *args, **kwargs):
         return_to_approve = OrderItem.objects.filter(is_returned=True,return_status="PENDING")
-        serializer = OrderItemSerializer(return_to_approve, many=True)
+        serializer = OrderItemSerializer(return_to_approve, many=True,context={'request': request})
 
         return Response({
             'status': 'success',
