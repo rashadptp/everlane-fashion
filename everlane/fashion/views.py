@@ -11,6 +11,9 @@ import json
 from django.core.serializers.json import DjangoJSONEncoder
 from .variables import STATUS_CHOICES
 import uuid
+import paypalrestsdk
+from paypalrestsdk import Payment,configure
+from django.conf import settings
 from io import BytesIO
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.units import inch
@@ -1192,178 +1195,7 @@ class AddressDeleteView(generics.DestroyAPIView):
 
 
 
-# class PlaceOrderView(APIView):
-#     permission_classes = [IsAuthenticated]
 
-#     def post(self, request, *args, **kwargs):
-#         user = request.user
-#         payment_method = request.data.get('payment_method')
-#         order_type = request.data.get('order_type')  # 'delivery' or 'donate'
-#         address_id = request.data.get('address_id')  # For delivery option
-#         disaster_id = request.data.get('disaster_id')  # For donation option
-#         pickup_location_id = request.data.get('pickup_location_id')  # For donation option
-
-#         # Validate payment method
-#         if payment_method not in ['COD', 'ONLINE']:
-#             return Response({
-#                 'status': 'failed',
-#                 'message': 'Invalid payment method.',
-#                 'response_code': status.HTTP_400_BAD_REQUEST
-#             }, status=status.HTTP_400_BAD_REQUEST)
-
-#         # Validate order type
-#         if order_type not in ['delivery', 'donate']:
-#             return Response({
-#                 'status': 'failed',
-#                 'message': 'Invalid order type.',
-#                 'response_code': status.HTTP_400_BAD_REQUEST
-#             }, status=status.HTTP_400_BAD_REQUEST)
-
-#         # Restrict COD for donations
-#         if order_type == 'donate' and payment_method == 'COD':
-#             return Response({
-#                 'status': 'failed',
-#                 'message': 'COD is not available for donations.',
-#                 'response_code': status.HTTP_400_BAD_REQUEST
-#             }, status=status.HTTP_400_BAD_REQUEST)
-
-#         # Get the user's active cart
-#         try:
-#             cart = Cart.objects.get(user=user, is_active=True, is_deleted=False)
-#         except Cart.DoesNotExist:
-#             return Response({
-#                 'status': 'failed',
-#                 'message': 'No active cart found for the user.',
-#                 'response_code': status.HTTP_404_NOT_FOUND
-#             }, status=status.HTTP_404_NOT_FOUND)
-
-#         cart_items = CartItem.objects.filter(cart=cart, is_active=True, is_deleted=False)
-#         if not cart_items.exists():
-#             return Response({
-#                 'status': 'failed',
-#                 'message': 'No items in the cart to place an order.',
-#                 'response_code': status.HTTP_400_BAD_REQUEST
-#             }, status=status.HTTP_400_BAD_REQUEST)
-
-#         # Calculate the total amount
-#         total_amount = sum(item.product.price * item.quantity for item in cart_items)
-
-#         # Create the order
-#         order = Order.objects.create(
-#             user=user,
-#             total_amount=total_amount,
-#             payment_method=payment_method,
-#             is_completed=False if payment_method == 'ONLINE' else True,
-#             is_donated=True if order_type == 'donate' else False
-#         )
-
-#         # Create order items from cart items
-#         for item in cart_items:
-#             OrderItem.objects.create(
-#                 order=order,
-#                 product=item.product,
-#                 quantity=item.quantity,
-#                 price=item.product.price
-#             )
-
-#         # Clear the cart
-#         cart_items.delete()
-#         cart.save()
-
-#         # If the order is a donation
-#         if order_type == 'donate':
-#             try:
-#                 disaster = Disaster.objects.get(id=disaster_id)
-#                 pickup_location = PickupLocation.objects.get(id=pickup_location_id)
-#             except Disaster.DoesNotExist:
-#                 return Response({
-#                     'status': 'failed',
-#                     'message': 'Invalid disaster selected.',
-#                     'response_code': status.HTTP_400_BAD_REQUEST
-#                 }, status=status.HTTP_400_BAD_REQUEST)
-#             except PickupLocation.DoesNotExist:
-#                 return Response({
-#                     'status': 'failed',
-#                     'message': 'Invalid pickup location selected.',
-#                     'response_code': status.HTTP_400_BAD_REQUEST
-#                 }, status=status.HTTP_400_BAD_REQUEST)
-
-#             # Assign disaster and pickup location to the order
-#             order.disaster = disaster
-#             order.pickup_location = pickup_location
-#             order.save()
-
-#             if payment_method == 'ONLINE':
-#                 # Integrate with a payment gateway here
-#                 return Response({
-#                     'status': 'success',
-#                     'message': 'Order placed successfully as a donation. Payment will be integrated later.',
-#                     'response_code': status.HTTP_201_CREATED,
-#                     'data': {
-#                         'order': OrderSerializer(order).data,
-#                         # 'payment_url': payment_url  # Placeholder for payment URL
-#                     }
-#                 }, status=status.HTTP_201_CREATED)
-
-#             return Response({
-#                 'status': 'success',
-#                 'message': 'Order placed successfully as a donation.',
-#                 'response_code': status.HTTP_201_CREATED,
-#                 'data': OrderSerializer(order).data
-#             }, status=status.HTTP_201_CREATED)
-
-#         # If the order is for delivery
-#         if order_type == 'delivery':
-#             try:
-#                 address = Address.objects.get(id=address_id, user=user, is_deleted=False)
-#             except Address.DoesNotExist:
-#                 return Response({
-#                     'status': 'failed',
-#                     'message': 'Invalid address selected.',
-#                     'response_code': status.HTTP_400_BAD_REQUEST
-#                 }, status=status.HTTP_400_BAD_REQUEST)
-
-#             # Assign the delivery address to the order
-#             order.delivery_address = address
-#             order.save()
-
-#             if payment_method == 'ONLINE':
-#                 # Integrate with a payment gateway here
-#                 return Response({
-#                     'status': 'success',
-#                     'message': 'Order placed successfully for delivery. Payment will be integrated later.',
-#                     'response_code': status.HTTP_201_CREATED,
-#                     'data': {
-#                         'order': OrderSerializer(order).data,
-#                         # 'payment_url': payment_url  # Placeholder for payment URL
-#                     }
-#                 }, status=status.HTTP_201_CREATED)
-#             order.payment_status='Completed'
-#             return Response({
-#                 'status': 'success',
-#                 'message': 'Order placed successfully for delivery.',
-#                 'response_code': status.HTTP_201_CREATED,
-#                 'data': OrderSerializer(order).data
-#             }, status=status.HTTP_201_CREATED)
-
-#         return Response({
-#             'status': 'failed',
-#             'message': 'Unknown error occurred.',
-#             'response_code': status.HTTP_400_BAD_REQUEST
-#         }, status=status.HTTP_400_BAD_REQUEST)
-#     # def initiate_online_payment(self, order):
-#     #     # Placeholder for initiating an online payment
-#     #     # This should be replaced with actual payment gateway integration code
-#     #     payment_url = "https://payment-gateway-url.com"
-#     #     return payment_url
-
-
-
-#cccccOMMENT
-
-from paypalrestsdk import Payment,configure
-import paypalrestsdk
-from django.conf import settings
 
 class PlaceOrderView(APIView):
     
@@ -2593,7 +2425,7 @@ class ExecutePaymentView(APIView):
 
                 return Response({
                     'status': 'success',
-                    'message': 'Payment completed successfully and order updated.',
+                    'message': 'Payment completed successfully and order Placed.',
                     'response_code': status.HTTP_200_OK
                 }, status=status.HTTP_200_OK)
             else:
@@ -2623,12 +2455,7 @@ class CancelPaymentView(APIView):
     def get(self, request, *args, **kwargs):
         # Extract the payment ID from the request
         payment_id = request.GET.get('token')
-        
-        # Log the cancellation or update order status if needed
-        # For example, you might want to set an order status to "Canceled"
-        # or delete an order if you keep track of such cases
-        
-        # Here is an optional step to update the order status
+ 
         try:
             order = Order.objects.get(paypal_payment_id=payment_id)
             order.payment_status = 'Canceled'
