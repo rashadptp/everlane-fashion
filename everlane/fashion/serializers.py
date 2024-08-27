@@ -347,3 +347,6 @@ class DressDonationListSerializer(serializers.ModelSerializer):
         Return URLs of the uploaded images.
         """
         return [image.image.url for image in obj.images.all()]
+
+
+
