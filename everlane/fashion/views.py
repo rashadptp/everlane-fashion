@@ -356,7 +356,7 @@ class AddProductItemView(generics.CreateAPIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
         # Validate size
-        if size not in [choice[0] for choice in ProductItem.SIZES]:
+        if size not in [choice[0] for choice in SIZES]:
             return Response({
                 'status': 'failed',
                 'message': 'Invalid size.',
@@ -1599,7 +1599,7 @@ class UpdateOrderStatusView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
         order_status = request.data.get('order_status')
-        
+    
 
         if order_status not in dict(STATUS_CHOICES):
             return Response({
@@ -1880,6 +1880,21 @@ class RequestReturnView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': OrderItemSerializer(order_item).data
         }, status=status.HTTP_200_OK)
+
+
+class ReturnPendingView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        return_to_approve = OrderItem.objects.filter(is_returned=False)
+        serializer = OrderItemSerializer(return_to_approve, many=True)
+        return Response({
+            'status': 'success',
+            'message': 'Return awaiting approval retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
+
     
 
 class ProcessReturnView(APIView):
@@ -2100,7 +2115,7 @@ class DisasterListCreateView(APIView):
         # serializer = DisasterSerializer(data=data)
         # if serializer.is_valid():
 
-        # Create the Disaster instance
+            
         disaster = Disaster(
             name=data['name'],
             user=user,

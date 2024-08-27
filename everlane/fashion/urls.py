@@ -16,7 +16,7 @@ urlpatterns = [
     path('orders/', OrderListView.as_view(), name='order-list'),
     path('request-return/', RequestReturnView.as_view(), name='request-return'),
     path('process-return/', ProcessReturnView.as_view(), name='process-return'),
-    # path('returned-items/', ReturnedItemsListView.as_view(), name='returned-items-list'),
+    path('return-pending/', ReturnPendingView.as_view(), name='return-pending'),
     path('categories/', CategoryListView.as_view(), name='category-list'),
     path('subcategories/', SubcategoryListView.as_view(), name='subcategory-list'),
     path('subcategories/<int:pk>/', SubcategoryDetailView.as_view(), name='subcategory-detail'),
@@ -47,6 +47,7 @@ urlpatterns = [
     path('profile/', UserProfileView.as_view(), name='user-profile-detail'), 
     path('profile/update/',ProfileUpdateView.as_view(), name='user-profile-update'),
     path('profile/change-password/',PasswordChangeView.as_view(), name='change-password'),
+    
 
 
     #######################################  DONATIONS      #############################

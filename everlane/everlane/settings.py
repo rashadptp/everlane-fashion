@@ -46,7 +46,10 @@ INSTALLED_APPS = [
     'corsheaders',
     
     
+    
 ]
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -77,6 +80,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = 'everlane.wsgi.application'
 
