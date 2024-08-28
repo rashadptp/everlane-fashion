@@ -150,8 +150,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
-    # 'DEFAULT_PAGINATION_CLASS': 'fashion.pagination.CustomPagination',  # Ensure this path is correct
-    # 'PAGE_SIZE': 10, 
+    'DEFAULT_PAGINATION_CLASS': 'fashion.pagination.CustomPagination',  # Ensure this path is correct
+    'PAGE_SIZE': 10, 
   
 }
 

@@ -49,8 +49,6 @@ def order_status_updated(sender, instance, created,**kwargs):
                 print(f"Failed to send update email: {e}")
 
 
-
-
 @receiver(post_save, sender=Disaster)
 def send_approval_email(sender, instance, **kwargs):
     # Check if the disaster was just approved

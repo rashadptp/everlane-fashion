@@ -53,6 +53,8 @@ urlpatterns = [
     path('payment/execute/', ExecutePaymentView.as_view(), name='payment-execute'),
     path('payment/cancel/', CancelPaymentView.as_view(), name='payment-cancel'),
     path('notification/', UserNotificationsAPIView.as_view(), name='notification'),
+   
+
 
 
 

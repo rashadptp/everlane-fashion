@@ -149,13 +149,79 @@ class LogoutView(generics.GenericAPIView):
 
 ###without pagination####
 
+from.pagination import CustomPagination 
 from django.db.models import Q
+
+##OLD CODE#
 
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
+    pagination_class = CustomPagination 
 
     def get_queryset(self):
-        queryset = Product.objects.all()
+        # Return the queryset
+        return Product.objects.all()
+
+
+# from rest_framework import generics, status
+# from rest_framework.response import Response
+# from .models import Product, ProductItem
+# from .serializers import ProductSerializer, ProductItemSerializer
+# from .pagination import CustomPagination
+
+# class ProductListView(generics.ListAPIView):
+#     serializer_class = ProductSerializer
+#     pagination_class = CustomPagination 
+
+#     def get_queryset(self):
+#         return Product.objects.all()
+
+#     def list(self, request, *args, **kwargs):
+#         queryset = self.get_queryset()
+        
+#         # Apply pagination
+#         page = self.paginate_queryset(queryset)
+#         if page is not None:
+#             product_data = []
+#             for product in page:
+#                 product_serializer = self.get_serializer(product)
+#                 items = ProductItem.objects.filter(product=product)
+#                 item_serializer = ProductItemSerializer(items, many=True)
+#                 product_data.append({
+#                     **product_serializer.data,
+#                     'items': item_serializer.data
+#                 })
+
+#             # Return the paginated response with custom product data
+#             return self.get_paginated_response(product_data)
+
+#         # If pagination is not applied (e.g., no pagination parameters)
+#         product_data = []
+#         for product in queryset:
+#             product_serializer = self.get_serializer(product)
+#             items = ProductItem.objects.filter(product=product)
+#             item_serializer = ProductItemSerializer(items, many=True)
+#             product_data.append({
+#                 **product_serializer.data,
+#                 'items': item_serializer.data
+#             })
+
+#         return Response({
+#             'status': "success",
+#             'message': "Products retrieved successfully.",
+#             'response_code': status.HTTP_200_OK,
+#             'data': product_data
+#         }, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+    
+
+    
 
         # Filter by subcategory
         subcategory_id = self.request.query_params.get('subcategory', None)
@@ -2127,7 +2193,7 @@ class DressDonationCreateView(APIView):
                 if is_dirty or is_torn:
                     return Response({
                         'status': 'error',
-                        'message': 'One or more dresses are dirty or torn. Please upload clean dresses and goo condition.',
+                        'message': 'One or more dresses are dirty or torn. Please upload clean dresses and good condition.',
                         'response_code': status.HTTP_200_OK
                     }, status=status.HTTP_200_OK)
                 
@@ -2515,3 +2581,10 @@ class PickupListView(generics.ListCreateAPIView):
             'data': serializer.data
         }
         return Response(response_data)
+
+
+
+
+
+
+
