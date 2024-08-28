@@ -1304,22 +1304,14 @@ class PlaceOrderView(APIView):
         cart_data=json.dumps(cart_items_data, cls=DjangoJSONEncoder)
     )
         # Clear the cart
-        cart_items.delete()
-        cart.save()
+        
 
         # Handle donations
         if order_type == 'donate':
             order.disaster = disaster
             order.pickup_location = pickup_location
             order.save()
-            invoice_number = str(uuid.uuid4()).replace('-', '').upper()[:10]
-            invoice = Invoice.objects.create(
-            order=order,
-            user=user,
-            invoice_number=invoice_number,
-            total_amount=total_amount,
-            )
-            generate_invoice_pdf(invoice)
+            
 
             if payment_method == 'ONLINE':
                 # Integrate PayPal payment
@@ -1441,6 +1433,8 @@ class PlaceOrderView(APIView):
 
             order.payment_status = 'Completed'
             order.save()
+            cart_items.delete()
+            cart.save()
             invoice_number = str(uuid.uuid4()).replace('-', '').upper()[:10]
             invoice = Invoice.objects.create(
             order=order,
@@ -2435,6 +2429,11 @@ class ExecutePaymentView(APIView):
             payment = Payment.find(payment_id)
 
             if payment.execute({"payer_id": payer_id}):
+                user = request.user
+                cart = Cart.objects.filter(user=user, is_active=True, is_deleted=False).first() 
+                cart_items = CartItem.objects.filter(cart=cart, is_active=True, is_deleted=False)
+                cart_items.delete()
+                cart.save()
                 order = Order.objects.get(paypal_payment_id=payment_id)
                 order.payment_status = 'Completed'
                 order.is_completed = True
