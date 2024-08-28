@@ -2142,7 +2142,7 @@ class DressDonationCreateView(APIView):
                 disaster.fulfilled_women_dresses + women_dresses > disaster.required_women_dresses or
                 disaster.fulfilled_kids_dresses + kids_dresses > disaster.required_kids_dresses):
                 return Response({
-                    'status': 'success',
+                    'status': 'failed',
                     'message': 'Donation exceeds the required dresses for this disaster.',
                     'response_code': status.HTTP_200_OK
                 }, status=status.HTTP_200_OK)
