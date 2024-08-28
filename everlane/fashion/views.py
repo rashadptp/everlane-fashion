@@ -1311,14 +1311,7 @@ class PlaceOrderView(APIView):
             order.disaster = disaster
             order.pickup_location = pickup_location
             order.save()
-            # invoice_number = str(uuid.uuid4()).replace('-', '').upper()[:10]
-            # invoice = Invoice.objects.create(
-            # order=order,
-            # user=user,
-            # invoice_number=invoice_number,
-            # total_amount=total_amount,
-            # )
-            # generate_invoice_pdf(invoice)
+            
 
             if payment_method == 'ONLINE':
                 # Integrate PayPal payment
