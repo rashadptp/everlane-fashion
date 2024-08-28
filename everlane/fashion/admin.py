@@ -21,6 +21,7 @@ admin.site.register(Disaster)
 admin.site.register(DressDonation)
 admin.site.register(PickupLocation)
 admin.site.register(CartHistory, CartHistoryAdmin)
+admin.site.register(Notification)
 
 
 
