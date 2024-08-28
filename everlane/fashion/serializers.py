@@ -273,6 +273,11 @@ class ProfileSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
+    
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
         
 ########################################     DONATION    #########################################################
 
