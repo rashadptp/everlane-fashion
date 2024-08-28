@@ -1514,16 +1514,37 @@ class UpdateOrderStatusView(APIView):
         
         order.order_status = order_status
         order.save()
+       
+
+        #Notification
+
+         # Create a notification for the user
+        recipient = order.user  # Assuming `order.user` is the user who placed the order
+        verb = f"Order status updated to {order_status}"
+        description = f"Your order {order.id} status has been updated to {order_status}."
+        Notification.objects.create(recipient=recipient, verb=verb, description=description)
         
-
-
-
-        
+       
         return Response({
             'status': 'success',
             'message': 'Order status updated successfully.',
             'response_code': status.HTTP_200_OK,
             'data': OrderSerializer(order).data
+        }, status=status.HTTP_200_OK)
+
+
+#NOTIFICATION
+
+class UserNotificationsAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        notifications = Notification.objects.filter(recipient=request.user).order_by('-timestamp')
+        serializer = NotificationSerializer(notifications, many=True)
+       
+        return Response({
+            'status': 'success',
+            'notifications': serializer.data
         }, status=status.HTTP_200_OK)
 
 
