@@ -1323,8 +1323,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "http://18.143.206.136/api/payment/execute/",
-                        "cancel_url": "http://18.143.206.136/api/payment/cancel/"
+                        "return_url": "http://localhost:4200/shopping/checkout",
+                        "cancel_url": "http://localhost:4200/shopping/checkout"
                     },
                     "transactions": [{
                         "item_list": {
@@ -1388,8 +1388,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "http://18.143.206.136/api/payment/execute/",
-                        "cancel_url": "http://18.143.206.136/api/payment/cancel/"
+                        "return_url": "http://localhost:4200/shopping/checkout",
+                        "cancel_url": "http://localhost:4200/shopping/checkout"
                     },
                     "transactions": [{
                         "item_list": {
