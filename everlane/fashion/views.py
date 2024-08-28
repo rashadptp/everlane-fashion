@@ -2114,13 +2114,13 @@ class DressDonationCreateView(APIView):
 
             #  the quality check
             images = request.FILES.getlist('images')
-            print(len(images))
-            if total_dresses != len(images):
-                return Response({
-                    'status': 'failed',
-                    'message': 'The number of dresses does not match the number of images uploaded.',
-                    'response_code': status.HTTP_200_OK
-                }, status=status.HTTP_200_OK)
+            # print(len(images))
+            # if total_dresses != len(images):
+            #     return Response({
+            #         'status': 'failed',
+            #         'message': 'The number of dresses does not match the number of images uploaded.',
+            #         'response_code': status.HTTP_200_OK
+            #     }, status=status.HTTP_200_OK)
 
             for image in images:
                 is_torn, is_dirty = self.check_quality(image)
