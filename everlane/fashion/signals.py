@@ -2,7 +2,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
-from .models import Order,Disaster
+from .models import Order,Disaster,Notification
 
 #sent main mail when admin change the order satatus
 
@@ -24,7 +24,11 @@ def order_status_updated(sender, instance, created,**kwargs):
         except Exception as e:
             print(f"Failed to send order placed email: {e}")
     else:
-
+        # Create a notification for the user when the order is placed
+        recipient = instance.user
+        verb = "Order placed successfully"
+        description = f"Thank you for your order! Your order ID is {instance.id}. We will notify you when your order status changes."
+        Notification.objects.create(recipient=recipient, verb=verb, description=description)
         
 
      
@@ -48,6 +52,12 @@ def order_status_updated(sender, instance, created,**kwargs):
             except Exception as e:
                 print(f"Failed to send update email: {e}")
 
+             # Create a notification for the user
+            recipient = instance.user  # Assuming `instance.user` is the user who placed the order
+            verb = f"Order status updated to {instance.order_status}"
+            description = f"Your order {instance.id} status has been updated to {instance.order_status}."
+            Notification.objects.create(recipient=recipient, verb=verb, description=description)
+
 
 @receiver(post_save, sender=Disaster)
 def send_approval_email(sender, instance, **kwargs):
@@ -63,6 +73,16 @@ def send_approval_email(sender, instance, **kwargs):
             print(f"Approval email sent to {recipient_list}")
         except Exception as e:
             print(f"Failed to send approval email: {e}")
+
+        # Create a notification for the user
+        recipient = instance.user
+        verb = f'Disaster "{instance.name}" Approved'
+        description = f'Your disaster "{instance.name}" has been approved. Description: {instance.description}.'
+        Notification.objects.create(recipient=recipient, verb=verb, description=description)
+
+        
+
+        
 
 
 

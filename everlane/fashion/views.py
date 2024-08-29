@@ -1507,14 +1507,6 @@ class UpdateOrderStatusView(APIView):
         order.order_status = order_status
         order.save()
        
-
-        #Notification
-
-         # Create a notification for the user
-        recipient = order.user  # Assuming `order.user` is the user who placed the order
-        verb = f"Order status updated to {order_status}"
-        description = f"Your order {order.id} status has been updated to {order_status}."
-        Notification.objects.create(recipient=recipient, verb=verb, description=description)
         
        
         return Response({
