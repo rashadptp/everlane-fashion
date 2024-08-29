@@ -316,13 +316,13 @@ class DressDonationSerializer(serializers.ModelSerializer):
         return [image.image.url for image in obj.images.all()]
 
 
-    def validate_images(self, value):
-        """
-        Ensure at least 5 images are uploaded.
-        """
-        if len(value) < 5:
-            raise serializers.ValidationError("You must upload at least 5 dress images.")
-        return value
+    # def validate_images(self, value):
+    #     """
+    #     Ensure at least 5 images are uploaded.
+    #     """
+    #     if len(value) < 5:
+    #         raise serializers.ValidationError("You must upload at least 5 dress images.")
+    #     return value
 
     def create(self, validated_data):
         images_data = validated_data.pop('images')
