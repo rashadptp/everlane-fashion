@@ -215,14 +215,11 @@ from django.db.models import Q
 
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
-    
 
     def get_queryset(self):
-        # Return the queryset
-        return Product.objects.all()
+        queryset = Product.objects.all()
 
-
-    # Filter by subcategory
+        # Filter by subcategory
         subcategory_id = self.request.query_params.get('subcategory', None)
         if subcategory_id is not None:
             queryset = queryset.filter(subcategory_id=subcategory_id)
@@ -1320,8 +1317,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "http://localhost:4200/shopping/payment",
-                        "cancel_url": "http://localhost:4200/shopping/payment"
+                        "return_url": "https://everlane-b23cf.web.app/shopping/payment",
+                        "cancel_url": "https://everlane-b23cf.web.app/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
@@ -1385,8 +1382,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "http://localhost:4200/shopping/payment",
-                        "cancel_url": "http://localhost:4200/shopping/payment"
+                        "return_url": "https://everlane-b23cf.web.app/shopping/payment",
+                        "cancel_url": "https://everlane-b23cf.web.app/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
@@ -2517,7 +2514,6 @@ import random
 import string
 
 class ForgotPasswordView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         serializer = ForgotPasswordSerializer(data=request.data)
