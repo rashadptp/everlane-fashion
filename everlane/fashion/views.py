@@ -147,81 +147,23 @@ class LogoutView(generics.GenericAPIView):
                 'data': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
 
-###without pagination####
+####################PRODUCT LIST WITH PAGINATION###############################
 
-from.pagination import CustomPagination 
+from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
 
-##OLD CODE#
+class ProductPagination(PageNumberPagination):
+    page_size = 10  # Number of products per page
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
-    pagination_class = CustomPagination 
+    pagination_class = ProductPagination
 
     def get_queryset(self):
-        # Return the queryset
-        return Product.objects.all()
-
-
-# from rest_framework import generics, status
-# from rest_framework.response import Response
-# from .models import Product, ProductItem
-# from .serializers import ProductSerializer, ProductItemSerializer
-# from .pagination import CustomPagination
-
-# class ProductListView(generics.ListAPIView):
-#     serializer_class = ProductSerializer
-#     pagination_class = CustomPagination 
-
-#     def get_queryset(self):
-#         return Product.objects.all()
-
-#     def list(self, request, *args, **kwargs):
-#         queryset = self.get_queryset()
-        
-#         # Apply pagination
-#         page = self.paginate_queryset(queryset)
-#         if page is not None:
-#             product_data = []
-#             for product in page:
-#                 product_serializer = self.get_serializer(product)
-#                 items = ProductItem.objects.filter(product=product)
-#                 item_serializer = ProductItemSerializer(items, many=True)
-#                 product_data.append({
-#                     **product_serializer.data,
-#                     'items': item_serializer.data
-#                 })
-
-#             # Return the paginated response with custom product data
-#             return self.get_paginated_response(product_data)
-
-#         # If pagination is not applied (e.g., no pagination parameters)
-#         product_data = []
-#         for product in queryset:
-#             product_serializer = self.get_serializer(product)
-#             items = ProductItem.objects.filter(product=product)
-#             item_serializer = ProductItemSerializer(items, many=True)
-#             product_data.append({
-#                 **product_serializer.data,
-#                 'items': item_serializer.data
-#             })
-
-#         return Response({
-#             'status': "success",
-#             'message': "Products retrieved successfully.",
-#             'response_code': status.HTTP_200_OK,
-#             'data': product_data
-#         }, status=status.HTTP_200_OK)
-
-
-
-
-
-
-
-    
-
-    
+        queryset = Product.objects.all()
 
         # Filter by subcategory
         subcategory_id = self.request.query_params.get('subcategory', None)
@@ -238,13 +180,24 @@ class ProductListView(generics.ListAPIView):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        products = self.get_queryset()
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            product_data = []
+            for product in page:
+                product_serializer = self.get_serializer(product)
+                items = ProductItem.objects.filter(product=product)
+                item_serializer = ProductItemSerializer(items, many=True)
+                product_data.append(product_serializer.data)
+
+            return self.get_paginated_response(product_data)
+
         product_data = []
-        for product in products:
+        for product in queryset:
             product_serializer = self.get_serializer(product)
             items = ProductItem.objects.filter(product=product)
             item_serializer = ProductItemSerializer(items, many=True)
-            product_data.append( product_serializer.data)
+            product_data.append(product_serializer.data)
 
         return Response({
             'status': "success",
@@ -253,24 +206,24 @@ class ProductListView(generics.ListAPIView):
             'data': product_data
         })
 
+###without pagination####
 
+# from.pagination import CustomPagination 
 
-
-#######pagination applied product list view #######
-
+#OLD CODE#
 
 # from django.db.models import Q
 
-# from .pagination import CustomPagination  # Import the custom pagination class
-
 # class ProductListView(generics.ListAPIView):
 #     serializer_class = ProductSerializer
-#     pagination_class = CustomPagination  # Use custom pagination class
+#     # pagination_class = CustomPagination 
 
 #     def get_queryset(self):
-#         queryset = Product.objects.all()
+#         # Return the queryset
+#         return Product.objects.all()
 
-#         # Filter by subcategory
+
+#     # Filter by subcategory
 #         subcategory_id = self.request.query_params.get('subcategory', None)
 #         if subcategory_id is not None:
 #             queryset = queryset.filter(subcategory_id=subcategory_id)
@@ -285,33 +238,13 @@ class ProductListView(generics.ListAPIView):
 #         return queryset
 
 #     def list(self, request, *args, **kwargs):
-#         queryset = self.get_queryset()
-
-#         # Apply pagination
-#         page = self.paginate_queryset(queryset)
-#         if page is not None:
-#             product_data = []
-#             for product in page:
-#                 product_serializer = self.get_serializer(product)
-#                 items = ProductItem.objects.filter(product=product)
-#                 item_serializer = ProductItemSerializer(items, many=True)
-#                 product_data.append({
-#                     **product_serializer.data,
-#                     'items': item_serializer.data
-#                 })
-            
-#             return self.get_paginated_response(product_data)
-
-#         # If pagination is not applied (e.g., no pagination parameters)
+#         products = self.get_queryset()
 #         product_data = []
-#         for product in queryset:
+#         for product in products:
 #             product_serializer = self.get_serializer(product)
 #             items = ProductItem.objects.filter(product=product)
 #             item_serializer = ProductItemSerializer(items, many=True)
-#             product_data.append({
-#                 **product_serializer.data,
-#                 'items': item_serializer.data
-#             })
+#             product_data.append( product_serializer.data)
 
 #         return Response({
 #             'status': "success",
@@ -319,6 +252,8 @@ class ProductListView(generics.ListAPIView):
 #             'response_code': status.HTTP_200_OK,
 #             'data': product_data
 #         })
+
+
 
 
 
@@ -1389,8 +1324,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "http://18.143.206.136/api/payment/execute/",
-                        "cancel_url": "http://18.143.206.136/api/payment/cancel/"
+                        "return_url": "http://localhost:4200/shopping/payment",
+                        "cancel_url": "http://localhost:4200/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
@@ -1454,8 +1389,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "http://18.143.206.136/api/payment/execute/",
-                        "cancel_url": "http://18.143.206.136/api/payment/cancel/"
+                        "return_url": "http://localhost:4200/shopping/payment",
+                        "cancel_url": "http://localhost:4200/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
@@ -2180,13 +2115,13 @@ class DressDonationCreateView(APIView):
 
             #  the quality check
             images = request.FILES.getlist('images')
-            print(len(images))
-            if total_dresses != len(images):
-                return Response({
-                    'status': 'failed',
-                    'message': 'The number of dresses does not match the number of images uploaded.',
-                    'response_code': status.HTTP_200_OK
-                }, status=status.HTTP_200_OK)
+            # print(len(images))
+            # if total_dresses != len(images):
+            #     return Response({
+            #         'status': 'failed',
+            #         'message': 'The number of dresses does not match the number of images uploaded.',
+            #         'response_code': status.HTTP_200_OK
+            #     }, status=status.HTTP_200_OK)
 
             for image in images:
                 is_torn, is_dirty = self.check_quality(image)
@@ -2208,7 +2143,7 @@ class DressDonationCreateView(APIView):
                 disaster.fulfilled_women_dresses + women_dresses > disaster.required_women_dresses or
                 disaster.fulfilled_kids_dresses + kids_dresses > disaster.required_kids_dresses):
                 return Response({
-                    'status': 'success',
+                    'status': 'failed',
                     'message': 'Donation exceeds the required dresses for this disaster.',
                     'response_code': status.HTTP_200_OK
                 }, status=status.HTTP_200_OK)
@@ -2581,6 +2516,50 @@ class PickupListView(generics.ListCreateAPIView):
             'data': serializer.data
         }
         return Response(response_data)
+    
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.conf import settings
+import random
+import string
+
+class ForgotPasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = ForgotPasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            
+            user = self.request.user
+                
+                # Generate a random password
+            if user.email == email:
+                # Generate a random password
+                new_password = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+                
+                # Update the user's password
+                user.set_password(new_password)
+                user.save()
+                
+                # Send an email with the new password
+                subject = 'Your New Password'
+                message = f'Hello {user.username},\n\nYour new password is: {new_password}\nPlease change it after logging in.'
+                email_from = settings.DEFAULT_FROM_EMAIL
+                recipient_list = [email]
+                
+                send_mail(subject, message, email_from, recipient_list)
+                
+                return Response({'message': 'A new password has been sent to your email address.'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'The email provided does not match the authenticated user.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
