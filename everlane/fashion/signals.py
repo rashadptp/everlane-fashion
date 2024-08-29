@@ -9,7 +9,7 @@ from .models import Order,Disaster,Notification
 @receiver(post_save, sender=Order)
 def order_status_updated(sender, instance, created,**kwargs):
     
-    # if not kwargs.get('created', False):
+   
     
     if created:
        
