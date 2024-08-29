@@ -1317,8 +1317,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "http://localhost:4200/shopping/payment",
-                        "cancel_url": "http://localhost:4200/shopping/payment"
+                        "return_url": "https://localhost:4200/shopping/payment",
+                        "cancel_url": "https://localhost:4200/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
@@ -2514,7 +2514,6 @@ import random
 import string
 
 class ForgotPasswordView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         serializer = ForgotPasswordSerializer(data=request.data)
