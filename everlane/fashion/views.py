@@ -1317,8 +1317,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "https://everlane-b23cf.web.app/shopping/payment",
-                        "cancel_url": "https://everlane-b23cf.web.app/shopping/payment"
+                        "return_url": "http://localhost:4200/shopping/payment",
+                        "cancel_url": "http://localhost:4200/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
@@ -1382,8 +1382,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "https://everlane-b23cf.web.app/shopping/payment",
-                        "cancel_url": "https://everlane-b23cf.web.app/shopping/payment"
+                        "return_url": "http://localhost:4200/shopping/payment",
+                        "cancel_url": "http://localhost:4200/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
@@ -2512,18 +2512,20 @@ from django.core.mail import send_mail
 from django.conf import settings
 import random
 import string
+from django.contrib.auth import get_user_model
+
 
 class ForgotPasswordView(APIView):
-
     def post(self, request, *args, **kwargs):
         serializer = ForgotPasswordSerializer(data=request.data)
         if serializer.is_valid():
-            email = serializer.validated_data['email']
+            username = serializer.validated_data['username']
             
-            user = self.request.user
+            User = get_user_model()  # Use the custom user model
+            
+            try:
+                user = User.objects.get(username=username)
                 
-                # Generate a random password
-            if user.email == email:
                 # Generate a random password
                 new_password = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
                 
@@ -2535,17 +2537,16 @@ class ForgotPasswordView(APIView):
                 subject = 'Your New Password'
                 message = f'Hello {user.username},\n\nYour new password is: {new_password}\nPlease change it after logging in.'
                 email_from = settings.DEFAULT_FROM_EMAIL
-                recipient_list = [email]
+                recipient_list = [user.email]
                 
                 send_mail(subject, message, email_from, recipient_list)
                 
-                return Response({'message': 'A new password has been sent to your email address.'}, status=status.HTTP_200_OK)
-            else:
-                return Response({'error': 'The email provided does not match the authenticated user.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'message': 'A new password has been sent to the email address associated with the username.'}, status=status.HTTP_200_OK)
+            
+            except User.DoesNotExist:
+                return Response({'error': 'Username not found.'}, status=status.HTTP_404_NOT_FOUND)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 
