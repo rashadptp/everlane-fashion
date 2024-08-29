@@ -1382,8 +1382,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "http://localhost:4200/shopping/payment",
-                        "cancel_url": "http://localhost:4200/shopping/payment"
+                        "return_url": "https://localhost:4200/shopping/payment",
+                        "cancel_url": "https://localhost:4200/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
