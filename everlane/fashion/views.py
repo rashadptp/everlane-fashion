@@ -149,81 +149,23 @@ class LogoutView(generics.GenericAPIView):
 
 ####################PRODUCT LIST WITH PAGINATION###############################
 
-from rest_framework.pagination import PageNumberPagination
-from django.db.models import Q
-
-class ProductPagination(PageNumberPagination):
-    page_size = 10  # Number of products per page
-    page_size_query_param = 'page_size'
-    max_page_size = 100
-
-
-class ProductListView(generics.ListAPIView):
-    serializer_class = ProductSerializer
-    pagination_class = ProductPagination
-
-    def get_queryset(self):
-        queryset = Product.objects.all()
-
-        # Filter by subcategory
-        subcategory_id = self.request.query_params.get('subcategory', None)
-        if subcategory_id is not None:
-            queryset = queryset.filter(subcategory_id=subcategory_id)
-
-        # Search by name or brand
-        search_query = self.request.query_params.get('query', None)
-        if search_query:
-            queryset = queryset.filter(
-                Q(name__icontains=search_query) | Q(brand__icontains=search_query)
-            )
-
-        return queryset
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            product_data = []
-            for product in page:
-                product_serializer = self.get_serializer(product)
-                items = ProductItem.objects.filter(product=product)
-                item_serializer = ProductItemSerializer(items, many=True)
-                product_data.append(product_serializer.data)
-
-            return self.get_paginated_response(product_data)
-
-        product_data = []
-        for product in queryset:
-            product_serializer = self.get_serializer(product)
-            items = ProductItem.objects.filter(product=product)
-            item_serializer = ProductItemSerializer(items, many=True)
-            product_data.append(product_serializer.data)
-
-        return Response({
-            'status': "success",
-            'message': "Products retrieved successfully.",
-            'response_code': status.HTTP_200_OK,
-            'data': product_data
-        })
-
-###without pagination####
-
-# from.pagination import CustomPagination 
-
-#OLD CODE#
-
+# from rest_framework.pagination import PageNumberPagination
 # from django.db.models import Q
+
+# class ProductPagination(PageNumberPagination):
+#     page_size = 10  # Number of products per page
+#     page_size_query_param = 'page_size'
+#     max_page_size = 100
+
 
 # class ProductListView(generics.ListAPIView):
 #     serializer_class = ProductSerializer
-#     # pagination_class = CustomPagination 
+#     pagination_class = ProductPagination
 
 #     def get_queryset(self):
-#         # Return the queryset
-#         return Product.objects.all()
+#         queryset = Product.objects.all()
 
-
-#     # Filter by subcategory
+#         # Filter by subcategory
 #         subcategory_id = self.request.query_params.get('subcategory', None)
 #         if subcategory_id is not None:
 #             queryset = queryset.filter(subcategory_id=subcategory_id)
@@ -238,13 +180,24 @@ class ProductListView(generics.ListAPIView):
 #         return queryset
 
 #     def list(self, request, *args, **kwargs):
-#         products = self.get_queryset()
+#         queryset = self.get_queryset()
+#         page = self.paginate_queryset(queryset)
+#         if page is not None:
+#             product_data = []
+#             for product in page:
+#                 product_serializer = self.get_serializer(product)
+#                 items = ProductItem.objects.filter(product=product)
+#                 item_serializer = ProductItemSerializer(items, many=True)
+#                 product_data.append(product_serializer.data)
+
+#             return self.get_paginated_response(product_data)
+
 #         product_data = []
-#         for product in products:
+#         for product in queryset:
 #             product_serializer = self.get_serializer(product)
 #             items = ProductItem.objects.filter(product=product)
 #             item_serializer = ProductItemSerializer(items, many=True)
-#             product_data.append( product_serializer.data)
+#             product_data.append(product_serializer.data)
 
 #         return Response({
 #             'status': "success",
@@ -253,8 +206,51 @@ class ProductListView(generics.ListAPIView):
 #             'data': product_data
 #         })
 
+###without pagination####
 
 
+#OLD CODE#
+
+from django.db.models import Q
+
+class ProductListView(generics.ListAPIView):
+    serializer_class = ProductSerializer
+    
+
+    def get_queryset(self):
+        # Return the queryset
+        return Product.objects.all()
+
+
+    # Filter by subcategory
+        subcategory_id = self.request.query_params.get('subcategory', None)
+        if subcategory_id is not None:
+            queryset = queryset.filter(subcategory_id=subcategory_id)
+
+        # Search by name or brand
+        search_query = self.request.query_params.get('query', None)
+        if search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=search_query) | Q(brand__icontains=search_query)
+            )
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        products = self.get_queryset()
+        product_data = []
+        for product in products:
+            product_serializer = self.get_serializer(product)
+            items = ProductItem.objects.filter(product=product)
+            item_serializer = ProductItemSerializer(items, many=True)
+            product_data.append( product_serializer.data)
+
+        return Response({
+            'status': "success",
+            'message': "Products retrieved successfully.",
+            'response_code': status.HTTP_200_OK,
+            'data': product_data
+        })
 
 
 class ProductDetailView(generics.RetrieveAPIView):
