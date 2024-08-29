@@ -1317,8 +1317,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "https://localhost:4200/shopping/payment",
-                        "cancel_url": "https://localhost:4200/shopping/payment"
+                        "return_url": "https://everlane-b23cf.web.app/shopping/payment",
+                        "cancel_url": "https://everlane-b23cf.web.app/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
@@ -1382,8 +1382,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "https://localhost:4200/shopping/payment",
-                        "cancel_url": "https://localhost:4200/shopping/payment"
+                        "return_url": "https://everlane-b23cf.web.app/shopping/payment",
+                        "cancel_url": "https://everlane-b23cf.web.app/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
