@@ -59,12 +59,31 @@ def order_status_updated(sender, instance, created,**kwargs):
             Notification.objects.create(recipient=recipient, verb=verb, description=description)
 
 
+from django.db.models.signals import pre_save, post_save
+from django.dispatch import receiver
+from django.core.mail import send_mail
+from django.conf import settings
+from .models import Disaster
+
+# Track the previous state of the instance
+@receiver(pre_save, sender=Disaster)
+def track_disaster_status(sender, instance, **kwargs):
+    if instance.pk:
+        previous_instance = Disaster.objects.get(pk=instance.pk)
+        instance._previous_is_approved = previous_instance.is_approved
+    else:
+        instance._previous_is_approved = False
+
 @receiver(post_save, sender=Disaster)
 def send_approval_email(sender, instance, **kwargs):
-    # Check if the disaster was just approved
-    if instance.is_approved and kwargs.get('created', False) == False:
+    # Check if the disaster is being updated and was just approved
+    if instance.is_approved and not instance._previous_is_approved:
         subject = f'Disaster "{instance.name}" Approved'
-        message = f'Dear {instance.user.username},\n\nYour disaster "{instance.name}" has been approved. Description: {instance.description}'
+        message = (
+            f'Dear {instance.user.username},\n\n'
+            f'Your disaster "{instance.name}" has been approved.\n\n'
+            f'Description: {instance.description}'
+        )
         email_from = settings.DEFAULT_FROM_EMAIL
         recipient_list = [instance.user.email]
 
@@ -73,7 +92,6 @@ def send_approval_email(sender, instance, **kwargs):
             print(f"Approval email sent to {recipient_list}")
         except Exception as e:
             print(f"Failed to send approval email: {e}")
-
         # Create a notification for the user
         recipient = instance.user
         verb = f'Disaster "{instance.name}" Approved'
