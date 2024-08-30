@@ -28,6 +28,7 @@ urlpatterns = [
     path('place-order/', PlaceOrderView.as_view(), name='place-order'),
     path('orders/', OrderListView.as_view(), name='order-list'),
     path('update-order-status/<int:order_id>/', UpdateOrderStatusView.as_view(), name='update-order-status'),
+    path('order-cancel/<int:order_id>/', CancelOrderView.as_view(), name='order-cancel'),
     path('banners/', AngularBannerListView.as_view(), name='banner-list'),
     path('bannerss/', FlutterBannerListView.as_view(), name='banner-list'),
     path('products/trending/', TrendingProductsView.as_view(), name='trending-products'),
@@ -54,7 +55,7 @@ urlpatterns = [
     path('payment/cancel/', CancelPaymentView.as_view(), name='payment-cancel'),
     path('notification/', UserNotificationsAPIView.as_view(), name='notification'),
     path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
-
+    
 
 
 

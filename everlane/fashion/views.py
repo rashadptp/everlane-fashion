@@ -730,7 +730,7 @@ class FlutterBannerListView(generics.ListAPIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 
-###Trending images listing api with using pagination###
+###Trending images listing api without using pagination###
 
 from rest_framework import generics, status
 from rest_framework.response import Response
@@ -1453,6 +1453,58 @@ class PlaceOrderView(APIView):
             'response_code': status.HTTP_400_BAD_REQUEST
         }, status=status.HTTP_400_BAD_REQUEST)
 
+# ###ORDER CANCEL ###
+
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Order
+
+class CancelOrderView(APIView):
+    permission_classes = [IsAuthenticated]  # Only authenticated users can access this view
+
+    def delete(self, request, order_id, *args, **kwargs):
+        try:
+            # Retrieve the order using the order_id and ensure it belongs to the current user
+            order = Order.objects.get(id=order_id, user=request.user)
+
+            if order.order_status == 'Completed':
+                return Response({
+                    'status': 'failed',
+                    'message': 'Order is already completed and cannot be canceled.',
+                    'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            if order.payment_method == 'ONLINE':
+                return Response({
+                    'status': 'failed',
+                    'message': 'Online payment orders cannot be canceled.',
+                    'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Delete the order
+            order.delete()
+
+            return Response({
+                'status': 'success',
+                'message': 'Order canceled and deleted successfully.',
+                'response_code': status.HTTP_200_OK,
+            }, status=status.HTTP_200_OK)
+
+        except Order.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Order not found or does not belong to you.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({
+                'status': 'error',
+                'message': str(e),
+                'response_code': status.HTTP_500_INTERNAL_SERVER_ERROR
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class OrderListView(generics.ListAPIView):
@@ -1957,6 +2009,7 @@ class DisasterListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
+        print("ENETERD IN GET")
         disasters = Disaster.objects.filter(is_approved=True).exclude(
             fulfilled_men_dresses__gte=F('required_men_dresses'),
             fulfilled_women_dresses__gte=F('required_women_dresses'),
@@ -1970,12 +2023,11 @@ class DisasterListCreateView(APIView):
             'data': serializer.data
         }, status=status.HTTP_200_OK)
 
+
     def post(self, request, *args, **kwargs):
-        # Extract the data from the request
         data = request.data
         user=request.user
 
-        # Validate the required fields
         required_fields = ['name', 'adhar', 'location', 'description', 'required_men_dresses', 'required_women_dresses', 'required_kids_dresses']
         missing_fields = [field for field in required_fields if field not in data]
 
@@ -2064,8 +2116,8 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image
 import numpy as np
 
-torn_model = tf.keras.models.load_model('quality_check_dirty.h5')
-dirty_model = tf.keras.models.load_model('quality_check_torn.h5')
+torn_model = tf.keras.models.load_model('quality_check_torn.h5')
+dirty_model = tf.keras.models.load_model('quality_check_dirty.h5')
 class DressDonationCreateView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -2263,14 +2315,11 @@ def generate_invoice_pdf(invoice):
     # Define the file name for the PDF
     file_name = f'invoice_{invoice.invoice_number}.pdf'
     
-    # Create a file-like buffer to receive PDF data
     buffer = BytesIO()
     
-    # Create a PDF document
     doc = SimpleDocTemplate(buffer, pagesize=A4)
     story = []
     
-    # Define styles
     styles = getSampleStyleSheet()
     
     # Custom styles
@@ -2425,7 +2474,6 @@ class ExecutePaymentView(APIView):
                 order.is_completed = True
                 order.save()
 
-                # Generate the invoice for the completed payment
                 invoice_number = str(uuid.uuid4()).replace('-', '').upper()[:10]
                 invoice = Invoice.objects.create(
                     order=order,
