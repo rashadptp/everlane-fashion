@@ -5,7 +5,6 @@ from rest_framework.permissions import IsAuthenticated
 from .models import *
 from .permissions import IsAdminUser
 from .serializers import *
-import joblib
 import pandas as pd
 import json
 from django.core.serializers.json import DjangoJSONEncoder
@@ -1317,8 +1316,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "https://everlane-b23cf.web.app/shopping/payment",
-                        "cancel_url": "https://everlane-b23cf.web.app/shopping/payment"
+                        "return_url": "http://localhost:4200/shopping/payment",
+                        "cancel_url": "http://localhost:4200/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
@@ -1382,8 +1381,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "https://everlane-b23cf.web.app/shopping/payment",
-                        "cancel_url": "https://everlane-b23cf.web.app/shopping/payment"
+                        "return_url": "http://localhost:4200/shopping/payment",
+                        "cancel_url": "http://localhost:4200/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
