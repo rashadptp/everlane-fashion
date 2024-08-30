@@ -104,6 +104,11 @@ class Disaster(models.Model):
     fulfilled_women_dresses = models.IntegerField(default=0)
     fulfilled_kids_dresses = models.IntegerField(default=0)
 
+    def soft_delete(self):
+        
+        self.is_deleted = True
+        self.save()
+
     def __str__(self):
         return self.name
 
