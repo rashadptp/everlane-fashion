@@ -1317,8 +1317,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "http://localhost:4200/shopping/payment",
-                        "cancel_url": "http://localhost:4200/shopping/payment"
+                        "return_url": "https://everlane-b23cf.web.app/shopping/payment",
+                        "cancel_url": "https://everlane-b23cf.web.app/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
@@ -1382,8 +1382,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "http://localhost:4200/shopping/payment",
-                        "cancel_url": "http://localhost:4200/shopping/payment"
+                        "return_url": "https://everlane-b23cf.web.app/shopping/payment",
+                        "cancel_url": "https://everlane-b23cf.web.app/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
@@ -1514,7 +1514,7 @@ class OrderListView(generics.ListAPIView):
     def get_queryset(self):
         # Optionally filter orders by the authenticated user
         user = self.request.user
-        return Order.objects.filter(user=user, is_deleted=False)
+        return Order.objects.filter(user=user, is_deleted=False,is_completed=True).order_by("-id")
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -2072,7 +2072,7 @@ class AdminDisasterApprovalListView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get(self, request, *args, **kwargs):
-        disasters_to_approve = Disaster.objects.filter(is_approved=False)
+        disasters_to_approve = Disaster.objects.filter(is_approved=False,is_deleted=False)
         serializer = DisasterSerializer(disasters_to_approve, many=True)
         return Response({
             'status': 'success',
@@ -2094,16 +2094,22 @@ class ApproveDisasterView(APIView):
                 'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
-        disaster.is_approved = True
-        disaster.save()
-
-        return Response({
-            'status': 'success',
-            'message': 'Disaster approved successfully.',
-            'response_code': status.HTTP_200_OK,
-            'data': DisasterSerializer(disaster).data
-        }, status=status.HTTP_200_OK)
-
+        if request.data.get('approve', True):  # Approve the disaster
+            disaster.is_approved = True
+            disaster.save()
+            return Response({
+                'status': 'success',
+                'message': 'Disaster approved successfully.',
+                'response_code': status.HTTP_200_OK,
+                'data': DisasterSerializer(disaster).data
+            }, status=status.HTTP_200_OK)
+        else:  # Reject and soft delete the disaster
+            disaster.soft_delete()
+            return Response({
+                'status': 'success',
+                'message': 'Disaster rejected and deleted successfully.',
+                'response_code': status.HTTP_200_OK
+            }, status=status.HTTP_200_OK)
 
 ############################################################    AI    #############################################################################
 
@@ -2152,13 +2158,13 @@ class DressDonationCreateView(APIView):
 
             #  the quality check
             images = request.FILES.getlist('images')
-            # print(len(images))
-            # if total_dresses != len(images):
-            #     return Response({
-            #         'status': 'failed',
-            #         'message': 'The number of dresses does not match the number of images uploaded.',
-            #         'response_code': status.HTTP_200_OK
-            #     }, status=status.HTTP_200_OK)
+            print(len(images))
+            if total_dresses != len(images):
+                return Response({
+                    'status': 'failed',
+                    'message': 'The number of dresses does not match the number of images uploaded.',
+                    'response_code': status.HTTP_200_OK
+                }, status=status.HTTP_200_OK)
 
             for image in images:
                 is_torn, is_dirty = self.check_quality(image)

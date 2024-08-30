@@ -94,6 +94,7 @@ class Disaster(models.Model):
     is_approved = models.BooleanField(default=False)
     created_by = models.ForeignKey(User, related_name='disasters', on_delete=models.CASCADE,null=True)
     created_on = models.DateTimeField(default=timezone.now)
+    is_deleted = models.BooleanField(default=False)
 
     required_men_dresses = models.IntegerField(default=0)
     required_women_dresses = models.IntegerField(default=0)
@@ -102,6 +103,11 @@ class Disaster(models.Model):
     fulfilled_men_dresses = models.IntegerField(default=0)
     fulfilled_women_dresses = models.IntegerField(default=0)
     fulfilled_kids_dresses = models.IntegerField(default=0)
+
+    def soft_delete(self):
+        
+        self.is_deleted = True
+        self.save()
 
     def __str__(self):
         return self.name
