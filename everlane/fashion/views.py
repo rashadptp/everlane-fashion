@@ -1,5 +1,6 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from .serializers import UserRegistrationSerializer
 from rest_framework.permissions import IsAuthenticated
 from .models import *
@@ -23,7 +24,27 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from django.core.files.base import ContentFile
 from decimal import Decimal
 from django.db.models import F
-
+import tensorflow as tf
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from PIL import Image
+import numpy as np
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from django.core.files.base import ContentFile
+from reportlab.lib import colors
+from io import BytesIO
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from django.core.files.base import ContentFile
+from decimal import Decimal
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from django.core.mail import send_mail
+import random
+import string
+from django.contrib.auth import get_user_model
 
 #register view
 
@@ -211,6 +232,8 @@ class LogoutView(generics.GenericAPIView):
 
 #OLD CODE#
 
+#product list/search
+
 from django.db.models import Q
 
 class ProductListView(generics.ListAPIView):
@@ -249,11 +272,12 @@ class ProductListView(generics.ListAPIView):
             'data': product_data
         })
 
+#product detail
 
 class ProductDetailView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductRetrieveSerializer
-    # permission_classes = [IsAuthenticated]
+   
 
     def get(self, request, *args, **kwargs):
         product = self.get_object()
@@ -268,6 +292,8 @@ class ProductDetailView(generics.RetrieveAPIView):
             'response_code': 200,
             'data': product_serializer.data
         })
+
+#product creation
 
 class ProductCreateView(generics.CreateAPIView):
     queryset = Product.objects.all()
@@ -288,6 +314,7 @@ class ProductCreateView(generics.CreateAPIView):
             'data': serializer.data
         }, status=status.HTTP_201_CREATED)
         
+#product updation
 
 class ProductUpdateView(generics.UpdateAPIView):
     queryset = Product.objects.all()
@@ -319,6 +346,8 @@ class ProductUpdateView(generics.UpdateAPIView):
             'data': serializer.data
         })
 
+#product delete
+
 class ProductDeleteView(generics.DestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
@@ -333,7 +362,9 @@ class ProductDeleteView(generics.DestroyAPIView):
             'response_code': status.HTTP_204_NO_CONTENT,
             'data': None
         }, status=status.HTTP_204_NO_CONTENT)
-    
+
+#add product item
+ 
 class AddProductItemView(generics.CreateAPIView):
     serializer_class = ProductItemSerializer
     permission_classes = [IsAuthenticated]
@@ -343,7 +374,7 @@ class AddProductItemView(generics.CreateAPIView):
         size = request.data.get('size')
         stock = request.data.get('stock')
 
-        # Validate that product exists
+       
         try:
             product = Product.objects.get(id=product_id)
         except Product.DoesNotExist:
@@ -383,13 +414,8 @@ class AddProductItemView(generics.CreateAPIView):
             'data': ProductItemSerializer(product_item).data
         }, status=status.HTTP_201_CREATED)
 
-# class OrderListView(generics.ListCreateAPIView):
-#     queryset = Order.objects.all()
-#     serializer_class = OrderSerializer
 
-# class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Order.objects.all()
-#     serializer_class = OrderSerializer
+#categorylist
 
 class CategoryListView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
@@ -406,7 +432,7 @@ class CategoryListView(generics.ListCreateAPIView):
         }
         return Response(response_data)
 
-
+#subcategory list
 
 class SubcategoryListView(generics.ListCreateAPIView):
     serializer_class = SubcategorySerializer
@@ -428,21 +454,15 @@ class SubcategoryListView(generics.ListCreateAPIView):
             'data': data
          })
 
-class SubcategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Subcategory.objects.all()
-    serializer_class = SubcategorySerializer
-
-
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
+#cartlist view,cart created
 
 class CartListView(generics.ListCreateAPIView):
     serializer_class = CartSerializer
-    permission_classes = [IsAuthenticated]  # Ensure only authenticated users can access
+    permission_classes = [IsAuthenticated]  
+    
 
     def get_queryset(self):
-        # Filter carts to show only those belonging to the authenticated user
+        
         user = self.request.user
         return Cart.objects.filter(user=user)
 
@@ -462,7 +482,7 @@ class CartListView(generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            cart = serializer.save(user=request.user)  # Ensure the cart is created for the authenticated user
+            cart = serializer.save(user=request.user)  
             return Response({
                 'status': 'success',
                 'message': 'Cart created successfully.',
@@ -476,50 +496,8 @@ class CartListView(generics.ListCreateAPIView):
             'data': serializer.errors
         })
 
+#add to cart view
 
-# class CartDetailView(generics.RetrieveDestroyAPIView):
-#     queryset = Cart.objects.all()
-#     serializer_class = CartSerializer
-
-# class AddToCartView(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def post(self, request, *args, **kwargs):
-#         user = request.user
-#         product_id = request.data.get('product_id')
-#         quantity = int(request.data.get('quantity', 1))  # Ensure quantity is an integer
-
-#         try:
-#             product = Product.objects.get(id=product_id)
-#         except Product.DoesNotExist:
-#             return Response({'status': 'failed', 'message': 'Product not found.', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
-
-#         # Retrieve or create the cart for the user
-#         cart, created = Cart.objects.get_or_create(user=user)
-
-#         # Retrieve or create the cart item
-#         cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
-
-#         if not created:
-#             # Item already exists in cart, update the quantity
-#             cart_item.quantity += quantity
-#             cart_item.save()
-#             message = 'Quantity updated for the item in cart.'
-#         else:
-#             cart_item.quantity = quantity
-#             cart_item.save()
-#             message = 'Item added to cart.'
-        
-#         cart.total_price = sum(item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
-#         cart.save()
-
-#         return Response({
-#             'status': 'success',
-#             'message': message,
-#             'response_code': status.HTTP_200_OK,
-#             'data': CartSerializer(cart).data  # Optional: Return the updated cart data
-#         }, status=status.HTTP_200_OK)
-    
 class AddToCartView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -527,21 +505,21 @@ class AddToCartView(APIView):
         user = request.user
         product_id = request.data.get('product_id')
         size = request.data.get('size')
-        quantity = int(request.data.get('quantity', 1))  # Ensure quantity is an integer
+        quantity = int(request.data.get('quantity', 1))  
 
         try:
             product_item = ProductItem.objects.get(product_id=product_id, size=size)
         except ProductItem.DoesNotExist:
             return Response({'status': 'failed', 'message': 'Product id with size or product not found', 'response_code': status.HTTP_404_NOT_FOUND}, status=status.HTTP_404_NOT_FOUND)
 
-        # Retrieve or create the cart for the user
+        
         cart, created = Cart.objects.get_or_create(user=user)
 
-        # Retrieve or create the cart item
+        
         cart_item, created = CartItem.objects.get_or_create(cart=cart, product_item=product_item)
 
         if not created:
-            # Item already exists in cart, update the quantity
+           
             cart_item.quantity += quantity
             cart_item.save()
             message = 'Quantity updated for the item in cart.'
@@ -553,7 +531,7 @@ class AddToCartView(APIView):
         cart.total_price = sum(
             item.product_item.product.price * item.quantity 
             for item in cart.items.filter(is_active=True, is_deleted=False)
-            if item.product_item  # Make sure product_item is not None
+            if item.product_item  
         )
         cart.save()
 
@@ -561,8 +539,10 @@ class AddToCartView(APIView):
             'status': 'success',
             'message': message,
             'response_code': status.HTTP_200_OK,
-            'data': CartSerializer(cart).data  # Optional: Return the updated cart data
+            'data': CartSerializer(cart).data  
         }, status=status.HTTP_200_OK)
+
+#cart item delete 
 
 class CartItemDeleteView(APIView):
     permission_classes = [IsAuthenticated]
@@ -571,7 +551,7 @@ class CartItemDeleteView(APIView):
         cart_item_id = kwargs.get('item_id')
 
         try:
-            # Ensure the cart item belongs to the authenticated user
+           
             cart_item = CartItem.objects.get(id=cart_item_id, cart__user=request.user)
         except CartItem.DoesNotExist:
             return Response({
@@ -580,13 +560,13 @@ class CartItemDeleteView(APIView):
                 'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
-        # Get the cart before deleting the item
+        
         cart = cart_item.cart
 
-        # Delete the cart item
+       
         cart_item.delete()
 
-        # Recalculate the total price of the cart
+       
         cart.total_price = sum(item.product_item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
         cart.save()
 
@@ -595,14 +575,16 @@ class CartItemDeleteView(APIView):
             'message': 'Cart item deleted successfully.',
             'response_code': status.HTTP_200_OK
         }, status=status.HTTP_200_OK)
-    
+
+#updatecartitemquantity
+ 
 class UpdateCartItemQuantityView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         user = request.user
         cart_item_id = request.data.get('cart_item_id')
-        action = request.data.get('action')  # 'increase' or 'decrease'
+        action = request.data.get('action')  
 
         try:
             cart_item = CartItem.objects.get(id=cart_item_id, cart__user=user, is_active=True, is_deleted=False)
@@ -636,7 +618,7 @@ class UpdateCartItemQuantityView(APIView):
                 'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Update the total price of the cart
+        
         cart = cart_item.cart
         cart.total_price = sum(item.product_item.product.price * item.quantity for item in cart.items.filter(is_active=True, is_deleted=False))
         cart.save()
@@ -645,15 +627,10 @@ class UpdateCartItemQuantityView(APIView):
             'status': 'success',
             'message': message,
             'response_code': status.HTTP_200_OK,
-            'data': CartSerializer(cart).data  # Return the updated cart data
+            'data': CartSerializer(cart).data  
         }, status=status.HTTP_200_OK)
 
 #Banner views
-
-from rest_framework import generics, status
-from rest_framework.response import Response
-from .models import Banner
-from .serializers import BannerSerializer
 
 class AngularBannerListView(generics.ListAPIView):
     serializer_class = BannerSerializer
@@ -690,11 +667,7 @@ class AngularBannerListView(generics.ListAPIView):
         }
         return Response(response_data, status=status.HTTP_200_OK)
 
-
-from rest_framework import generics, status
-from rest_framework.response import Response
-from .models import Banner
-from .serializers import BannerSerializer
+#banner view
 
 class FlutterBannerListView(generics.ListAPIView):
     serializer_class = BannerSerializer
@@ -732,11 +705,6 @@ class FlutterBannerListView(generics.ListAPIView):
 
 ###Trending images listing api without using pagination###
 
-from rest_framework import generics, status
-from rest_framework.response import Response
-from .models import Product
-from .serializers import ProductSerializer
-
 class TrendingProductsView(generics.ListAPIView):
     serializer_class = ProductSerializer
 
@@ -761,50 +729,6 @@ class TrendingProductsView(generics.ListAPIView):
             'response_code': status.HTTP_404_NOT_FOUND,
             'data': []
         }, status=status.HTTP_404_NOT_FOUND)
-
-
-###### Trending images listing api with using pagination ######
-
-# from rest_framework import generics, status
-# from rest_framework.response import Response
-# from .models import Product
-# from .serializers import ProductSerializer
-# from .pagination import CustomPagination  # Import your custom pagination class
-
-# class TrendingProductsView(generics.ListAPIView):
-#     serializer_class = ProductSerializer
-#     pagination_class = CustomPagination  # Apply custom pagination class
-
-#     def get_queryset(self):
-#         return Product.objects.filter(is_trending=True)
-
-#     def list(self, request, *args, **kwargs):
-#         queryset = self.get_queryset()
-
-#         # If no trending products are found
-#         if not queryset.exists():
-#             return Response({
-#                 'status': "failed",
-#                 'message': 'No trending products found.',
-#                 'response_code': status.HTTP_404_NOT_FOUND,
-#                 'data': []
-#             }, status=status.HTTP_404_NOT_FOUND)
-
-#         # Apply pagination
-#         page = self.paginate_queryset(queryset)
-#         if page is not None:
-#             serializer = self.get_serializer(page, many=True)
-#             return self.get_paginated_response(serializer.data)
-
-#         # If pagination is not applied (e.g., no pagination parameters)
-#         serializer = self.get_serializer(queryset, many=True)
-#         return Response({
-#             'status': "success",
-#             'message': 'Trending products retrieved successfully.',
-#             'response_code': status.HTTP_200_OK,
-#             'data': serializer.data
-#         }, status=status.HTTP_200_OK)
-
 
 ##seasons without pagination###
 
@@ -840,57 +764,7 @@ class SeasonalProductsView(generics.ListAPIView):
     
 
 
-        
-        
-###seasons with pagination ###
-
-
-# from rest_framework import generics, status
-# from rest_framework.response import Response
-# from .models import Product
-# from .serializers import SeosonSerializer
-# from .pagination import CustomPagination  # Import your custom pagination class
-
-# class SeasonalProductsView(generics.ListAPIView):
-#     serializer_class = SeosonSerializer
-#     pagination_class = CustomPagination  # Apply custom pagination class
-
-#     def get_queryset(self):
-#         season = self.kwargs.get('season')
-#         filter_kwargs = {season: True}
-#         return Product.objects.filter(**filter_kwargs)
-
-#     def list(self, request, *args, **kwargs):
-#         queryset = self.get_queryset()
-
-#         # If no products are found for the particular season
-#         if not queryset.exists():
-#             season = self.kwargs.get("season")
-#             return Response({
-#                 'status': "failed",
-#                 'message': f'No {season.capitalize()} products found.',
-#                 'response_code': status.HTTP_404_NOT_FOUND,
-#                 'data': []
-#             }, status=status.HTTP_404_NOT_FOUND)
-
-#         # Apply pagination
-#         page = self.paginate_queryset(queryset)
-#         if page is not None:
-#             serializer = self.get_serializer(page, many=True)
-#             return self.get_paginated_response(serializer.data)
-
-#         # If pagination is not applied (e.g., no pagination parameters)
-#         serializer = self.get_serializer(queryset, many=True)
-#         return Response({
-#             'status': "success",
-#             'message': f'{self.kwargs.get("season").capitalize()} products retrieved successfully.',
-#             'response_code': status.HTTP_200_OK,
-#             'data': serializer.data
-#         }, status=status.HTTP_200_OK)
-
-
-#Questionnaire   
-
+#Questionnaire view
 
 class QuestionnaireCreateView(generics.UpdateAPIView):
     serializer_class = QuestionnaireSerializer
@@ -946,15 +820,6 @@ class WishlistListView(generics.ListAPIView):
 
 #Add to wishlist view
 
-
-
-
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from .serializers import WishlistSerializer
-
 class AddWishlistView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -977,7 +842,7 @@ class AddWishlistView(APIView):
                 'response_code': status.HTTP_404_NOT_FOUND,
             }, status=status.HTTP_404_NOT_FOUND)
         
-        # Check if the product is already in the wishlist
+        
         if Wishlist.objects.filter(user=request.user, product=product).exists():
             return Response({
                 'status': 'failed',
@@ -985,7 +850,7 @@ class AddWishlistView(APIView):
                 'response_code': status.HTTP_400_BAD_REQUEST,
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Create a wishlist item
+        
         wishlist = Wishlist.objects.create(user=request.user, product=product)
         
         return Response({
@@ -995,19 +860,13 @@ class AddWishlistView(APIView):
             'data': WishlistSerializer(wishlist).data
         }, status=status.HTTP_201_CREATED)
 
-#wishlist filter
-
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from .models import Wishlist, Product  # Import the Wishlist and Product models
+#wishlist delete
 
 class DeleteWishlistView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, product_id, *args, **kwargs):
-        # Attempt to retrieve the product
+       
         products = Product.objects.filter(id=product_id)
         
         if not products.exists():
@@ -1017,10 +876,10 @@ class DeleteWishlistView(APIView):
                 'response_code': status.HTTP_404_NOT_FOUND,
             }, status=status.HTTP_404_NOT_FOUND)
         
-        # Assume only one product should match
+        
         product = products.first()
         
-        # Filter Wishlist items based on the product and the current user
+        
         wishlist_items = Wishlist.objects.filter(product=product, user=request.user)
         
         if not wishlist_items.exists():
@@ -1030,7 +889,7 @@ class DeleteWishlistView(APIView):
                 'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
         
-        # Delete all matching wishlist items
+        
         wishlist_items.delete()
         
         
@@ -1041,7 +900,7 @@ class DeleteWishlistView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-#Address view
+#Default Address view
 
 class DefaultAddressView(APIView):
     permission_classes = [IsAuthenticated]
@@ -1063,6 +922,7 @@ class DefaultAddressView(APIView):
                 'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
+#Address list view
 
 class AddressListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -1091,16 +951,17 @@ class AddressListView(generics.ListAPIView):
                 'response_code': status.HTTP_200_OK
             }, status=status.HTTP_200_OK)
 
-##Address creation##
+#Address creation view
+
 class AddressCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        # Extract the data from the request
+        
         data = request.data
         user = request.user
 
-        # Validate the required fields
+        
         required_fields = ['mobile', 'pincode', 'locality', 'address', 'city', 'state']
         missing_fields = [field for field in required_fields if field not in data]
 
@@ -1120,13 +981,13 @@ class AddressCreateView(APIView):
             address=data['address'],
             city=data['city'],
             state=data['state'],
-            landmark=data.get('landmark', ''),  # Optional field
+            landmark=data.get('landmark', ''),  
             is_default=data.get('is_default', False),
             is_active=data.get('is_active', True),
             is_deleted=data.get('is_deleted', False)
         )
 
-        # Serialize the created address for the response
+       
         serializer = AddressSerializer(address)
         return Response({
             'status': 'success',
@@ -1136,7 +997,7 @@ class AddressCreateView(APIView):
         }, status=status.HTTP_201_CREATED)
 
 
-
+#Address delete view
 
 class AddressDeleteView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
@@ -1160,10 +1021,7 @@ class AddressDeleteView(generics.DestroyAPIView):
                 'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
-
-
-
-
+#place order view
 
 class PlaceOrderView(APIView):
     
@@ -1181,12 +1039,12 @@ class PlaceOrderView(APIView):
         user = request.user
         
         payment_method = request.data.get('payment_method')
-        order_type = request.data.get('order_type')  # 'delivery' or 'donate'
-        address_id = request.data.get('address_id')  # For delivery option
-        disaster_id = request.data.get('disaster_id')  # For donation option
-        pickup_location_id = request.data.get('pickup_location_id')  # For donation option
+        order_type = request.data.get('order_type')  
+        address_id = request.data.get('address_id')  
+        disaster_id = request.data.get('disaster_id')  
+        pickup_location_id = request.data.get('pickup_location_id')  
       
-        # Validate payment method
+       
         if payment_method not in ['COD', 'ONLINE']:
             return Response({
                 'status': 'failed',
@@ -1194,7 +1052,7 @@ class PlaceOrderView(APIView):
                 'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Validate order type
+        
         if order_type not in ['delivery', 'donate']:
             return Response({
                 'status': 'failed',
@@ -1202,7 +1060,7 @@ class PlaceOrderView(APIView):
                 'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Restrict COD for donations
+       
         if order_type == 'donate' and payment_method == 'COD':
             return Response({
                 'status': 'failed',
@@ -1210,9 +1068,9 @@ class PlaceOrderView(APIView):
                 'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Get the user's active cart
+        
         try:
-            cart = Cart.objects.filter(user=user, is_active=True, is_deleted=False).first()   #addded
+            cart = Cart.objects.filter(user=user, is_active=True, is_deleted=False).first()   
           
         except Cart.DoesNotExist:
             return Response({
@@ -1229,7 +1087,7 @@ class PlaceOrderView(APIView):
                 'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Calculate the total amount
+       
         total_amount = 0 
 
         for item in cart_items:
@@ -1238,7 +1096,7 @@ class PlaceOrderView(APIView):
             total_amount += product_price * quantity
         
 
-        # Additional validations for donations
+       
         disaster = None
         pickup_location = None
         if order_type== 'donate':
@@ -1269,7 +1127,7 @@ class PlaceOrderView(APIView):
                     'response_code': status.HTTP_400_BAD_REQUEST
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-        # If all validations pass, create the order
+        
         order = Order.objects.create(
             user=user,
             total_amount=total_amount,
@@ -1278,7 +1136,7 @@ class PlaceOrderView(APIView):
             is_donated=True if order_type == 'donate' else False
         )
 
-        # Create order items from cart items
+        
         for item in cart_items:
             OrderItem.objects.create(
                 order=order,
@@ -1297,10 +1155,10 @@ class PlaceOrderView(APIView):
         user=user,
         cart_data=json.dumps(cart_items_data, cls=DjangoJSONEncoder)
     )
-        # Clear the cart
+       
         
 
-        # Handle donations
+        
         if order_type == 'donate':
             order.disaster = disaster
             order.pickup_location = pickup_location
@@ -1308,7 +1166,7 @@ class PlaceOrderView(APIView):
             
 
             if payment_method == 'ONLINE':
-                # Integrate PayPal payment
+            #payment by paypal   
                 PlaceOrderView.initialize_paypal()
 
                 payment = Payment({
@@ -1339,7 +1197,7 @@ class PlaceOrderView(APIView):
                 })
 
                 if payment.create():
-                    # Save payment ID for further use
+                    
                     order.paypal_payment_id = payment.id
                     order.save()
 
@@ -1367,13 +1225,13 @@ class PlaceOrderView(APIView):
                 'data': OrderSerializer(order).data
             }, status=status.HTTP_201_CREATED)
 
-        # Handle deliveries
+        
         if order_type == 'delivery':
             order.delivery_address = address
             order.save()
 
             if payment_method == 'ONLINE':
-                # Integrate PayPal payment
+                
                 PlaceOrderView.initialize_paypal()
 
                 payment = Payment({
@@ -1404,7 +1262,7 @@ class PlaceOrderView(APIView):
                 })
 
                 if payment.create():
-                    # Save payment ID for further use
+                    
                     order.paypal_payment_id = payment.id
                     order.save()
 
@@ -1453,20 +1311,14 @@ class PlaceOrderView(APIView):
             'response_code': status.HTTP_400_BAD_REQUEST
         }, status=status.HTTP_400_BAD_REQUEST)
 
-# ###ORDER CANCEL ###
-
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Order
+#order cancel view
 
 class CancelOrderView(APIView):
-    permission_classes = [IsAuthenticated]  # Only authenticated users can access this view
+    permission_classes = [IsAuthenticated]  
 
     def delete(self, request, order_id, *args, **kwargs):
         try:
-            # Retrieve the order using the order_id and ensure it belongs to the current user
+           
             order = Order.objects.get(id=order_id, user=request.user)
 
             if order.order_status == 'Completed':
@@ -1483,7 +1335,7 @@ class CancelOrderView(APIView):
                     'response_code': status.HTTP_400_BAD_REQUEST
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            # Delete the order
+            
             order.delete()
 
             return Response({
@@ -1506,13 +1358,14 @@ class CancelOrderView(APIView):
                 'response_code': status.HTTP_500_INTERNAL_SERVER_ERROR
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+#order list view
 
 class OrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Optionally filter orders by the authenticated user
+        
         user = self.request.user
         return Order.objects.filter(user=user, is_deleted=False,is_completed=True).order_by("-id")
 
@@ -1526,8 +1379,7 @@ class OrderListView(generics.ListAPIView):
             'data': serializer.data
         })
 
-# from .tasks import send_order_status_email
-
+#update order status view 
 
 class UpdateOrderStatusView(APIView):
     permission_classes = [IsAuthenticated,IsAdminUser]
@@ -1566,7 +1418,7 @@ class UpdateOrderStatusView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-#NOTIFICATION
+#notification
 
 class UserNotificationsAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -1580,29 +1432,28 @@ class UserNotificationsAPIView(APIView):
             'notifications': serializer.data
         }, status=status.HTTP_200_OK)
 
+#recommendation
 
-
-        
 class RecommendationAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         user = request.user
 
-        # Retrieve user attributes
+        
         skin_color = user.skin_color
         height = user.height
         gender = user.gender
         preferred_season = user.preferred_season
         usage_of_dress = user.usage_of_dress
 
-        # Start with basic filters
+        
         filters = {
             'is_active': True,
             'is_deleted': False,
         }
 
-        # Add season filter
+        
         if preferred_season == 'SUMMER':
             filters['summer'] = True
         elif preferred_season == 'WINTER':
@@ -1612,28 +1463,24 @@ class RecommendationAPIView(APIView):
         elif preferred_season == 'AUTUMN':
             filters['autumn'] = True
 
-        # Add dynamic filters for user attributes using JSON fields
+       
         if skin_color:
             filters['skin_colors__contains'] = {skin_color.title(): True}
 
         if height:
             filters['heights__contains'] = {height.title(): True}
 
-        # Add gender filter as a choice field
+        
         if gender:
             filters['genders__contains'] = gender.upper()
 
         if usage_of_dress:
             filters['usages__contains'] = {usage_of_dress.title(): True}
 
-        # Apply filters
+        
         recommended_products = Product.objects.filter(**filters).distinct()
 
-        # # Log filters and results
-        # print(f"Applied filters: {filters}")
-        # print(f"Recommended products: {recommended_products}")
-
-        # Serialize the filtered products
+        
         serializer = RecommendSerializer(recommended_products, many=True,context={'request': request})
         
 
@@ -1644,107 +1491,8 @@ class RecommendationAPIView(APIView):
             'data': serializer.data
         }, status=status.HTTP_200_OK)
 
-
- ############ RETURN ################
-
-
-# class RequestReturnView(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def post(self, request, *args, **kwargs):
-#         order_item_id = request.data.get('order_item_id')
-#         return_reason = request.data.get('return_reason')
-
-#         order_item = OrderItem.objects.filter(id=order_item_id, order__user=request.user).first()
-
-#         if not order_item:
-#             return Response({
-#             'status': 'failed',
-#             'message': 'Order item not found or does not belong to you.',
-#             'response_code': status.HTTP_404_NOT_FOUND
-#             }, status=status.HTTP_404_NOT_FOUND)
-
-#         if order_item.is_returned:
-#             return Response({
-#                 'status': 'failed',
-#                 'message': 'Return has already been requested for this item.',
-#                 'response_code': status.HTTP_400_BAD_REQUEST
-#             }, status=status.HTTP_400_BAD_REQUEST)
-
-#         order_item.is_returned = True
-#         order_item.return_reason = return_reason
-#         order_item.return_requested_on = timezone.now()
-#         order_item.return_status = 'PENDING'
-#         order_item.save()
-
-#         return Response({
-#             'status': 'success',
-#             'message': 'Return requested successfully.',
-#             'response_code': status.HTTP_200_OK,
-#             'data': OrderItemSerializer(order_item).data
-#         }, status=status.HTTP_200_OK)
-
-
-# class ProcessReturnView(APIView):
-#     permission_classes = [IsAdminUser]  # Only allow admin users to process returns
-
-#     def post(self, request, *args, **kwargs):
-#         order_item_id = request.data.get('order_item_id')
-#         action = request.data.get('action')  # 'approve' or 'reject'
-
-#         order_item = OrderItem.objects.filter(id=order_item_id).first()
-
-#         if not order_item:
-#             return Response({
-#             'status': 'failed',
-#             'message': 'Order item not found.',
-#             'response_code': status.HTTP_404_NOT_FOUND
-#             }, status=status.HTTP_404_NOT_FOUND)
-
-#         if not order_item.is_returned:
-#             return Response({
-#                 'status': 'failed',
-#                 'message': 'No return request found for this item.',
-#                 'response_code': status.HTTP_400_BAD_REQUEST
-#             }, status=status.HTTP_400_BAD_REQUEST)
-
-#         order = order_item.order
-
-#         if action == 'approve':
-#             order_item.is_returned = True
-#             order_item.save()
-
-#             order_item.return_status = 'APPROVED'
-#             order_item.refund_amount = order_item.price * order_item.quantity
-#             order_item.refund_date = timezone.now()
-#             order_item.save()
-
-#             # Process refund (if necessary)
-#             # Here, integrate with a payment gateway to process the refund for online payments
-
-#             return Response({
-#                 'status': 'success',
-#                 'message': 'Return approved and refund processed.',
-#                 'response_code': status.HTTP_200_OK,
-#                 'data': ReturnSerializer(order).data
-#             }, status=status.HTTP_200_OK)
-
-#         elif action == 'reject':
-#             order_item.return_status = 'REJECTED'
-#             order_item.save()
-
-#             return Response({
-#                 'status': 'success',
-#                 'message': 'Return request rejected.',
-#                 'response_code': status.HTTP_200_OK
-#             }, status=status.HTTP_200_OK)
-
-#         return Response({
-#             'status': 'failed',
-#             'message': 'Invalid action provided.',
-#             'response_code': status.HTTP_400_BAD_REQUEST
-#         }, status=status.HTTP_400_BAD_REQUEST)
-
+#return request
+ 
 class RequestReturnView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -1778,20 +1526,20 @@ class RequestReturnView(APIView):
                 'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Process the return
+       
         order_item.is_returned = True
         order_item.returned_quantity += return_quantity
         order_item.return_reason = return_reason
         order_item.return_requested_on = timezone.now()
         order_item.return_status = 'PENDING'
 
-        # Check if fully returned
+       
         if order_item.is_fully_returned:
             order_item.return_status = 'PENDING'
         
         order_item.save()
 
-        # Calculate refund amount (e.g., based on the returned quantity)
+       
         refund_amount = return_quantity * order_item.price
         order_item.refund_amount = refund_amount
         order_item.refund_date = timezone.now()
@@ -1804,6 +1552,7 @@ class RequestReturnView(APIView):
             'data': OrderItemSerializer(order_item).data
         }, status=status.HTTP_200_OK)
 
+#return pending view
 
 class ReturnPendingView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -1819,16 +1568,16 @@ class ReturnPendingView(APIView):
             'data': serializer.data
         }, status=status.HTTP_200_OK)
 
-    
+#return process  
 
 class ProcessReturnView(APIView):
-    permission_classes = [IsAdminUser]  # Only allow admin users to process returns
+    permission_classes = [IsAdminUser]  
 
     def post(self, request, *args, **kwargs):
         order_item_id = request.data.get('order_item_id')
-        action = request.data.get('action')  # 'approve' or 'reject'
+        action = request.data.get('action')  
 
-        # Find the OrderItem
+       
         order_item = OrderItem.objects.filter(id=order_item_id).first()
 
         if not order_item:
@@ -1846,25 +1595,24 @@ class ProcessReturnView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         if action == 'approve':
-            # Approve return and update details
+            
             order_item.return_status = 'APPROVED'
-            order_item.refund_amount = order_item.price * order_item.returned_quantity  # Refund based on already requested quantity
+            order_item.refund_amount = order_item.price * order_item.returned_quantity  
             order_item.refund_date = timezone.now()
             order_item.save()
 
-            # Check if the entire quantity has been returned
+            
             if order_item.returned_quantity >= order_item.quantity:
                 order_item.return_status = 'RETURNED'
                 order_item.save()
 
-            # Process refund (if necessary)
-            # Integrate with a payment gateway to process the refund for online payments
+           
 
             return Response({
                 'status': 'success',
                 'message': 'Return approved and refund processed.',
                 'response_code': status.HTTP_200_OK,
-                'data': OrderItemSerializer(order_item).data  # Use the serializer for OrderItem
+                'data': OrderItemSerializer(order_item).data  
             }, status=status.HTTP_200_OK)
 
         elif action == 'reject':
@@ -1884,7 +1632,7 @@ class ProcessReturnView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
-# User profile view(get)
+# user profile view
 
 
 class UserProfileView(APIView):
@@ -1900,21 +1648,21 @@ class UserProfileView(APIView):
             'data': serializer.data
         }, status=status.HTTP_200_OK)
 
-#Without serializer.valid 
+#profile update view
 
 class ProfileUpdateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, *args, **kwargs):
-        # Extract the data from the request
+        
         data = request.data
         user = request.user
 
-        # Define the fields that can be updated
-        updateable_fields = ['username', 'first_name', 'last_name', 'email', 'mobile'] # Adjust these fields as per your model
+        
+        updateable_fields = ['username', 'first_name', 'last_name', 'email', 'mobile'] 
         updated_data = {field: data[field] for field in updateable_fields if field in data}
 
-        # Check if any fields to update
+        
         if not updated_data:
             return Response({
                 'status': 'failed',
@@ -1922,12 +1670,11 @@ class ProfileUpdateView(APIView):
                 'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Update the user profile fields
+        
         for field, value in updated_data.items():
             setattr(user, field, value)
         user.save()
 
-        # Serialize the updated user data for the response
         serializer = ProfileSerializer(user)
         return Response({
             'status': 'success',
@@ -1936,42 +1683,17 @@ class ProfileUpdateView(APIView):
             'data': serializer.data
         }, status=status.HTTP_200_OK)
 
-
-# class ProfileUpdateView(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def patch(self, request, *args, **kwargs):
-#         user = request.user
-#         serializer = ProfileSerializer(user, data=request.data, partial=True)
-
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response({
-#                 'status': 'success',
-#                 'message': 'User profile updated successfully',
-#                 'response_code': status.HTTP_200_OK,
-#                 'data': serializer.data
-#             }, status=status.HTTP_200_OK)
-
-#         return Response({
-#             'status': 'error',
-#             'message': 'Profile update failed.',
-#             'response_code': status.HTTP_400_BAD_REQUEST,
-#             'errors': serializer.errors
-#         }, status=status.HTTP_400_BAD_REQUEST)
-
-
-
+#password change view
 
 class PasswordChangeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, *args, **kwargs):
-        # Extract the data from the request
+       
         data = request.data
         user = request.user
 
-        # Validate the required fields
+        
         required_fields = ['old_password', 'new_password']
         missing_fields = [field for field in required_fields if field not in data]
 
@@ -1982,7 +1704,7 @@ class PasswordChangeView(APIView):
                 'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check if the old password is correct
+        
         if not user.check_password(data['old_password']):
             return Response({
                 'status': 'error',
@@ -1990,7 +1712,7 @@ class PasswordChangeView(APIView):
                 'response_code': status.HTTP_400_BAD_REQUEST
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Set the new password
+        
         user.set_password(data['new_password'])
         user.save()
 
@@ -2004,6 +1726,8 @@ class PasswordChangeView(APIView):
 
 
 ###############################################    DONATION      ##########################################################
+
+#disasterlist and disaster registration view
 
 class DisasterListCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -2040,8 +1764,7 @@ class DisasterListCreateView(APIView):
 
             
 
-        # serializer = DisasterSerializer(data=data)
-        # if serializer.is_valid():
+       
 
             
         disaster = Disaster(
@@ -2057,7 +1780,7 @@ class DisasterListCreateView(APIView):
         )
         disaster.save()
 
-        # Serialize the created disaster for the response
+       
         serializer = DisasterSerializer(disaster)
         return Response({
             'status': 'success',
@@ -2066,7 +1789,7 @@ class DisasterListCreateView(APIView):
             'data': serializer.data
         }, status=status.HTTP_201_CREATED)
     
-
+#disaster pending list view
 
 class AdminDisasterApprovalListView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -2081,6 +1804,8 @@ class AdminDisasterApprovalListView(APIView):
             'data': serializer.data
         }, status=status.HTTP_200_OK)
 
+#approve disaster view
+
 class ApproveDisasterView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -2094,7 +1819,7 @@ class ApproveDisasterView(APIView):
                 'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
-        if request.data.get('approve', True):  # Approve the disaster
+        if request.data.get('approve', True): 
             disaster.is_approved = True
             disaster.save()
             return Response({
@@ -2103,7 +1828,7 @@ class ApproveDisasterView(APIView):
                 'response_code': status.HTTP_200_OK,
                 'data': DisasterSerializer(disaster).data
             }, status=status.HTTP_200_OK)
-        else:  # Reject and soft delete the disaster
+        else:  
             disaster.soft_delete()
             return Response({
                 'status': 'success',
@@ -2113,17 +1838,11 @@ class ApproveDisasterView(APIView):
 
 ############################################################    AI    #############################################################################
 
-import tensorflow as tf
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from django.core.files.uploadedfile import InMemoryUploadedFile
-from PIL import Image
-import numpy as np
+#dress donation view
 
 torn_model = tf.keras.models.load_model('quality_check_torn.h5')
 dirty_model = tf.keras.models.load_model('quality_check_dirty.h5')
+
 class DressDonationCreateView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -2139,7 +1858,7 @@ class DressDonationCreateView(APIView):
         """Check if the image is torn or dirty."""
         preprocessed_image = self.preprocess_image(image_file)
         
-        # Prediction
+        
         is_torn = torn_model.predict(preprocessed_image)[0][0] > 0.5
         is_dirty = dirty_model.predict(preprocessed_image)[0][0] > 0.5
         
@@ -2175,12 +1894,6 @@ class DressDonationCreateView(APIView):
                         'response_code': status.HTTP_200_OK
                     }, status=status.HTTP_200_OK)
                 
-                # if is_torn:
-                #     return Response({
-                #         'status': 'failed',
-                #         'message': 'One or more dresses are torn. Please upload dresses in good condition.',
-                #         'response_code': status.HTTP_400_BAD_REQUEST
-                #     }, status=status.HTTP_400_BAD_REQUEST)
             
             if (disaster.fulfilled_men_dresses + men_dresses > disaster.required_men_dresses or
                 disaster.fulfilled_women_dresses + women_dresses > disaster.required_women_dresses or
@@ -2212,6 +1925,7 @@ class DressDonationCreateView(APIView):
         }, status=status.HTTP_400_BAD_REQUEST)
 
 
+#user donation list view
 
 class UserDonationListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -2229,12 +1943,8 @@ class UserDonationListView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+#disaster donation view
 
-
-
-
-    
-        
 class DisasterDonationsView(APIView):
     permission_classes = [IsAuthenticated,IsAdminUser]
 
@@ -2248,7 +1958,7 @@ class DisasterDonationsView(APIView):
         }, status=status.HTTP_404_NOT_FOUND)
 
 
-        # Ensure the user is the one who registered the disaster or an admin
+        
         if not (request.user == disaster.user or request.user.is_admin):
             return Response({
                 'status': 'failed',
@@ -2267,7 +1977,8 @@ class DisasterDonationsView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-# Display disasters registered by the current user 
+#user disaster view
+
 class UserDisastersView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -2292,33 +2003,10 @@ class UserDisastersView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-
-
-
-
-
-
-
-
-
-
-
-from io import BytesIO
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from django.core.files.base import ContentFile
-from reportlab.lib import colors
-from io import BytesIO
-from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-from django.core.files.base import ContentFile
-from decimal import Decimal
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+#invoice generation
 
 def generate_invoice_pdf(invoice):
-    # Define the file name for the PDF
+
     file_name = f'invoice_{invoice.invoice_number}.pdf'
     
     buffer = BytesIO()
@@ -2328,13 +2016,13 @@ def generate_invoice_pdf(invoice):
     
     styles = getSampleStyleSheet()
     
-    # Custom styles
+  
     title_style = ParagraphStyle(
         'Title',
         parent=styles['Title'],
         fontSize=24,
         spaceAfter=20,
-        textColor=colors.HexColor('#0d47a1')  # Dark blue
+        textColor=colors.HexColor('#0d47a1')  
     )
     
     heading_style = ParagraphStyle(
@@ -2342,7 +2030,7 @@ def generate_invoice_pdf(invoice):
         parent=styles['Heading2'],
         fontSize=16,
         spaceAfter=12,
-        textColor=colors.HexColor('#424242')  # Dark gray
+        textColor=colors.HexColor('#424242')  
     )
     
     normal_style = ParagraphStyle(
@@ -2350,14 +2038,14 @@ def generate_invoice_pdf(invoice):
         parent=styles['Normal'],
         fontSize=12,
         spaceAfter=8,
-        textColor=colors.HexColor('#212121')  # Gray black
+        textColor=colors.HexColor('#212121')  
     )
     
-    # Get order and user details
+    
     order = invoice.order
     user = order.user
     
-    # Add company information with spacing and bold text
+
     company_info = """
     <font size=12><b>Everlane Style</b></font><br/>
     Near MP Tower<br/>
@@ -2367,34 +2055,34 @@ def generate_invoice_pdf(invoice):
     Email: contact@everlane.com
     """
     story.append(Paragraph(company_info, normal_style))
-    story.append(Spacer(1, 12))  # Add space between sections
+    story.append(Spacer(1, 12)) 
     
-    # Add invoice header with a background color
+   
     header_data = [
         ['Invoice Number:', invoice.invoice_number],
         ['Date:', invoice.created_at.strftime('%Y-%m-%d')],
-        ['Due Date:', invoice.created_at.strftime('%Y-%m-%d')],  # Modify if you have a due date
+        ['Due Date:', invoice.created_at.strftime('%Y-%m-%d')],  
         ['Customer Name:', user.get_full_name() or user.username],
     ]
     
     header_table = Table(header_data, colWidths=[2.5*inch, 4.5*inch])
     header_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d47a1')),  # Dark blue background
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text
-        ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#212121')),  # Gray black text
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d47a1')),  
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#212121')),  
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Bold font for header
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  
         ('FONTSIZE', (0, 0), (-1, -1), 12),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # Add padding to header row
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  
         ('TOPPADDING', (0, 0), (-1, 0), 12),
     ]))
     story.append(header_table)
-    story.append(Spacer(1, 12))  # Add space between sections
+    story.append(Spacer(1, 12))  
     
-    # Add invoice items with alternating row colors
+    
     item_data = [['Description', 'Quantity', 'Unit Price', 'Total']]
     
-    # Use the related name 'items' to get order items
+    
     for item in order.items.all():
         item_data.append([
             item.product_item.product.name,
@@ -2405,38 +2093,38 @@ def generate_invoice_pdf(invoice):
     
     item_table = Table(item_data, colWidths=[3*inch, 1.5*inch, 1.5*inch, 1.5*inch])
     item_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d47a1')),  # Dark blue header
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text for header
-        ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#212121')),  # Gray black text for rows
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d47a1')),  
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#212121')), 
         ('ALIGN', (2, 1), (-1, -1), 'RIGHT'),
         ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.whitesmoke, colors.lightgrey]),  # Alternating row colors
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),  # Grid lines
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.whitesmoke, colors.lightgrey]),  
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),  
     ]))
     story.append(item_table)
-    story.append(Spacer(1, 12))  # Add space between sections
+    story.append(Spacer(1, 12))  
     
-    # Add totals with bold text
+  
     totals_data = [
         ['Subtotal', f"Rs. {invoice.total_amount:.2f}"],
-        ['Tax (5%)', f"Rs. {(invoice.total_amount * Decimal('0.05')).quantize(Decimal('0.01')):.2f}"],  # Assuming 5% tax, adjust as needed
+        ['Tax (5%)', f"Rs. {(invoice.total_amount * Decimal('0.05')).quantize(Decimal('0.01')):.2f}"],  
         ['Total', f"Rs. {(invoice.total_amount+((invoice.total_amount * Decimal('0.05')).quantize(Decimal('0.01')))):.2f}"]
     ]
     
     totals_table = Table(totals_data, colWidths=[3*inch, 1.5*inch])
     totals_table.setStyle(TableStyle([
         ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d47a1')),  # Dark blue background for subtotal row
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # White text for subtotal row
-        ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#212121')),  # Gray black text for other rows
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),  # Bold font
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d47a1')),  
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#212121')),  
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),  
         ('LINEABOVE', (0, 0), (-1, 0), 1, colors.black),
-        ('LINEABOVE', (0, 2), (-1, 2), 2, colors.black),  # Thick line above total
+        ('LINEABOVE', (0, 2), (-1, 2), 2, colors.black),  
     ]))
     story.append(totals_table)
-    story.append(Spacer(1, 24))  # Add space before the footer
+    story.append(Spacer(1, 24))  
     
-    # Add footer with thank you note and contact info
+    
     footer_info = """
     <font size=10>
     <b>Thank you for your business!</b><br/>
@@ -2446,18 +2134,17 @@ def generate_invoice_pdf(invoice):
     """
     story.append(Paragraph(footer_info, normal_style))
     
-    # Build the PDF
+   
     doc.build(story)
     
-    # Get the PDF from the buffer
+    
     buffer.seek(0)
     pdf_file = ContentFile(buffer.getvalue())
     
-    # Save the PDF file to the invoice model
     invoice.pdf.save(file_name, pdf_file)
 
 
-
+#execute payment
 
 class ExecutePaymentView(APIView):
     permission_classes = [IsAuthenticated]
@@ -2516,12 +2203,13 @@ class ExecutePaymentView(APIView):
                 'response_code': status.HTTP_500_INTERNAL_SERVER_ERROR
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+#cancel payment
 
 class CancelPaymentView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        # Extract the payment ID from the request
+       
         payment_id = request.GET.get('token')
  
         try:
@@ -2529,10 +2217,10 @@ class CancelPaymentView(APIView):
             order.payment_status = 'Canceled'
             order.save()
         except Order.DoesNotExist:
-            # Handle the case where the order was not found
+            
             pass
         
-        # Provide feedback to the user
+       
         return Response({
                 'status': 'failed',
                 'message': 'Payment Canceled.',
@@ -2540,6 +2228,7 @@ class CancelPaymentView(APIView):
             }, status=status.HTTP_200_OK)
     
 
+#pickup list
 
 class PickupListView(generics.ListCreateAPIView):
     queryset = PickupLocation.objects.all()
@@ -2557,17 +2246,7 @@ class PickupListView(generics.ListCreateAPIView):
         return Response(response_data)
     
 
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.contrib.auth.models import User
-from django.core.mail import send_mail
-from django.conf import settings
-import random
-import string
-from django.contrib.auth import get_user_model
-
+#forgot password
 
 class ForgotPasswordView(APIView):
     def post(self, request, *args, **kwargs):
@@ -2575,19 +2254,19 @@ class ForgotPasswordView(APIView):
         if serializer.is_valid():
             username = serializer.validated_data['username']
             
-            User = get_user_model()  # Use the custom user model
+            User = get_user_model()  
             
             try:
                 user = User.objects.get(username=username)
                 
-                # Generate a random password
+                
                 new_password = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
                 
-                # Update the user's password
+               
                 user.set_password(new_password)
                 user.save()
                 
-                # Send an email with the new password
+                
                 subject = 'Your New Password'
                 message = f'Hello {user.username},\n\nYour new password is: {new_password}\nPlease change it after logging in.'
                 email_from = settings.DEFAULT_FROM_EMAIL

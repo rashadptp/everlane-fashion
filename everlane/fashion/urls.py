@@ -20,7 +20,6 @@ urlpatterns = [
     path('categories/', CategoryListView.as_view(), name='category-list'),
     path('pickups/',PickupListView.as_view(),name='pickup-list'),
     path('subcategories/', SubcategoryListView.as_view(), name='subcategory-list'),
-    path('subcategories/<int:pk>/', SubcategoryDetailView.as_view(), name='subcategory-detail'),
     path('carts/', CartListView.as_view(), name='cart-list'),
     path('add-to-cart/', AddToCartView.as_view(), name='add-to-cart'),
     path('update-cart-item-quantity/', UpdateCartItemQuantityView.as_view(), name='update-cart-item-quantity'),
