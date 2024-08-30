@@ -1462,7 +1462,7 @@ class OrderListView(generics.ListAPIView):
     def get_queryset(self):
         # Optionally filter orders by the authenticated user
         user = self.request.user
-        return Order.objects.filter(user=user, is_deleted=False,is_completed=True).order_by("id")
+        return Order.objects.filter(user=user, is_deleted=False,is_completed=True).order_by("-id")
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
