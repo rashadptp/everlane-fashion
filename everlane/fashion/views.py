@@ -2020,7 +2020,7 @@ class AdminDisasterApprovalListView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get(self, request, *args, **kwargs):
-        disasters_to_approve = Disaster.objects.filter(is_approved=False)
+        disasters_to_approve = Disaster.objects.filter(is_approved=False,is_deleted=False)
         serializer = DisasterSerializer(disasters_to_approve, many=True)
         return Response({
             'status': 'success',
@@ -2042,16 +2042,22 @@ class ApproveDisasterView(APIView):
                 'response_code': status.HTTP_404_NOT_FOUND
             }, status=status.HTTP_404_NOT_FOUND)
 
-        disaster.is_approved = True
-        disaster.save()
-
-        return Response({
-            'status': 'success',
-            'message': 'Disaster approved successfully.',
-            'response_code': status.HTTP_200_OK,
-            'data': DisasterSerializer(disaster).data
-        }, status=status.HTTP_200_OK)
-
+        if request.data.get('approve', True):  # Approve the disaster
+            disaster.is_approved = True
+            disaster.save()
+            return Response({
+                'status': 'success',
+                'message': 'Disaster approved successfully.',
+                'response_code': status.HTTP_200_OK,
+                'data': DisasterSerializer(disaster).data
+            }, status=status.HTTP_200_OK)
+        else:  # Reject and soft delete the disaster
+            disaster.soft_delete()
+            return Response({
+                'status': 'success',
+                'message': 'Disaster rejected and deleted successfully.',
+                'response_code': status.HTTP_200_OK
+            }, status=status.HTTP_200_OK)
 
 ############################################################    AI    #############################################################################
 
