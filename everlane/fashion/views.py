@@ -1936,7 +1936,7 @@ class UserDonationListView(APIView):
     def get(self, request, *args, **kwargs):
         user = request.user
         donations = user.donations.all()
-        serializer = DressDonationListSerializer(donations, many=True)
+        serializer = DressDonationListSerializer(donations, many=True,context={'request': request})
         return Response({
             'status': 'success',
             'message': 'User donations retrieved successfully.',
