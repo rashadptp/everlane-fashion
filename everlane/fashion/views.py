@@ -1366,7 +1366,11 @@ class OrderListView(generics.ListAPIView):
     def get_queryset(self):
         
         user = self.request.user
-        return Order.objects.filter(user=user, is_deleted=False,is_completed=True).order_by("-id")
+        if user.is_admin:  
+            return Order.objects.filter(is_deleted=False, is_completed=True).order_by("-id")
+        else:  
+            return Order.objects.filter(user=user, is_deleted=False, is_completed=True).order_by("-id")
+
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -1732,7 +1736,7 @@ class DisasterListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        print("ENETERD IN GET")
+        
         disasters = Disaster.objects.filter(is_approved=True).exclude(
             fulfilled_men_dresses__gte=F('required_men_dresses'),
             fulfilled_women_dresses__gte=F('required_women_dresses'),
