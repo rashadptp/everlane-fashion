@@ -360,9 +360,12 @@ class DressDonationListSerializer(serializers.ModelSerializer):
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
-        fields = ['id', 'verb', 'description', 'timestamp']
+        fields = ['id', 'verb', 'description','formatted_timestamp']
 
+    def get_formatted_timestamp(self, obj):
+        return obj.formatted_timestamp()
 
+# 'timestamp'
     
 
 

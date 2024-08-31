@@ -347,6 +347,7 @@ class Invoice(models.Model):
 
 
 ######Notification######
+from datetime import datetime
 
 class Notification(models.Model):
     recipient = models.ForeignKey(User, related_name='notifications', on_delete=models.CASCADE)
@@ -356,3 +357,8 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.verb} - {self.recipient}"
+    def formatted_timestamp(self):
+        
+        dt = self.timestamp
+        
+        return dt.astimezone(timezone.get_current_timezone()).strftime("%Y-%m-%d %H:%M:%S")
