@@ -11,7 +11,19 @@ def order_status_updated(sender, instance, created, **kwargs):
 
     if instance.payment_status == 'Completed':
             subject = f'Your order {instance.id} placed successfully'
-            message = f'Your order ID {instance.id} payment has been successfully processed. We will notify you of any further changes'
+            message = (
+    f"Dear {instance.user.username},\n\n"
+    "Thank you for your purchase! We are pleased to inform you that your payment for Order" f"{instance.order_code} has been successfully processed.\n\n"
+    "Order Details:\n"
+    f"Order CODE: {instance.order_code}\n"
+    "Payment Status: Completed\n\n"
+    "We will keep you informed of any updates regarding your order, including shipping and delivery information.\n\n"
+    "Should you have any questions or require further assistance, please do not hesitate to contact our customer support team.\n\n"
+    "Thank you for shopping with us!\n\n"
+    "Best regards,\n"
+    "Everlane Team"
+)
+           
             email_from = settings.DEFAULT_FROM_EMAIL
             recipient_list = [instance.user.email]
             
