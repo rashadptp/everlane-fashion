@@ -1426,7 +1426,7 @@ class UserNotificationsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        notifications = Notification.objects.filter(recipient=request.user).order_by('-timestamp')
+        notifications = Notification.objects.filter(recipient=request.user,is_deleted=False).order_by('-timestamp')
         serializer = NotificationSerializer(notifications, many=True)
        
         return Response({
@@ -1435,6 +1435,31 @@ class UserNotificationsAPIView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         }, status=status.HTTP_200_OK)
+
+#notification deletion
+
+
+class NotificationDeleteView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            notification = self.get_object()
+            notification.is_deleted = True
+            notification.save()
+            return Response({
+                'status': 'success',
+                'message': 'Notification deleted successfully.',
+                'response_code': status.HTTP_200_OK
+            }, status=status.HTTP_200_OK)
+        except Notification.DoesNotExist:
+            return Response({
+                'status': 'failed',
+                'message': 'Notification not found.',
+                'response_code': status.HTTP_404_NOT_FOUND
+            }, status=status.HTTP_404_NOT_FOUND)
 
 #recommendation
 

@@ -7,6 +7,7 @@ urlpatterns = [
     path('register/admin/', RegisterAdminView.as_view(), name='admin-register'),
     path('login/', LoginView.as_view(), name='login'),
     path('logout/',LogoutView.as_view(),name='logout'),
+    path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
 
     ######################################   PRODUCTS    ######################################################################
     path('products/', ProductListView.as_view(), name='product-list'),
@@ -74,7 +75,10 @@ urlpatterns = [
     path('payment/execute/', ExecutePaymentView.as_view(), name='payment-execute'),
     path('payment/cancel/', CancelPaymentView.as_view(), name='payment-cancel'),
     path('notification/', UserNotificationsAPIView.as_view(), name='notification'),
-    path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
+    path('notification/<int:pk>/delete/', NotificationDeleteView.as_view(), name='notification-delete'),
+
+    
+    
     
 
 
