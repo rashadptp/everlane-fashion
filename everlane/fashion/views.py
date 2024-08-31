@@ -1432,7 +1432,9 @@ class UserNotificationsAPIView(APIView):
        
         return Response({
             'status': 'success',
-            'notifications': serializer.data
+            'message': 'Notification retrieved successfully.',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
         }, status=status.HTTP_200_OK)
 
 #recommendation
