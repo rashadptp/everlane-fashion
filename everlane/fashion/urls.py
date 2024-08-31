@@ -79,10 +79,6 @@ urlpatterns = [
 
     
     
-    
-
-
-
     #######################################  DONATIONS      #############################
 
     path('disasters/', DisasterListCreateView.as_view(), name='disaster-list-create'),
