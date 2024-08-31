@@ -1912,7 +1912,7 @@ class DressDonationCreateView(APIView):
             donation = serializer.save(user=request.user)
 
             
-            disaster.update_fulfillment(men_dresses, women_dresses, kids_dresses)
+            # disaster.update_fulfillment(men_dresses, women_dresses, kids_dresses)
 
             return Response({
                 'status': 'success',
