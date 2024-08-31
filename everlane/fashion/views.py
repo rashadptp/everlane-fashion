@@ -6,7 +6,6 @@ from rest_framework.permissions import IsAuthenticated
 from .models import *
 from .permissions import IsAdminUser
 from .serializers import *
-import pandas as pd
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 from .variables import STATUS_CHOICES
