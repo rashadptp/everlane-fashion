@@ -343,10 +343,13 @@ class DressDonationListSerializer(serializers.ModelSerializer):
     donor_name = serializers.CharField(source='user.username', read_only=True)
     disaster_name=serializers.CharField(source='disaster.name',read_only=True)
     images = serializers.SerializerMethodField()
+    pickup_location_city=serializers.CharField(source='pickup_location.city',read_only=True)
+    pickup_location_address=serializers.CharField(source='pickup_location.address',read_only=True)
 
     class Meta:
         model = DressDonation
-        fields = ['disaster','disaster_name', 'men_dresses', 'women_dresses', 'kids_dresses', 'images','pickup_location', 'donated_on', 'donor_name']
+        fields = ['disaster','disaster_name', 'men_dresses', 'women_dresses', 'kids_dresses', 'images','pickup_location', 'donated_on',
+                   'donor_name','pickup_location_address','pickup_location_city']
 
     def get_images(self, obj):
         """
