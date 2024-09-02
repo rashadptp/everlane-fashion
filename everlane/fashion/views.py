@@ -1871,8 +1871,9 @@ class ApproveDisasterView(APIView):
 
 # torn_model = tf.keras.models.load_model('quality_check_torn.h5')
 # dirty_model = tf.keras.models.load_model('quality_check_dirty.h5')
-
-torn_dirty_model = tf.keras.models.load_model('quality_check_dirty.h5')
+import cv2
+import numpy as np
+torn_dirty_model = tf.keras.models.load_model('quality_check_both.h5')
 
 class DressDonationCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -1880,20 +1881,27 @@ class DressDonationCreateView(APIView):
     def preprocess_image(self, image_file: InMemoryUploadedFile):
         """Preprocess the image for prediction."""
         image = Image.open(image_file)
-        image = image.resize((100,100))  
-        image = np.array(image) / 255.0  
-        image = np.expand_dims(image, axis=0)  
-        return image
+        # image = image.resize((100,100))  
+        # image = np.array(image) / 255.0  
+        # image = np.expand_dims(image, axis=0)  
+        # return image
+        image_np = np.array(image)
+        
+        # Resize the image
+        img_resize = cv2.resize(image_np, (100, 100))
+        
+        # Normalize the image
+        img_norm = img_resize / 255.0
+        
+        # Reshape the image
+        img_reshape = img_norm.reshape(1, 100, 100, 3)
+
+        return img_reshape
 
     def check_quality(self, image_file):
         """Check if the image is torn or dirty."""
         preprocessed_image = self.preprocess_image(image_file)
-        
-        
-        # is_torn = torn_model.predict(preprocessed_image)[0][0] > 0.5
-        # is_dirty = dirty_model.predict(preprocessed_image)[0][0] > 0.5
         is_torn_dirty = torn_dirty_model.predict(preprocessed_image)[0][0] > 0.5
-        
         return is_torn_dirty
         
 
