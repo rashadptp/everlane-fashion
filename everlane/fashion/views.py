@@ -1872,7 +1872,7 @@ class ApproveDisasterView(APIView):
 # torn_model = tf.keras.models.load_model('quality_check_torn.h5')
 # dirty_model = tf.keras.models.load_model('quality_check_dirty.h5')
 
-torn_dirty_model = tf.keras.models.load_model('quality_check_dirty.h5')
+torn_dirty_model = tf.keras.models.load_model('quality_check_both.h5')
 
 class DressDonationCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -1888,12 +1888,7 @@ class DressDonationCreateView(APIView):
     def check_quality(self, image_file):
         """Check if the image is torn or dirty."""
         preprocessed_image = self.preprocess_image(image_file)
-        
-        
-        # is_torn = torn_model.predict(preprocessed_image)[0][0] > 0.5
-        # is_dirty = dirty_model.predict(preprocessed_image)[0][0] > 0.5
         is_torn_dirty = torn_dirty_model.predict(preprocessed_image)[0][0] > 0.5
-        
         return is_torn_dirty
         
 
