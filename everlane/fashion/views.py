@@ -43,7 +43,7 @@ from django.core.mail import send_mail
 import random
 import string
 from django.contrib.auth import get_user_model
-
+from rest_framework.pagination import PageNumberPagination
 #register view
 
 class RegisterUserView(generics.CreateAPIView):
@@ -2309,6 +2309,22 @@ class ForgotPasswordView(APIView):
                 return Response({'error': 'Username not found.'}, status=status.HTTP_404_NOT_FOUND)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+#product list with pagination
+
+class ProductPagination(PageNumberPagination):
+    page_size = 10  
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
+class ProductPaginatedListView(generics.ListAPIView):
+    serializer_class = ProductSerializer
+    pagination_class = ProductPagination
+
+    def get_queryset(self):
+        return Product.objects.all()
 
 
 
