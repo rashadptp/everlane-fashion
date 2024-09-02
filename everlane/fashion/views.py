@@ -1422,19 +1422,30 @@ class UpdateOrderStatusView(APIView):
 
 #notification
 
+
 class UserNotificationsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        notifications = Notification.objects.filter(recipient=request.user,is_deleted=False).order_by('-timestamp')
+        notifications = Notification.objects.filter(recipient=request.user, is_deleted=False).order_by('-timestamp')
+        
+        if not notifications.exists():
+            return Response({
+                'status': 'error',
+                'message': 'No notifications found.',
+                'response_code': status.HTTP_404_NOT_FOUND,
+                'data': []
+            }, status=status.HTTP_404_NOT_FOUND)
+
         serializer = NotificationSerializer(notifications, many=True)
-       
+        
         return Response({
             'status': 'success',
-            'message': 'Notification retrieved successfully.',
+            'message': 'Notifications retrieved successfully.',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         }, status=status.HTTP_200_OK)
+
 
 #notification deletion
 
