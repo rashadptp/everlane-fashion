@@ -1871,7 +1871,8 @@ class ApproveDisasterView(APIView):
 
 # torn_model = tf.keras.models.load_model('quality_check_torn.h5')
 # dirty_model = tf.keras.models.load_model('quality_check_dirty.h5')
-
+import cv2
+import numpy as np
 torn_dirty_model = tf.keras.models.load_model('quality_check_both.h5')
 
 class DressDonationCreateView(APIView):
@@ -1880,10 +1881,22 @@ class DressDonationCreateView(APIView):
     def preprocess_image(self, image_file: InMemoryUploadedFile):
         """Preprocess the image for prediction."""
         image = Image.open(image_file)
-        image = image.resize((100,100))  
-        image = np.array(image) / 255.0  
-        image = np.expand_dims(image, axis=0)  
-        return image
+        # image = image.resize((100,100))  
+        # image = np.array(image) / 255.0  
+        # image = np.expand_dims(image, axis=0)  
+        # return image
+        image_np = np.array(image)
+        
+        # Resize the image
+        img_resize = cv2.resize(image_np, (100, 100))
+        
+        # Normalize the image
+        img_norm = img_resize / 255.0
+        
+        # Reshape the image
+        img_reshape = img_norm.reshape(1, 100, 100, 3)
+
+        return img_reshape
 
     def check_quality(self, image_file):
         """Check if the image is torn or dirty."""
