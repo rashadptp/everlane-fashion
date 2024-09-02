@@ -1869,8 +1869,10 @@ class ApproveDisasterView(APIView):
 
 #dress donation view
 
-torn_model = tf.keras.models.load_model('quality_check_torn.h5')
-dirty_model = tf.keras.models.load_model('quality_check_dirty.h5')
+# torn_model = tf.keras.models.load_model('quality_check_torn.h5')
+# dirty_model = tf.keras.models.load_model('quality_check_dirty.h5')
+
+torn_dirty_model = tf.keras.models.load_model('quality_check_dirty.h5')
 
 class DressDonationCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -1888,10 +1890,11 @@ class DressDonationCreateView(APIView):
         preprocessed_image = self.preprocess_image(image_file)
         
         
-        is_torn = torn_model.predict(preprocessed_image)[0][0] > 0.5
-        is_dirty = dirty_model.predict(preprocessed_image)[0][0] > 0.5
+        # is_torn = torn_model.predict(preprocessed_image)[0][0] > 0.5
+        # is_dirty = dirty_model.predict(preprocessed_image)[0][0] > 0.5
+        is_torn_dirty = torn_dirty_model.predict(preprocessed_image)[0][0] > 0.5
         
-        return is_torn, is_dirty
+        return is_torn_dirty
         
 
     def post(self, request, *args, **kwargs):
@@ -1915,8 +1918,8 @@ class DressDonationCreateView(APIView):
                 }, status=status.HTTP_200_OK)
 
             for image in images:
-                is_torn, is_dirty = self.check_quality(image)
-                if is_dirty or is_torn:
+                is_torn_dirty = self.check_quality(image)
+                if is_torn_dirty:
                     return Response({
                         'status': 'error',
                         'message': 'One or more dresses are dirty or torn. Please upload clean dresses and good condition.',
