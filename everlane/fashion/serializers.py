@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import *
 from .variables import * 
+import phonenumbers
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -8,13 +9,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'mobile', 'password', 'confirm_password']
+        fields = ['username', 'first_name', 'last_name', 'email', 'mobile','country_code', 'password', 'confirm_password']
         
         extra_kwargs = {
             'first_name': {'required': True},
             'last_name': {'required': True},
             'email': {'required': True},
             'mobile': {'required': True},
+            'country_code':{'required':True},
             'password': {'required': True},
             'confirm_password': {'required': True},
         }
@@ -22,6 +24,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def validate(self, data):
         password = data.get('password')
         confirm_password = data.get('confirm_password')
+
+        mobile = data.get('mobile')
+        country_code = data.get('country_code')
+        full_number = f"{country_code}{mobile}"
+
+        print(f"Full number for validation: {full_number}")
+
 
         if password != confirm_password:
             raise serializers.ValidationError({"password": "Passwords do not match."})
@@ -34,6 +43,19 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
         if not any(char.isalpha() for char in password):
             raise serializers.ValidationError({"password": "Password must contain at least one letter."})
+        
+        try:
+            # Parse the phone number
+            parsed_number = phonenumbers.parse(full_number, None)
+            print(f"Parsed Number: {parsed_number}")  # Debugging line
+
+            # Validate the phone number
+            if not phonenumbers.is_valid_number(parsed_number):
+                print(f"Validation failed for: {parsed_number}")  # Debugging line
+                raise serializers.ValidationError({"mobile": "Invalid mobile number."})
+        except phonenumbers.NumberParseException as e:
+            print(f"Exception: {e}")  # Debugging line
+            raise serializers.ValidationError({"mobile": "Invalid mobile number or country code."})
 
         return data
 
@@ -44,7 +66,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
             email=validated_data['email'],
-            mobile=validated_data['mobile']
+            mobile=validated_data['mobile'],
+            country_code=validated_data['country_code'],
         )
         user.set_password(validated_data['password'])
         user.save()
