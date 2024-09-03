@@ -62,7 +62,7 @@ class RegisterUserView(generics.CreateAPIView):
                 'message': 'User registered successfully',
                 'response_code': status.HTTP_201_CREATED,
                 'data': UserRegistrationSerializer(user).data
-            }, status=status.HTTP_201_CREATED)
+            })
 
         else:
 
@@ -71,9 +71,9 @@ class RegisterUserView(generics.CreateAPIView):
                 'message': 'User registration failed',
                 'response_code': status.HTTP_400_BAD_REQUEST,
                 'data': serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
-
+# response change
 class RegisterAdminView(generics.CreateAPIView):
     serializer_class = AdminRegistrationSerializer
 
@@ -87,16 +87,17 @@ class RegisterAdminView(generics.CreateAPIView):
                 'message': "Admin registered successfully",
                 'response_code': status.HTTP_201_CREATED,
                 'data': AdminRegistrationSerializer(user).data
-            }, status=status.HTTP_201_CREATED)
+            })
         else:
             return Response({
                 'status': "failed",
                 'message': "Admin registration failed",
                 'response_code': status.HTTP_400_BAD_REQUEST,
                 'data': serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
 #Login view
+# response change
 
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
@@ -114,14 +115,14 @@ class LoginView(generics.GenericAPIView):
                  'token': token.key,
                   'user_id': user.pk,
                    'username': user.username
-                       }, status=status.HTTP_200_OK)
+                       })
 
         return Response({
             'status': "failed",
             'message': 'Invalid username or password',
             'response_code': status.HTTP_400_BAD_REQUEST,
             'data': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+        })
         
 
 # Logout view
@@ -141,7 +142,7 @@ class LogoutView(generics.GenericAPIView):
                 'message': 'Logged out successfully',
                 'response_code': status.HTTP_200_OK,
                 'data': None
-            }, status=status.HTTP_200_OK)
+            })
         
         except Token.DoesNotExist:
             return Response({
@@ -149,7 +150,7 @@ class LogoutView(generics.GenericAPIView):
                 'message': 'Logout failed. Token does not exist',
                 'response_code': status.HTTP_400_BAD_REQUEST,
                 'data': None
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
         
         except Exception as e:
             return Response({
@@ -157,7 +158,7 @@ class LogoutView(generics.GenericAPIView):
                 'message': 'Logout failed',
                 'response_code': status.HTTP_400_BAD_REQUEST,
                 'data': str(e)
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
 
 ###without pagination####
@@ -165,7 +166,7 @@ class LogoutView(generics.GenericAPIView):
 #product list/search
 
 from django.db.models import Q
-
+# add is_active in filteration for queryset
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
 
@@ -185,7 +186,7 @@ class ProductListView(generics.ListAPIView):
             )
 
         return queryset
-
+# check item_serializer required or not
     def list(self, request, *args, **kwargs):
         products = self.get_queryset()
         product_data = []
@@ -203,6 +204,7 @@ class ProductListView(generics.ListAPIView):
         })
 
 #product detail
+# check item_serializer required or not
 
 class ProductDetailView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
@@ -213,8 +215,8 @@ class ProductDetailView(generics.RetrieveAPIView):
         product = self.get_object()
         product_data=[]
         product_serializer = self.get_serializer(product)
-        items = ProductItem.objects.filter(product=product)
-        item_serializer = ProductItemSerializer(items, many=True)
+        # items = ProductItem.objects.filter(product=product)
+        # item_serializer = ProductItemSerializer(items, many=True)
         product_data.append(product_serializer.data)
         return Response({
             'status': 'success',
@@ -242,7 +244,7 @@ class ProductCreateView(generics.CreateAPIView):
             'message': "Product created successfully",
             'response_code': status.HTTP_201_CREATED,
             'data': serializer.data
-        }, status=status.HTTP_201_CREATED)
+        })
         
 #product updation
 
@@ -291,15 +293,18 @@ class ProductDeleteView(generics.DestroyAPIView):
             'message': "Product deleted successfully",
             'response_code': status.HTTP_204_NO_CONTENT,
             'data': None
-        }, status=status.HTTP_204_NO_CONTENT)
+        })
 
 #add product item
  
+ # status change
 class AddProductItemView(generics.CreateAPIView):
     serializer_class = ProductItemSerializer
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
+        # data = request.data
+        # product_id = data['product']
         product_id = request.data.get('product')
         size = request.data.get('size')
         stock = request.data.get('stock')
@@ -312,7 +317,7 @@ class AddProductItemView(generics.CreateAPIView):
                 'status': 'failed',
                 'message': 'Product not found',
                 'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
 
         # Validate size
         if size not in [choice[0] for choice in SIZES]:
@@ -320,7 +325,7 @@ class AddProductItemView(generics.CreateAPIView):
                 'status': 'failed',
                 'message': 'Invalid size',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
         # Validate stock
         if stock is None or int(stock) < 0:
@@ -328,7 +333,7 @@ class AddProductItemView(generics.CreateAPIView):
                 'status': 'failed',
                 'message': 'Stock must be a non-negative integer',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
         # Create ProductItem
         product_item = ProductItem.objects.create(
@@ -342,7 +347,7 @@ class AddProductItemView(generics.CreateAPIView):
             'message': 'Product item added successfully',
             'response_code': status.HTTP_201_CREATED,
             'data': ProductItemSerializer(product_item).data
-        }, status=status.HTTP_201_CREATED)
+        })
 
 
 #categorylist
@@ -385,7 +390,7 @@ class SubcategoryListView(generics.ListCreateAPIView):
          })
 
 #cartlist view,cart created
-
+##-------------------------------------------------------------------------------------------------
 class CartListView(generics.ListCreateAPIView):
     serializer_class = CartSerializer
     permission_classes = [IsAuthenticated]  
@@ -473,7 +478,7 @@ class AddToCartView(APIView):
             'message': message,
             'response_code': status.HTTP_200_OK,
             'data': CartSerializer(cart).data  
-        }, status=status.HTTP_200_OK)
+        })
 
 #cart item delete 
 
@@ -491,7 +496,7 @@ class CartItemDeleteView(APIView):
                 'status': 'failed',
                 'message': 'Cart item not found or does not belong to you',
                 'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
 
         
         cart = cart_item.cart
@@ -507,7 +512,7 @@ class CartItemDeleteView(APIView):
             'status': 'success',
             'message': 'Cart item deleted successfully',
             'response_code': status.HTTP_200_OK
-        }, status=status.HTTP_200_OK)
+        })
 
 #updatecartitemquantity
  
@@ -527,7 +532,7 @@ class UpdateCartItemQuantityView(APIView):
                 'status': 'failed',
                 'message': 'Cart item not found',
                 'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
 
         if action == 'increase':
             cart_item.quantity += 1
@@ -543,13 +548,13 @@ class UpdateCartItemQuantityView(APIView):
                     'status': 'failed',
                     'message': 'Quantity cannot be less than 1',
                     'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
+                })
         else:
             return Response({
                 'status': 'failed',
                 'message': 'Invalid action',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
         
         cart = cart_item.cart
@@ -561,7 +566,7 @@ class UpdateCartItemQuantityView(APIView):
             'message': message,
             'response_code': status.HTTP_200_OK,
             'data': CartSerializer(cart).data  
-        }, status=status.HTTP_200_OK)
+        })
 
 #Banner views
 
@@ -590,7 +595,7 @@ class AngularBannerListView(generics.ListAPIView):
                 'response_code': status.HTTP_404_NOT_FOUND,
                 'data': []
             }
-            return Response(response_data, status=status.HTTP_404_NOT_FOUND)
+            return Response(response_data)
 
         response_data = {
             'status': 'success',
@@ -625,7 +630,7 @@ class FlutterBannerListView(generics.ListAPIView):
                 'response_code': status.HTTP_404_NOT_FOUND,
                 'data': []
             }
-            return Response(response_data, status=status.HTTP_404_NOT_FOUND)
+            return Response(response_data)
 
         response_data = {
             'status': 'success',
@@ -654,14 +659,14 @@ class TrendingProductsView(generics.ListAPIView):
                 'message': 'Trending products retrieved successfully',
                 'response_code': status.HTTP_200_OK,
                 'data': serializer.data
-            }, status=status.HTTP_200_OK)
+            })
 
         return Response({
             'status': "failed",
             'message': 'No trending products found',
             'response_code': status.HTTP_404_NOT_FOUND,
             'data': []
-        }, status=status.HTTP_404_NOT_FOUND)
+        })
 
 ##seasons without pagination###
 
@@ -684,7 +689,7 @@ class SeasonalProductsView(generics.ListAPIView):
                 'message': f'No {self.kwargs.get("season")} products found',
                 'response_code': status.HTTP_404_NOT_FOUND,
                 'data': []
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
 
         serializer = self.get_serializer(queryset, many=True)
         return Response({
@@ -692,7 +697,7 @@ class SeasonalProductsView(generics.ListAPIView):
             'message': f'{self.kwargs.get("season").capitalize()} products retrieved successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        }, status=status.HTTP_200_OK)
+        })
 
     
 
@@ -713,13 +718,13 @@ class QuestionnaireCreateView(generics.UpdateAPIView):
                 'message': 'Questionnaire submitted successfully',
                 'response_code': status.HTTP_201_CREATED,
                 'data': QuestionnaireSerializer(questionnaire).data
-            }, status=status.HTTP_201_CREATED)
+            })
         return Response({
             'status': "failed",
             'message': 'Failed to submit questionnaire',
             'response_code': status.HTTP_400_BAD_REQUEST,
             'data': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+        })
     
 
 
@@ -749,7 +754,7 @@ class WishlistListView(generics.ListAPIView):
                 'message': 'No items found in your wishlist',
                 'response_code': status.HTTP_200_OK,
                 'data': []
-            }, status=status.HTTP_200_OK)
+            })
 
 #Add to wishlist view
 
@@ -764,7 +769,7 @@ class AddWishlistView(APIView):
                 'status': 'failed',
                 'message': 'Product ID is required',
                 'response_code': status.HTTP_400_BAD_REQUEST,
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
         
         try:
             product = Product.objects.get(id=product_id)
@@ -773,7 +778,7 @@ class AddWishlistView(APIView):
                 'status': 'failed',
                 'message': 'Product not found',
                 'response_code': status.HTTP_404_NOT_FOUND,
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
         
         
         if Wishlist.objects.filter(user=request.user, product=product).exists():
@@ -781,7 +786,7 @@ class AddWishlistView(APIView):
                 'status': 'failed',
                 'message': 'Product already in wishlist',
                 'response_code': status.HTTP_400_BAD_REQUEST,
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
         
         
         wishlist = Wishlist.objects.create(user=request.user, product=product)
@@ -791,7 +796,7 @@ class AddWishlistView(APIView):
             'message': 'Product added to wishlist successfully',
             'response_code': status.HTTP_201_CREATED,
             'data': WishlistSerializer(wishlist).data
-        }, status=status.HTTP_201_CREATED)
+        })
 
 #wishlist delete
 
@@ -807,7 +812,7 @@ class DeleteWishlistView(APIView):
                 'status': 'failed',
                 'message': 'Product not found',
                 'response_code': status.HTTP_404_NOT_FOUND,
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
         
         
         product = products.first()
@@ -820,7 +825,7 @@ class DeleteWishlistView(APIView):
                 'status': 'failed',
                 'message': 'Wishlist item not found',
                 'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
         
         
         wishlist_items.delete()
@@ -830,7 +835,7 @@ class DeleteWishlistView(APIView):
             'status': 'success',
             'message': 'Wishlist item deleted successfully',
             'response_code': status.HTTP_200_OK
-        }, status=status.HTTP_200_OK)
+        })
 
 
 #Default Address view
@@ -847,13 +852,13 @@ class DefaultAddressView(APIView):
                 'message': 'Default address retrieved successfully',
                 'response_code': status.HTTP_200_OK,
                 'data': serializer.data
-            }, status=status.HTTP_200_OK)
+            })
         except Address.DoesNotExist:
             return Response({
                 'status': 'failed',
                 'message': 'Default address not found',
                 'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
 
 #Address list view
 
@@ -874,7 +879,7 @@ class AddressListView(generics.ListAPIView):
             'message': 'Addresses retrieved successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        }, status=status.HTTP_200_OK)
+        })
 
         else:
             
@@ -882,7 +887,7 @@ class AddressListView(generics.ListAPIView):
                 'status': 'failed',
                 'message': 'No addresses found',
                 'response_code': status.HTTP_200_OK
-            }, status=status.HTTP_200_OK)
+            })
 
 #Address creation view
 
@@ -903,7 +908,7 @@ class AddressCreateView(APIView):
                 'status': 'failed',
                 'message': f'Missing fields: {", ".join(missing_fields)}',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
         # Create the Address instance
         address = Address.objects.create(
@@ -927,7 +932,7 @@ class AddressCreateView(APIView):
             'message': 'Address created successfully',
             'response_code': status.HTTP_201_CREATED,
             'data': serializer.data
-        }, status=status.HTTP_201_CREATED)
+        })
 
 
 #Address delete view
@@ -946,13 +951,13 @@ class AddressDeleteView(generics.DestroyAPIView):
                 'status': 'success',
                 'message': 'Address deleted successfully',
                 'response_code': status.HTTP_200_OK
-            }, status=status.HTTP_200_OK)
+            })
         except Address.DoesNotExist:
             return Response({
                 'status': 'failed',
                 'message': 'Address not found',
                 'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
 
 #place order view
 
@@ -983,7 +988,7 @@ class PlaceOrderView(APIView):
                 'status': 'failed',
                 'message': 'Invalid payment method.',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
         
         if order_type not in ['delivery', 'donate']:
@@ -991,7 +996,7 @@ class PlaceOrderView(APIView):
                 'status': 'failed',
                 'message': 'Invalid order type.',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
        
         if order_type == 'donate' and payment_method == 'COD':
@@ -999,7 +1004,7 @@ class PlaceOrderView(APIView):
                 'status': 'failed',
                 'message': 'COD is not available for donations',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
         
         try:
@@ -1010,7 +1015,7 @@ class PlaceOrderView(APIView):
                 'status': 'failed',
                 'message': 'No active cart found for the user',
                 'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
 
         cart_items = CartItem.objects.filter(cart=cart, is_active=True, is_deleted=False)
         if not cart_items.exists():
@@ -1018,7 +1023,7 @@ class PlaceOrderView(APIView):
                 'status': 'failed',
                 'message': 'No items in the cart to place an order',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
        
         total_amount = 0 
@@ -1039,7 +1044,7 @@ class PlaceOrderView(APIView):
             'status': 'failed',
             'message': 'Invalid disaster selected',
             'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
             pickup_location = PickupLocation.objects.filter(id=pickup_location_id).first()
             if not pickup_location:
@@ -1047,7 +1052,7 @@ class PlaceOrderView(APIView):
                 'status': 'failed',
                 'message': 'Invalid pickup location selected',
                 'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
+                })
         
         
 
@@ -1058,7 +1063,7 @@ class PlaceOrderView(APIView):
                     'status': 'failed',
                     'message': 'Invalid address selected',
                     'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
+                })
 
         
         order = Order.objects.create(
@@ -1143,20 +1148,20 @@ class PlaceOrderView(APIView):
                                 'message': 'Order placed successfully. Redirecting to PayPal',
                                 'approval_url': link.href,
                                 'response_code': status.HTTP_201_CREATED
-                            }, status=status.HTTP_201_CREATED)
+                            })
                 else:
                     return Response({
                         'status': 'failed',
                         'message': 'Error occurred while processing PayPal payment',
                         'response_code': status.HTTP_400_BAD_REQUEST
-                    }, status=status.HTTP_400_BAD_REQUEST)
+                    })
 
             return Response({
                 'status': 'success',
                 'message': 'Order placed successfully as a donation',
                 'response_code': status.HTTP_201_CREATED,
                 'data': OrderSerializer(order).data
-            }, status=status.HTTP_201_CREATED)
+            })
 
         
         if order_type == 'delivery':
@@ -1208,13 +1213,13 @@ class PlaceOrderView(APIView):
                                 'message': 'Order placed successfully. Redirecting to PayPal',
                                 'approval_url': link.href,
                                 'response_code': status.HTTP_201_CREATED
-                            }, status=status.HTTP_201_CREATED)
+                            })
                 else:
                     return Response({
                         'status': 'failed',
                         'message': 'Error occurred while processing PayPal payment',
                         'response_code': status.HTTP_400_BAD_REQUEST
-                    }, status=status.HTTP_400_BAD_REQUEST)
+                    })
 
             order.payment_status = 'Completed'
             order.save()
@@ -1236,13 +1241,13 @@ class PlaceOrderView(APIView):
                 'response_code': status.HTTP_201_CREATED,
                 'data':  OrderSerializer(order).data
     
-            }, status=status.HTTP_201_CREATED)
+            })
 
         return Response({
             'status': 'failed',
             'message': 'Unknown error occurred',
             'response_code': status.HTTP_400_BAD_REQUEST
-        }, status=status.HTTP_400_BAD_REQUEST)
+        })
 
 #order cancel view
 
@@ -1259,14 +1264,14 @@ class CancelOrderView(APIView):
                     'status': 'failed',
                     'message': 'Order is already completed and cannot be canceled',
                     'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
+                })
 
             if order.payment_method == 'ONLINE':
                 return Response({
                     'status': 'failed',
                     'message': 'Online payment orders cannot be canceled',
                     'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
+                })
 
             
             order.delete()
@@ -1275,14 +1280,14 @@ class CancelOrderView(APIView):
                 'status': 'success',
                 'message': 'Order canceled and deleted successfully',
                 'response_code': status.HTTP_200_OK,
-            }, status=status.HTTP_200_OK)
+            })
 
         except Order.DoesNotExist:
             return Response({
                 'status': 'failed',
                 'message': 'Order not found or does not belong to you',
                 'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
 
         except Exception as e:
             return Response({
@@ -1329,7 +1334,7 @@ class UpdateOrderStatusView(APIView):
             'status': 'failed',
             'message': 'Order not found',
             'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
 
         order_status = request.data.get('order_status')
     
@@ -1339,7 +1344,7 @@ class UpdateOrderStatusView(APIView):
                 'status': 'failed',
                 'message': 'Invalid status',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
         
         order.order_status = order_status
@@ -1352,7 +1357,7 @@ class UpdateOrderStatusView(APIView):
             'message': 'Order status updated successfully',
             'response_code': status.HTTP_200_OK,
             'data': OrderSerializer(order).data
-        }, status=status.HTTP_200_OK)
+        })
 
 
 #notification
@@ -1370,7 +1375,7 @@ class UserNotificationsAPIView(APIView):
                 'message': 'No notifications found',
                 'response_code': status.HTTP_200_OK,
                 'data': []
-            }, status=status.HTTP_200_OK)
+            })
 
         serializer = NotificationSerializer(notifications, many=True)
         
@@ -1379,7 +1384,7 @@ class UserNotificationsAPIView(APIView):
             'message': 'Notifications retrieved successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        }, status=status.HTTP_200_OK)
+        })
 
 
 #notification deletion
@@ -1399,13 +1404,13 @@ class NotificationDeleteView(generics.DestroyAPIView):
                 'status': 'success',
                 'message': 'Notification deleted successfully',
                 'response_code': status.HTTP_200_OK
-            }, status=status.HTTP_200_OK)
+            })
         except Notification.DoesNotExist:
             return Response({
                 'status': 'failed',
                 'message': 'Notification not found',
                 'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
 
 #recommendation
 
@@ -1464,7 +1469,7 @@ class RecommendationAPIView(APIView):
             'message': 'Recommendations retrieved successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        }, status=status.HTTP_200_OK)
+        })
 
 #return request
  
@@ -1483,7 +1488,7 @@ class RequestReturnView(APIView):
                 'status': 'failed',
                 'message': 'Invalid return quantity',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
         order_item = OrderItem.objects.filter(id=order_item_id, order__user=request.user).first()
 
@@ -1492,14 +1497,14 @@ class RequestReturnView(APIView):
                 'status': 'failed',
                 'message': 'Order item not found or does not belong to you',
                 'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
 
         if return_quantity > (order_item.quantity - order_item.returned_quantity):
             return Response({
                 'status': 'failed',
                 'message': 'Return quantity exceeds available quantity',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
        
         order_item.is_returned = True
@@ -1525,7 +1530,7 @@ class RequestReturnView(APIView):
             'message': 'Return requested successfully',
             'response_code': status.HTTP_200_OK,
             'data': OrderItemSerializer(order_item).data
-        }, status=status.HTTP_200_OK)
+        })
 
 #return pending view
 
@@ -1541,7 +1546,7 @@ class ReturnPendingView(APIView):
             'message': 'Return awaiting approval retrieved successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        }, status=status.HTTP_200_OK)
+        })
 
 #return process  
 
@@ -1560,14 +1565,14 @@ class ProcessReturnView(APIView):
                 'status': 'failed',
                 'message': 'Order item not found',
                 'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
 
         if not order_item.is_returned:
             return Response({
                 'status': 'failed',
                 'message': 'No return request found for this item',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
         if action == 'approve':
             
@@ -1588,7 +1593,7 @@ class ProcessReturnView(APIView):
                 'message': 'Return approved and refund processed',
                 'response_code': status.HTTP_200_OK,
                 'data': OrderItemSerializer(order_item).data  
-            }, status=status.HTTP_200_OK)
+            })
 
         elif action == 'reject':
             order_item.return_status = 'REJECTED'
@@ -1598,13 +1603,13 @@ class ProcessReturnView(APIView):
                 'status': 'success',
                 'message': 'Return request rejected',
                 'response_code': status.HTTP_200_OK
-            }, status=status.HTTP_200_OK)
+            })
 
         return Response({
             'status': 'failed',
             'message': 'Invalid action provided',
             'response_code': status.HTTP_400_BAD_REQUEST
-        }, status=status.HTTP_400_BAD_REQUEST)
+        })
 
 
 # user profile view
@@ -1621,7 +1626,7 @@ class UserProfileView(APIView):
             'message': 'User profile retrieved successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        }, status=status.HTTP_200_OK)
+        })
 
 #profile update view
 
@@ -1643,7 +1648,7 @@ class ProfileUpdateView(APIView):
                 'status': 'failed',
                 'message': 'No valid fields provided for update',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
         
         for field, value in updated_data.items():
@@ -1656,7 +1661,7 @@ class ProfileUpdateView(APIView):
             'message': 'User profile updated successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        }, status=status.HTTP_200_OK)
+        })
 
 #password change view
 
@@ -1677,7 +1682,7 @@ class PasswordChangeView(APIView):
                 'status': 'error',
                 'message': f'Missing fields: {", ".join(missing_fields)}',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
         
         if not user.check_password(data['old_password']):
@@ -1685,7 +1690,7 @@ class PasswordChangeView(APIView):
                 'status': 'error',
                 'message': 'Old password is incorrect',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
         
         user.set_password(data['new_password'])
@@ -1695,7 +1700,7 @@ class PasswordChangeView(APIView):
             'status': 'success',
             'message': 'Password updated successfully',
             'response_code': status.HTTP_200_OK
-        }, status=status.HTTP_200_OK)
+        })
 
 
 
@@ -1720,7 +1725,7 @@ class DisasterListCreateView(APIView):
             'message': 'Disasters retrieved successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        }, status=status.HTTP_200_OK)
+        })
 
 
     def post(self, request, *args, **kwargs):
@@ -1735,7 +1740,7 @@ class DisasterListCreateView(APIView):
                 'status': 'failed',
                 'message': f'Missing fields: {", ".join(missing_fields)}',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
             
 
@@ -1762,7 +1767,7 @@ class DisasterListCreateView(APIView):
             'message': 'Disaster created successfully. Awaiting approval',
             'response_code': status.HTTP_201_CREATED,
             'data': serializer.data
-        }, status=status.HTTP_201_CREATED)
+        })
     
 #disaster pending list view
 
@@ -1777,7 +1782,7 @@ class AdminDisasterApprovalListView(APIView):
             'message': 'Disasters awaiting approval retrieved successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        }, status=status.HTTP_200_OK)
+        })
 
 #approve disaster view
 
@@ -1792,7 +1797,7 @@ class ApproveDisasterView(APIView):
                 'status': 'failed',
                 'message': 'Disaster not found',
                 'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
 
         if request.data.get('approve', True): 
             disaster.is_approved = True
@@ -1802,14 +1807,14 @@ class ApproveDisasterView(APIView):
                 'message': 'Disaster approved successfully',
                 'response_code': status.HTTP_200_OK,
                 'data': DisasterSerializer(disaster).data
-            }, status=status.HTTP_200_OK)
+            })
         else:  
             disaster.soft_delete()
             return Response({
                 'status': 'success',
                 'message': 'Disaster rejected and deleted successfully',
                 'response_code': status.HTTP_200_OK
-            }, status=status.HTTP_200_OK)
+            })
 
 ############################################################    AI    #############################################################################
 
@@ -1869,7 +1874,7 @@ class DressDonationCreateView(APIView):
                     'status': 'failed',
                     'message': 'The number of dresses does not match the number of images uploaded',
                     'response_code': status.HTTP_200_OK
-                }, status=status.HTTP_200_OK)
+                })
 
             for image in images:
                 is_torn_dirty = self.check_quality(image)
@@ -1878,7 +1883,7 @@ class DressDonationCreateView(APIView):
                         'status': 'error',
                         'message': 'One or more dresses are dirty or torn. Please upload clean dresses and good condition',
                         'response_code': status.HTTP_200_OK
-                    }, status=status.HTTP_200_OK)
+                    })
                 
             
             if (disaster.fulfilled_men_dresses + men_dresses > disaster.required_men_dresses or
@@ -1888,7 +1893,7 @@ class DressDonationCreateView(APIView):
                     'status': 'failed',
                     'message': 'Donation exceeds the required dresses for this disaster',
                     'response_code': status.HTTP_200_OK
-                }, status=status.HTTP_200_OK)
+                })
             
             
             donation = serializer.save(user=request.user)
@@ -1901,14 +1906,14 @@ class DressDonationCreateView(APIView):
                 'message': 'Dress donation recorded successfully',
                 'response_code': status.HTTP_201_CREATED,
                 'data': DressDonationSerializer(donation).data
-            }, status=status.HTTP_201_CREATED)
+            })
 
         return Response({
             'status': 'failed',
             'message': 'Invalid data',
             'response_code': status.HTTP_400_BAD_REQUEST,
             'errors': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+        })
 
 
 #user donation list view
@@ -1926,7 +1931,7 @@ class UserDonationListView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': serializer.data,
             'donation_count': donations.count()
-        }, status=status.HTTP_200_OK)
+        })
 
 
 #disaster donation view
@@ -1941,7 +1946,7 @@ class DisasterDonationsView(APIView):
             'status': 'failed',
             'message': 'Disaster not found',
             'response_code': status.HTTP_404_NOT_FOUND
-        }, status=status.HTTP_404_NOT_FOUND)
+        })
 
 
         
@@ -1960,7 +1965,7 @@ class DisasterDonationsView(APIView):
             'message': 'Donations retrieved successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        }, status=status.HTTP_200_OK)
+        })
 
 
 #user disaster view
@@ -1978,7 +1983,7 @@ class UserDisastersView(APIView):
                 'message': 'You do not have any registered disasters',
                 'response_code': status.HTTP_200_OK,
                 'data': []
-            }, status=status.HTTP_200_OK)
+            })
 
         serializer = DisasterSerializer(disasters, many=True)
         return Response({
@@ -1986,7 +1991,7 @@ class UserDisastersView(APIView):
             'message': 'Disasters retrieved successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        }, status=status.HTTP_200_OK)
+        })
 
 
 #invoice generation
@@ -2167,20 +2172,20 @@ class ExecutePaymentView(APIView):
                     'message': 'Payment completed successfully and order placed',
                     'response_code': status.HTTP_200_OK,
                     'data': OrderSerializer(order).data
-                }, status=status.HTTP_200_OK)
+                })
             else:
                 return Response({
                     'status': 'failed',
                     'message': 'Payment execution failed',
                     'response_code': status.HTTP_400_BAD_REQUEST
-                }, status=status.HTTP_400_BAD_REQUEST)
+                })
 
         except Order.DoesNotExist:
             return Response({
                 'status': 'failed',
                 'message': 'Order not found',
                 'response_code': status.HTTP_404_NOT_FOUND
-            }, status=status.HTTP_404_NOT_FOUND)
+            })
 
         except Exception as e:
             return Response({
@@ -2211,7 +2216,7 @@ class CancelPaymentView(APIView):
                 'status': 'failed',
                 'message': 'Payment Canceled',
                 'response_code': status.HTTP_200_OK
-            }, status=status.HTTP_200_OK)
+            })
     
 
 #pickup list
@@ -2260,12 +2265,12 @@ class ForgotPasswordView(APIView):
                 
                 send_mail(subject, message, email_from, recipient_list)
                 
-                return Response({'message': 'A new password has been sent to the email address associated with the username'}, status=status.HTTP_200_OK)
+                return Response({'message': 'A new password has been sent to the email address associated with the username'})
             
             except User.DoesNotExist:
-                return Response({'error': 'Username not found'}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'error': 'Username not found'})
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors)
 
 
 #product list with pagination

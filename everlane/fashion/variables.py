@@ -43,6 +43,7 @@ STATUS_CHOICES = [
         ('Pending', 'Pending'),
         ('Processing', 'Processing'),
         ('Completed', 'Completed'),
+
     ]
 
 PAYMENT_METHODS = [

@@ -35,12 +35,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
         print(f"Full number for validation: {full_number}")
 
-
+        # chsnge responses to standard format
         if password != confirm_password:
             raise serializers.ValidationError({"password": "Passwords do not match"})
 
         if len(password) < 8:
-            raise serializers.ValidationError({"password": "Password must be at least 8 characters long"})
+            raise serializers.ValidationError({"password": "Password does not meet the minimum length of 8 characters"})
 
         if not any(char.isdigit() for char in password):
             raise serializers.ValidationError({"password": "Password must contain at least one digit"})
@@ -50,20 +50,19 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         
         # Email uniqueness validation
         if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError({"email": "A user with this email already exists"})
+            raise serializers.ValidationError({"email": "Email already exists"})
 
         
         try:
-            # Parse the phone number
             parsed_number = phonenumbers.parse(full_number, None)
-            print(f"Parsed Number: {parsed_number}")  # Debugging line
+            print(f"Parsed Number: {parsed_number}")  
 
-            # Validate the phone number
             if not phonenumbers.is_valid_number(parsed_number):
-                print(f"Validation failed for: {parsed_number}")  # Debugging line
+                print(f"Validation failed for: {parsed_number}")
                 raise serializers.ValidationError({"mobile": "Invalid mobile number."})
         except phonenumbers.NumberParseException as e:
-            print(f"Exception: {e}")  # Debugging line
+            print(f"Exception: {e}") 
+
             raise serializers.ValidationError({"mobile": "Invalid mobile number or country code."})
 
         return data
