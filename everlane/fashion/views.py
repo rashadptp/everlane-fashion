@@ -1682,7 +1682,7 @@ class PasswordChangeView(APIView):
                 'status': 'failed',
                 'message': f'Missing fields: {", ".join(missing_fields)}',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            })
+            },status=status.HTTP_400_BAD_REQUEST)
 
         
         if not user.check_password(data['old_password']):
@@ -1690,7 +1690,7 @@ class PasswordChangeView(APIView):
                 'status': 'failed',
                 'message': 'Old password is incorrect',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            })
+            },status=status.HTTP_400_BAD_REQUEST)
 
         
         user.set_password(data['new_password'])
