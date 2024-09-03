@@ -43,16 +43,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password": "Password must contain at least one digit"})
 
         if not any(char.isalpha() for char in password):
-<<<<<<< HEAD
             raise serializers.ValidationError({"password": "Password must contain at least one letter"})
         
         # Email uniqueness validation
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError({"email": "A user with this email already exists"})
 
-
-=======
-            raise serializers.ValidationError({"password": "Password must contain at least one letter."})
         
         try:
             # Parse the phone number
@@ -66,7 +62,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         except phonenumbers.NumberParseException as e:
             print(f"Exception: {e}")  # Debugging line
             raise serializers.ValidationError({"mobile": "Invalid mobile number or country code."})
->>>>>>> 7856a5f3ccb06e3d7f4a481e3bfa15abda136a1a
 
         return data
 
