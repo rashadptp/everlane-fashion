@@ -29,7 +29,6 @@ urlpatterns = [
     ######################################    ORDERS    ######################################################################
     path('orders/', OrderListView.as_view(), name='order-list'),
     path('place-order/', PlaceOrderView.as_view(), name='place-order'),
-    path('orders/', OrderListView.as_view(), name='order-list'),
     path('update-order-status/<int:order_id>/', UpdateOrderStatusView.as_view(), name='update-order-status'),
     path('order-cancel/<int:order_id>/', CancelOrderView.as_view(), name='order-cancel'),
     path('request-return/', RequestReturnView.as_view(), name='request-return'),
