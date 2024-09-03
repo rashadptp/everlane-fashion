@@ -22,18 +22,25 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def validate(self, data):
         password = data.get('password')
         confirm_password = data.get('confirm_password')
+        email = data.get('email')
 
         if password != confirm_password:
-            raise serializers.ValidationError({"password": "Passwords do not match."})
+            raise serializers.ValidationError({"password": "Passwords do not match"})
 
         if len(password) < 8:
-            raise serializers.ValidationError({"password": "Password must be at least 8 characters long."})
+            raise serializers.ValidationError({"password": "Password must be at least 8 characters long"})
 
         if not any(char.isdigit() for char in password):
-            raise serializers.ValidationError({"password": "Password must contain at least one digit."})
+            raise serializers.ValidationError({"password": "Password must contain at least one digit"})
 
         if not any(char.isalpha() for char in password):
-            raise serializers.ValidationError({"password": "Password must contain at least one letter."})
+            raise serializers.ValidationError({"password": "Password must contain at least one letter"})
+        
+        # Email uniqueness validation
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"email": "A user with this email already exists"})
+
+
 
         return data
 
