@@ -2,6 +2,9 @@ from rest_framework import serializers
 from .models import *
 from .variables import * 
 import phonenumbers
+from django.contrib.auth import authenticate
+from .models import Banner
+
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -90,8 +93,6 @@ class AdminRegistrationSerializer(UserRegistrationSerializer):
 
 #login
 
-from rest_framework import serializers
-from django.contrib.auth import authenticate
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
@@ -242,8 +243,7 @@ class CartSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user', 'total_price']
 
 #for banner
-from rest_framework import serializers
-from .models import Banner
+
 
 class BannerSerializer(serializers.ModelSerializer):
     class Meta:
