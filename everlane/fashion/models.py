@@ -11,6 +11,7 @@ import base64
 class User(AbstractUser):
 
     mobile = models.CharField(max_length=15,null=True,blank=True)
+    country_code = models.CharField(max_length=5, null=True, blank=True)
     skin_color = models.CharField(max_length=10, choices=SKIN_COLOR_CHOICES, null=True, blank=True)
     height = models.CharField(max_length=10, choices=HEIGHT_CHOICES, null=True, blank=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True, blank=True)

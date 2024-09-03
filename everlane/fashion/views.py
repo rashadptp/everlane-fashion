@@ -1368,9 +1368,9 @@ class UserNotificationsAPIView(APIView):
             return Response({
                 'status': 'error',
                 'message': 'No notifications found',
-                'response_code': status.HTTP_404_NOT_FOUND,
+                'response_code': status.HTTP_200_OK,
                 'data': []
-            }, status=status.HTTP_404_NOT_FOUND)
+            }, status=status.HTTP_200_OK)
 
         serializer = NotificationSerializer(notifications, many=True)
         
