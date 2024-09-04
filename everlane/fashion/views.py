@@ -1296,30 +1296,6 @@ class CancelOrderView(APIView):
                 'response_code': status.HTTP_500_INTERNAL_SERVER_ERROR
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-#order list view without keyword search
-
-# class OrderListView(generics.ListAPIView):
-#     serializer_class = OrderSerializer
-#     permission_classes = [IsAuthenticated]
-
-#     def get_queryset(self):
-        
-#         user = self.request.user
-#         if user.is_admin:  
-#             return Order.objects.filter(is_deleted=False, is_completed=True).order_by("-id")
-#         else:  
-#             return Order.objects.filter(user=user, is_deleted=False, is_completed=True).order_by("-id")
-
-
-#     def list(self, request, *args, **kwargs):
-#         queryset = self.get_queryset()
-#         serializer = self.get_serializer(queryset, many=True)
-#         return Response({
-#             'status': 'success',
-#             'message': 'Orders retrieved successfully',
-#             'response_code': status.HTTP_200_OK,
-#             'data': serializer.data
-#         })
 
 #search with keyword search 
 
