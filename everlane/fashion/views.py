@@ -68,7 +68,7 @@ class RegisterUserView(generics.CreateAPIView):
 
             return Response({
                 'status': "failed",
-                'message': serializer.errors,
+                'message': 'User registration failed',
                 'response_code': status.HTTP_400_BAD_REQUEST,
                 'data': serializer.errors
             },status =  status.HTTP_400_BAD_REQUEST)
