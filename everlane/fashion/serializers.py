@@ -43,7 +43,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password": "Password does not meet the minimum length of 8 characters"})
 
         if not any(char.isdigit() for char in password):
-            raise serializers.ValidationError("Password must contain at least one digit")
+            raise serializers.ValidationError({"password": "Password must contain at least one digit"})
 
         if not any(char.isalpha() for char in password):
             raise serializers.ValidationError({"password": "Password must contain at least one letter"})
