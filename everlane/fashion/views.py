@@ -1405,7 +1405,7 @@ class UserNotificationsAPIView(APIView):
 
 class NotificationDeleteView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = Notification.objects.filter(is_active=True)
+    queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
 
     def delete(self, request, *args, **kwargs):
