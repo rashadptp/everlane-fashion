@@ -4,6 +4,8 @@ from .variables import *
 import phonenumbers
 from django.contrib.auth import authenticate
 from .models import Banner
+from rest_framework.response import Response
+from rest_framework import generics, status
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -31,26 +33,26 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
         mobile = data.get('mobile')
         country_code = data.get('country_code')
-        full_number = f"{country_code}{mobile}"
+        full_number = f"+{country_code}{mobile}"
 
         print(f"Full number for validation: {full_number}")
 
         # chsnge responses to standard format
         if password != confirm_password:
-            raise serializers.ValidationError({"password": "Passwords do not match"})
+            raise serializers.ValidationError("Passwords do not match")
 
         if len(password) < 8:
-            raise serializers.ValidationError({"password": "Password does not meet the minimum length of 8 characters"})
+            raise serializers.ValidationError("Password does not meet the minimum length of 8 characters")
 
         if not any(char.isdigit() for char in password):
-            raise serializers.ValidationError({"password": "Password must contain at least one digit"})
+            raise serializers.ValidationError("Password must contain at least one digit")
 
         if not any(char.isalpha() for char in password):
-            raise serializers.ValidationError({"password": "Password must contain at least one letter"})
+            raise serializers.ValidationError("Password must contain at least one letter")
         
         # Email uniqueness validation
         if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError({"email": "Email already exists"})
+            raise serializers.ValidationError("Email already exists")
 
         
         try:
@@ -59,11 +61,11 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
             if not phonenumbers.is_valid_number(parsed_number):
                 print(f"Validation failed for: {parsed_number}")
-                raise serializers.ValidationError({"mobile": "Invalid mobile number."})
+                raise serializers.ValidationError("Invalid mobile number.")
         except phonenumbers.NumberParseException as e:
             print(f"Exception: {e}") 
 
-            raise serializers.ValidationError({"mobile": "Invalid mobile number or country code."})
+            raise serializers.ValidationError("Invalid mobile number or country code.")
 
         return data
 
