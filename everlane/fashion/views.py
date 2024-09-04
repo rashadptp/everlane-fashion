@@ -62,7 +62,7 @@ class RegisterUserView(generics.CreateAPIView):
                 'message': 'User registered successfully',
                 'response_code': status.HTTP_201_CREATED,
                 'data': UserRegistrationSerializer(user).data
-            }, status=status.HTTP_201_CREATED)
+            },status = status.HTTP_201_CREATED)
 
         else:
 
@@ -71,9 +71,9 @@ class RegisterUserView(generics.CreateAPIView):
                 'message': 'User registration failed',
                 'response_code': status.HTTP_400_BAD_REQUEST,
                 'data': serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
+            },status =  status.HTTP_400_BAD_REQUEST)
 
-
+# response change
 class RegisterAdminView(generics.CreateAPIView):
     serializer_class = AdminRegistrationSerializer
 
@@ -87,16 +87,17 @@ class RegisterAdminView(generics.CreateAPIView):
                 'message': "Admin registered successfully",
                 'response_code': status.HTTP_201_CREATED,
                 'data': AdminRegistrationSerializer(user).data
-            }, status=status.HTTP_201_CREATED)
+            }, status = status.HTTP_201_CREATED)
         else:
             return Response({
                 'status': "failed",
                 'message': "Admin registration failed",
                 'response_code': status.HTTP_400_BAD_REQUEST,
                 'data': serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
+            }, status = status.HTTP_400_BAD_REQUEST)
 
-#Login view
+#Login view 
+# response change
 
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
@@ -121,7 +122,7 @@ class LoginView(generics.GenericAPIView):
             'message': 'Invalid username or password',
             'response_code': status.HTTP_400_BAD_REQUEST,
             'data': serializer.errors
-        }, status=status.HTTP_400_BAD_REQUEST)
+        },status= status.HTTP_400_BAD_REQUEST)
         
 
 # Logout view
@@ -165,12 +166,12 @@ class LogoutView(generics.GenericAPIView):
 #product list/search
 
 from django.db.models import Q
-
+# add is_active in filteration for queryset
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
 
     def get_queryset(self):
-        queryset = Product.objects.all()
+        queryset = Product.objects.filter(is_active=True)
 
         # Filter by subcategory
         subcategory_id = self.request.query_params.get('subcategory', None)
@@ -185,7 +186,7 @@ class ProductListView(generics.ListAPIView):
             )
 
         return queryset
-
+# check item_serializer required or not
     def list(self, request, *args, **kwargs):
         products = self.get_queryset()
         product_data = []
@@ -203,9 +204,10 @@ class ProductListView(generics.ListAPIView):
         })
 
 #product detail
+# check item_serializer required or not
 
 class ProductDetailView(generics.RetrieveAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductRetrieveSerializer
    
 
@@ -226,7 +228,7 @@ class ProductDetailView(generics.RetrieveAPIView):
 #product creation
 
 class ProductCreateView(generics.CreateAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -247,7 +249,7 @@ class ProductCreateView(generics.CreateAPIView):
 #product updation
 
 class ProductUpdateView(generics.UpdateAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -279,7 +281,7 @@ class ProductUpdateView(generics.UpdateAPIView):
 #product delete
 
 class ProductDeleteView(generics.DestroyAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -295,11 +297,14 @@ class ProductDeleteView(generics.DestroyAPIView):
 
 #add product item
  
+ # status change
 class AddProductItemView(generics.CreateAPIView):
     serializer_class = ProductItemSerializer
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
+        # data = request.data
+        # product_id = data['product']
         product_id = request.data.get('product')
         size = request.data.get('size')
         stock = request.data.get('stock')
@@ -385,7 +390,7 @@ class SubcategoryListView(generics.ListCreateAPIView):
          })
 
 #cartlist view,cart created
-
+##-------------------------------------------------------------------------------------------------
 class CartListView(generics.ListCreateAPIView):
     serializer_class = CartSerializer
     permission_classes = [IsAuthenticated]  
@@ -1424,7 +1429,7 @@ class UserNotificationsAPIView(APIView):
 
 class NotificationDeleteView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = Notification.objects.all()
+    queryset = Notification.objects.filter(is_active=True)
     serializer_class = NotificationSerializer
 
     def delete(self, request, *args, **kwargs):
@@ -1578,7 +1583,7 @@ class ReturnPendingView(APIView):
             'message': 'Return awaiting approval retrieved successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        }, status=status.HTTP_200_OK)
+        })
 
 #return process  
 
@@ -1604,7 +1609,7 @@ class ProcessReturnView(APIView):
                 'status': 'failed',
                 'message': 'No return request found for this item',
                 'response_code': status.HTTP_400_BAD_REQUEST
-            }, status=status.HTTP_400_BAD_REQUEST)
+            })
 
         if action == 'approve':
             
@@ -1625,7 +1630,7 @@ class ProcessReturnView(APIView):
                 'message': 'Return approved and refund processed',
                 'response_code': status.HTTP_200_OK,
                 'data': OrderItemSerializer(order_item).data  
-            }, status=status.HTTP_200_OK)
+            })
 
         elif action == 'reject':
             order_item.return_status = 'REJECTED'
@@ -1641,7 +1646,7 @@ class ProcessReturnView(APIView):
             'status': 'failed',
             'message': 'Invalid action provided',
             'response_code': status.HTTP_400_BAD_REQUEST
-        }, status=status.HTTP_400_BAD_REQUEST)
+        })
 
 
 # user profile view
