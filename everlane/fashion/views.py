@@ -1333,12 +1333,13 @@ class OrderListView(generics.ListAPIView):
         else:
             queryset = Order.objects.filter(user=user, is_deleted=False, is_completed=True).order_by("-id")
 
-        if keyword:
-            queryset = queryset.filter(
-                Q(order_code__icontains=keyword)  
-              
+        if user.is_admin:
+            if keyword:
+                queryset = queryset.filter(
+                    Q(order_code__icontains=keyword)  
                 
-            )
+                    
+                )
                 
         return queryset
 
