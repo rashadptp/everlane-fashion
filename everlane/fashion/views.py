@@ -1291,20 +1291,56 @@ class CancelOrderView(APIView):
                 'response_code': status.HTTP_500_INTERNAL_SERVER_ERROR
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-#order list view
+#order list view without keyword search
+
+# class OrderListView(generics.ListAPIView):
+#     serializer_class = OrderSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+        
+#         user = self.request.user
+#         if user.is_admin:  
+#             return Order.objects.filter(is_deleted=False, is_completed=True).order_by("-id")
+#         else:  
+#             return Order.objects.filter(user=user, is_deleted=False, is_completed=True).order_by("-id")
+
+
+#     def list(self, request, *args, **kwargs):
+#         queryset = self.get_queryset()
+#         serializer = self.get_serializer(queryset, many=True)
+#         return Response({
+#             'status': 'success',
+#             'message': 'Orders retrieved successfully',
+#             'response_code': status.HTTP_200_OK,
+#             'data': serializer.data
+#         })
+
+#search with keyword search 
 
 class OrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        
         user = self.request.user
-        if user.is_admin:  
-            return Order.objects.filter(is_deleted=False, is_completed=True).order_by("-id")
-        else:  
-            return Order.objects.filter(user=user, is_deleted=False, is_completed=True).order_by("-id")
+    
+        keyword = self.request.query_params.get('keyword')
 
+        
+        if user.is_admin:
+            queryset = Order.objects.filter(is_deleted=False, is_completed=True).order_by("-id")
+        else:
+            queryset = Order.objects.filter(user=user, is_deleted=False, is_completed=True).order_by("-id")
+
+        if keyword:
+            queryset = queryset.filter(
+                Q(order_code__icontains=keyword)  
+              
+                
+            )
+                
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -1315,6 +1351,7 @@ class OrderListView(generics.ListAPIView):
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         })
+
 
 #update order status view 
 
@@ -1527,7 +1564,7 @@ class RequestReturnView(APIView):
             'data': OrderItemSerializer(order_item).data
         }, status=status.HTTP_200_OK)
 
-#return pending view
+#return pending view without search
 
 class ReturnPendingView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
