@@ -33,7 +33,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
         mobile = data.get('mobile')
         country_code = data.get('country_code')
-        full_number = f"{country_code}{mobile}"
+        full_number = f"+{country_code}{mobile}"
 
         print(f"Full number for validation: {full_number}")
 

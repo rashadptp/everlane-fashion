@@ -2304,3 +2304,16 @@ class ProductPaginatedListView(generics.ListAPIView):
 
 
 
+
+
+
+
+
+
+
+
+# for i in items:
+#     if order_items_status == 'canceled':
+#         c++
+
+# if c == 
