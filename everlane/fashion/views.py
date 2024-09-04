@@ -1248,52 +1248,6 @@ class PlaceOrderView(APIView):
             'response_code': status.HTTP_400_BAD_REQUEST
         }, status=status.HTTP_400_BAD_REQUEST)
 
-#order cancel view using order id#
-
-# class CancelOrderView(APIView):
-#     permission_classes = [IsAuthenticated]  
-
-#     def delete(self, request, order_id, *args, **kwargs):
-#         try:
-           
-#             order = Order.objects.get(id=order_id, user=request.user)
-
-#             if order.order_status == 'Completed':
-#                 return Response({
-#                     'status': 'failed',
-#                     'message': 'Order is already completed and cannot be canceled',
-#                     'response_code': status.HTTP_400_BAD_REQUEST
-#                 }, status=status.HTTP_400_BAD_REQUEST)
-
-#             if order.payment_method == 'ONLINE':
-#                 return Response({
-#                     'status': 'failed',
-#                     'message': 'Online payment orders cannot be canceled',
-#                     'response_code': status.HTTP_400_BAD_REQUEST
-#                 }, status=status.HTTP_400_BAD_REQUEST)
-
-            
-#             order.delete()
-
-#             return Response({
-#                 'status': 'success',
-#                 'message': 'Order canceled and deleted successfully',
-#                 'response_code': status.HTTP_200_OK,
-#             }, status=status.HTTP_200_OK)
-
-#         except Order.DoesNotExist:
-#             return Response({
-#                 'status': 'failed',
-#                 'message': 'Order not found or does not belong to you',
-#                 'response_code': status.HTTP_404_NOT_FOUND
-#             }, status=status.HTTP_404_NOT_FOUND)
-
-#         except Exception as e:
-#             return Response({
-#                 'status': 'error',
-#                 'message': str(e),
-#                 'response_code': status.HTTP_500_INTERNAL_SERVER_ERROR
-#             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
