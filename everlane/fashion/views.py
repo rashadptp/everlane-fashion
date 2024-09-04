@@ -87,16 +87,16 @@ class RegisterAdminView(generics.CreateAPIView):
                 'message': "Admin registered successfully",
                 'response_code': status.HTTP_201_CREATED,
                 'data': AdminRegistrationSerializer(user).data
-            })
+            }, status = status.HTTP_201_CREATED)
         else:
             return Response({
                 'status': "failed",
                 'message': "Admin registration failed",
                 'response_code': status.HTTP_400_BAD_REQUEST,
                 'data': serializer.errors
-            })
+            }, status = status.HTTP_400_BAD_REQUEST)
 
-#Login view
+#Login view 
 # response change
 
 class LoginView(generics.GenericAPIView):
@@ -122,7 +122,7 @@ class LoginView(generics.GenericAPIView):
             'message': 'Invalid username or password',
             'response_code': status.HTTP_400_BAD_REQUEST,
             'data': serializer.errors
-        })
+        },status= status.HTTP_400_BAD_REQUEST)
         
 
 # Logout view
@@ -171,7 +171,7 @@ class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
 
     def get_queryset(self):
-        queryset = Product.objects.all()
+        queryset = Product.objects.filter(is_active=True)
 
         # Filter by subcategory
         subcategory_id = self.request.query_params.get('subcategory', None)
@@ -207,7 +207,7 @@ class ProductListView(generics.ListAPIView):
 # check item_serializer required or not
 
 class ProductDetailView(generics.RetrieveAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductRetrieveSerializer
    
 
@@ -228,7 +228,7 @@ class ProductDetailView(generics.RetrieveAPIView):
 #product creation
 
 class ProductCreateView(generics.CreateAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -249,7 +249,7 @@ class ProductCreateView(generics.CreateAPIView):
 #product updation
 
 class ProductUpdateView(generics.UpdateAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -281,7 +281,7 @@ class ProductUpdateView(generics.UpdateAPIView):
 #product delete
 
 class ProductDeleteView(generics.DestroyAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -1392,7 +1392,7 @@ class UserNotificationsAPIView(APIView):
 
 class NotificationDeleteView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = Notification.objects.all()
+    queryset = Notification.objects.filter(is_active=True)
     serializer_class = NotificationSerializer
 
     def delete(self, request, *args, **kwargs):
