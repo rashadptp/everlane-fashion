@@ -8,6 +8,7 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('logout/',LogoutView.as_view(),name='logout'),
     path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
+    path('forgot-username/', ForgotUsernameView.as_view(), name='forgot-username'),
 
     ######################################   PRODUCTS    ######################################################################
     path('products/', ProductListView.as_view(), name='product-list'),

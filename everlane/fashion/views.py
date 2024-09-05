@@ -1112,8 +1112,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "http://localhost:4200/shopping/payment",
-                        "cancel_url": "http://localhost:4200/shopping/payment"
+                        "return_url": "https://everlane-b23cf.web.app/shopping/payment",
+                        "cancel_url": "https://everlane-b23cf.web.app/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
@@ -1177,8 +1177,8 @@ class PlaceOrderView(APIView):
                         "payment_method": "paypal"
                     },
                     "redirect_urls": {
-                        "return_url": "http://localhost:4200/shopping/payment",
-                        "cancel_url": "http://localhost:4200/shopping/payment"
+                        "return_url": "https://everlane-b23cf.web.app/shopping/payment",
+                        "cancel_url": "https://everlane-b23cf.web.app/shopping/payment"
                     },
                     "transactions": [{
                         "item_list": {
@@ -2302,6 +2302,31 @@ class ForgotPasswordView(APIView):
             
             except User.DoesNotExist:
                 return Response({'error': 'Username not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ForgotUsernameView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = ForgotUsernameSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            
+            User = get_user_model()  
+            
+            try:
+                user = User.objects.get(email=email)
+                subject = 'Your New Password'
+                message = f'This is your {user.username}.Dont forget again please!'
+                email_from = settings.DEFAULT_FROM_EMAIL
+                recipient_list = [user.email]
+                
+                send_mail(subject, message, email_from, recipient_list)
+                
+                return Response({'message': 'Your username is sent to your email'}, status=status.HTTP_200_OK)
+            
+            except User.DoesNotExist:
+                return Response({'error': 'Email not found'}, status=status.HTTP_404_NOT_FOUND)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
