@@ -96,6 +96,7 @@ class RegisterAdminView(generics.CreateAPIView):
             }, status = status.HTTP_400_BAD_REQUEST)
 
 #Login view 
+
 # response change
 
 class LoginView(generics.GenericAPIView):
@@ -1293,6 +1294,7 @@ class CancelOrderView(APIView):
           
             if canceled_order_items_count == total_order_items_count:
                 order_item.order.order_status = 'Canceled'
+                order_item.order.payment_status = 'Canceled'
                 order_item.order.save()
 
             return Response({
@@ -1316,35 +1318,47 @@ class CancelOrderView(APIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-#search with keyword search 
+
+
+class Pagination(PageNumberPagination):
+    page_size = 10  
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 class OrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = Pagination 
 
     def get_queryset(self):
         user = self.request.user
-    
         keyword = self.request.query_params.get('keyword')
 
-        
         if user.is_admin:
             queryset = Order.objects.filter(is_deleted=False, is_completed=True).order_by("-id")
         else:
             queryset = Order.objects.filter(user=user, is_deleted=False, is_completed=True).order_by("-id")
 
-        if user.is_admin:
-            if keyword:
-                queryset = queryset.filter(
-                    Q(order_code__icontains=keyword)  
-                
-                    
-                )
-                
+        if user.is_admin and keyword:
+            queryset = queryset.filter(Q(order_code__icontains=keyword))
+
         return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)  
+
+        if page is not None:
+           
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response({
+                'status': 'success',
+                'message': 'Orders retrieved successfully',
+                'response_code': status.HTTP_200_OK,
+                'data': serializer.data
+            })
+
+        
         serializer = self.get_serializer(queryset, many=True)
         return Response({
             'status': 'success',
@@ -1353,9 +1367,7 @@ class OrderListView(generics.ListAPIView):
             'data': serializer.data
         })
 
-
 #update order status view 
-
 class UpdateOrderStatusView(APIView):
     permission_classes = [IsAuthenticated,IsAdminUser]
 
@@ -2308,15 +2320,12 @@ class ForgotPasswordView(APIView):
 
 #product list with pagination
 
-class ProductPagination(PageNumberPagination):
-    page_size = 10  
-    page_size_query_param = 'page_size'
-    max_page_size = 100
+
 
 
 class ProductPaginatedListView(generics.ListAPIView):
     serializer_class = ProductSerializer
-    pagination_class = ProductPagination
+    pagination_class = Pagination
 
     def get_queryset(self):
         return Product.objects.all()
