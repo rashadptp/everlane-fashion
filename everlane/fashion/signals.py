@@ -166,10 +166,6 @@ def send_approval_email(sender, instance, **kwargs):
         description = f'Your disaster "{instance.name}" has been approved. Description: {instance.description}.'
         Notification.objects.create(recipient=recipient, verb=verb, description=description)
 
-        
-
-        
-
 
 
 

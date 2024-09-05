@@ -308,6 +308,9 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class ForgotPasswordSerializer(serializers.Serializer):
     username = serializers.CharField()
+
+class ForgotUsernameSerializer(serializers.Serializer):
+    email = serializers.EmailField()
         
 ########################################     DONATION    #########################################################
 
