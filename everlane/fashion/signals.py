@@ -1,4 +1,3 @@
-
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
@@ -131,6 +130,13 @@ def send_approval_email(sender, instance,**kwargs):
             print(f"Approval email sent to {recipient_list}")
         except Exception as e:
             print(f"Failed to send approval email: {e}")
+
+        recipient = instance.order.user
+        verb = f"Order status updated to {instance.order_item_status}"
+        description = f"Your order {instance.id} status has been updated to {instance.order_item_status}."
+        Notification.objects.create(recipient=recipient, verb=verb, description=description)
+
+
 
  #Disaster approval    
        

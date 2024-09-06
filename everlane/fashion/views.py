@@ -45,7 +45,7 @@ import string
 from django.contrib.auth import get_user_model
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.authtoken.models import Token
-
+from django.db.models import Q
 
 #register view
 
@@ -165,7 +165,6 @@ class LogoutView(generics.GenericAPIView):
 
 #product list/search
 
-from django.db.models import Q
 # add is_active in filteration for queryset
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
@@ -1318,17 +1317,16 @@ class CancelOrderView(APIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
+#orderlist view with pagination and search
 
 class Pagination(PageNumberPagination):
     page_size = 10  
-    page_size_query_param = 'page_size'
-    max_page_size = 100
+    page_size_query_param = 'page_size'  
+    max_page_size = 100  
 
 class OrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
-    pagination_class = Pagination 
 
     def get_queryset(self):
         user = self.request.user
@@ -1346,17 +1344,21 @@ class OrderListView(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        page = self.paginate_queryset(queryset)  
+        user = request.user
 
-        if page is not None:
-           
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response({
-                'status': 'success',
-                'message': 'Orders retrieved successfully',
-                'response_code': status.HTTP_200_OK,
-                'data': serializer.data
-            })
+       
+        if user.is_admin:
+          
+            paginator = Pagination()  
+            page = paginator.paginate_queryset(queryset, request)  
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return paginator.get_paginated_response({
+                    'status': 'success',
+                    'message': 'Orders retrieved successfully',
+                    'response_code': status.HTTP_200_OK,
+                    'data': serializer.data
+                })
 
         
         serializer = self.get_serializer(queryset, many=True)
@@ -1366,6 +1368,7 @@ class OrderListView(generics.ListAPIView):
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         })
+
 
 #update order status view 
 class UpdateOrderStatusView(APIView):
@@ -1818,17 +1821,33 @@ class DisasterListCreateView(APIView):
 
 class AdminDisasterApprovalListView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
-
+   
     def get(self, request, *args, **kwargs):
-        disasters_to_approve = Disaster.objects.filter(is_approved=False,is_deleted=False)
-        serializer = DisasterSerializer(disasters_to_approve, many=True)
-        return Response({
+       
+        keyword = request.query_params.get('keyword', None)
+
+        
+        disasters_to_approve = Disaster.objects.filter(is_approved=False, is_deleted=False)
+
+        
+        if keyword:
+            disasters_to_approve = disasters_to_approve.filter(
+                Q(name__icontains=keyword) |  
+                Q(location__icontains=keyword)   
+            )
+        paginator = Pagination()
+
+        paginated_queryset = paginator.paginate_queryset(disasters_to_approve, request)
+       
+        serializer = DisasterSerializer(paginated_queryset, many=True)
+
+       
+        return paginator.get_paginated_response({
             'status': 'success',
             'message': 'Disasters awaiting approval retrieved successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        }, status=status.HTTP_200_OK)
-
+        })
 #approve disaster view
 
 class ApproveDisasterView(APIView):
@@ -2310,7 +2329,8 @@ class ForgotPasswordView(APIView):
                 
                 send_mail(subject, message, email_from, recipient_list)
                 
-                return Response({'message': 'A new password has been sent to the email address associated with the username'}, status=status.HTTP_200_OK)
+                return Response({'message': 'A new password has been sent to the email address associated with the username'},
+                 status=status.HTTP_200_OK)
             
             except User.DoesNotExist:
                 return Response({'error': 'Username not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -2345,9 +2365,6 @@ class ForgotUsernameView(APIView):
 
 #product list with pagination
 
-
-
-
 class ProductPaginatedListView(generics.ListAPIView):
     serializer_class = ProductSerializer
     pagination_class = Pagination
@@ -2366,9 +2383,3 @@ class ProductPaginatedListView(generics.ListAPIView):
 
 
 
-
-# for i in items:
-#     if order_items_status == 'canceled':
-#         c++
-
-# if c == 
