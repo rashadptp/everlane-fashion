@@ -1333,7 +1333,7 @@ class OrderListView(generics.ListAPIView):
         keyword = self.request.query_params.get('keyword')
 
         if user.is_admin:
-            queryset = Order.objects.filter(is_deleted=False, is_completed=True).order_by("-id")
+            queryset = Order.objects.filter(is_deleted=False, is_completed=True).exclude(order_status="Completed").order_by("-id")
         else:
             queryset = Order.objects.filter(user=user, is_deleted=False, is_completed=True).order_by("-id")
 
