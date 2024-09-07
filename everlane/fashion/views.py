@@ -166,6 +166,7 @@ class LogoutView(generics.GenericAPIView):
 #product list/search
 
 # add is_active in filteration for queryset
+
 class ProductListView(generics.ListAPIView):
     serializer_class = ProductSerializer
 
@@ -204,6 +205,9 @@ class ProductListView(generics.ListAPIView):
 
 #product detail
 # check item_serializer required or not
+
+#product list with product price  filter
+
 
 class ProductDetailView(generics.RetrieveAPIView):
     queryset = Product.objects.filter(is_active=True)
