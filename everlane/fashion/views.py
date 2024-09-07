@@ -193,8 +193,6 @@ class ProductListView(generics.ListAPIView):
         product_data = []
         for product in products:
             product_serializer = self.get_serializer(product)
-            items = ProductItem.objects.filter(product=product)
-            item_serializer = ProductItemSerializer(items, many=True)
             product_data.append( product_serializer.data)
 
         return Response({
