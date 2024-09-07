@@ -1821,12 +1821,10 @@ class DisasterListCreateView(APIView):
 
 class AdminDisasterApprovalListView(APIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
-   
+
     def get(self, request, *args, **kwargs):
-       
         keyword = request.query_params.get('keyword', None)
 
-        
         disasters_to_approve = Disaster.objects.filter(is_approved=False, is_deleted=False)
 
         
@@ -1835,19 +1833,20 @@ class AdminDisasterApprovalListView(APIView):
                 Q(name__icontains=keyword) |  
                 Q(location__icontains=keyword)   
             )
-        paginator = Pagination()
 
-        paginated_queryset = paginator.paginate_queryset(disasters_to_approve, request)
-       
-        serializer = DisasterSerializer(paginated_queryset, many=True)
+        
+        serializer = DisasterSerializer(disasters_to_approve, many=True)
 
-       
-        return paginator.get_paginated_response({
+        
+        return Response({
             'status': 'success',
             'message': 'Disasters awaiting approval retrieved successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
-        })
+        }, status=status.HTTP_200_OK)
+
+
+
 #approve disaster view
 
 class ApproveDisasterView(APIView):
