@@ -69,7 +69,7 @@ ROOT_URLCONF = 'everlane.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Add this line to specify the global template directory
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

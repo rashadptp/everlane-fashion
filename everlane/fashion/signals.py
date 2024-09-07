@@ -3,6 +3,11 @@ from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import Order, Notification,Disaster,OrderItem
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.conf import settings
+import datetime
+from strip_tags import strip_tags
 
 
 @receiver(pre_save, sender=Order)
@@ -64,37 +69,69 @@ def track_order_status_before_save(sender, instance, **kwargs):
         instance._old_order_status = None
 
 
-@receiver(post_save, sender=Order)
-def order_status_updated(sender, instance, created, **kwargs):
+# @receiver(post_save, sender=Order)
+# def order_status_updated(sender, instance, created, **kwargs):
  
-    if instance.payment_status == 'Completed':
+#     if instance.payment_status == 'Completed':
 
-        pass
+#         pass
     
   
-    if instance._old_order_status == 'Pending' and instance.order_status != 'Pending':
+#     if instance._old_order_status == 'Pending' and instance.order_status != 'Pending':
    
-        subject = f'Your order {instance.id} status has been updated'
-        message = (
-            f"Dear {instance.user.username},\n\n"
-            f"your order {instance.id} is  {instance.order_status}.\n\n"
-            "We will keep you informed of any further updates regarding your order.\n\n"
-            "Thank you for shopping with us!\n\n"
-            "Best regards,\n"
-            "Everlane Team"
-        )
+#         subject = f'Your order {instance.id} status has been updated'
+#         message = (
+#             f"Dear {instance.user.username},\n\n"
+#             f"your order {instance.id} is  {instance.order_status}.\n\n"
+#             "We will keep you informed of any further updates regarding your order.\n\n"
+#             "Thank you for shopping with us!\n\n"
+#             "Best regards,\n"
+#             "Everlane Team"
+#         )
         
+#         email_from = settings.DEFAULT_FROM_EMAIL
+#         recipient_list = [instance.user.email]
+
+     
+#         try:
+#             send_mail(subject, message, email_from, recipient_list)
+#             print(f"Update email sent to {recipient_list}")
+#         except Exception as e:
+#             print(f"Failed to send update email: {e}")
+
+       
+#         recipient = instance.user
+#         verb = f"Order status updated to {instance.order_status}"
+#         description = f"Your order {instance.id} status has been updated to {instance.order_status}."
+#         Notification.objects.create(recipient=recipient, verb=verb, description=description)
+
+@receiver(post_save, sender=Order)
+def order_status_updated(sender, instance, created, **kwargs):
+    if instance.payment_status == 'Completed':
+        pass
+    
+    if instance._old_order_status == 'Pending' and instance.order_status != 'Pending':
+        subject = f'Your order {instance.id} status has been updated'
+        context = {
+            'user': instance.user,
+            'order': instance,
+            'order_link': f"https://everlane-b23cf.web.app/main",
+            
+        }
+        html_message = render_to_string('email_template.html', context)
+        plain_message = strip_tags(html_message)  # If you want a plain text version too
+
         email_from = settings.DEFAULT_FROM_EMAIL
         recipient_list = [instance.user.email]
 
-     
         try:
-            send_mail(subject, message, email_from, recipient_list)
+            email = EmailMultiAlternatives(subject, plain_message, email_from, recipient_list)
+            email.attach_alternative(html_message, "text/html")
+            email.send()
             print(f"Update email sent to {recipient_list}")
         except Exception as e:
             print(f"Failed to send update email: {e}")
 
-       
         recipient = instance.user
         verb = f"Order status updated to {instance.order_status}"
         description = f"Your order {instance.id} status has been updated to {instance.order_status}."
