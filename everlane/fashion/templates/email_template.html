@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: #007bff;
+            color: #ffffff;
+            padding: 10px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .header img {
+            max-width: 150px;
+        }
+        .content {
+            padding: 20px;
+        }
+        .footer {
+            background: #f1f1f1;
+            color: #777;
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            border-radius: 0 0 5px 5px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 0;
+            background-color: #007bff;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://i.pinimg.com/564x/28/53/57/2853573ad164af2124c279e502ad87ca.jpg" alt="Company Logo">
+        </div>
+        <div class="content">
+            <h1>Order Status Update</h1>
+            <p>Dear {{ user.username }},</p>
+            <p>Your order with ID {{ order.id }} has been updated to {{ order.order_status }}.</p>
+            <p>We will keep you informed of any further updates regarding your order.</p>
+            <a href="{{ order_link }}" class="btn">View site</a>
+            <p>Thank you for shopping with us!</p>
+        </div>
+        <div class="footer">
+            <p>&copy;  Your Company. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
