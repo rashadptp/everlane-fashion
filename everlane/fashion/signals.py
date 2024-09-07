@@ -152,7 +152,7 @@ def track_order_item_status(sender, instance, **kwargs):
 @receiver(post_save, sender=OrderItem)
 def send_approval_email(sender, instance,**kwargs):
     
-    if instance._old_order_item_status== 'Pending'  and  instance.order_item_status != 'Pending':
+    if instance._old_order_item_status== 'Pending'  and  instance.order_item_status != 'Pending' or instance._old_order_item_status== 'Processing'  and  instance.order_item_status != 'Processing':
         subject = f'Order Item "{instance.id}" Canceled'
         message = (
             f'Dear {instance.order.user.username},\n\n'
