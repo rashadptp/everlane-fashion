@@ -1648,7 +1648,7 @@ class ProcessReturnView(APIView):
             order_item.save()
 
             return Response({
-                'status': 'success',
+                'status': 'error',
                 'message': 'Return request rejected',
                 'response_code': status.HTTP_200_OK
             }, status=status.HTTP_200_OK)
@@ -2373,7 +2373,31 @@ class ProductPaginatedListView(generics.ListAPIView):
 
 
 
+class CompletedOrdersView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        user = self.request.user
+        
+        if user.is_admin:
+            # Only return completed orders for admin
+            queryset = Order.objects.filter(is_deleted=False, is_completed=True,order_status="Completed").order_by("-id")
+        else:
+            # If a non-admin tries to access, return an empty queryset
+            queryset = Order.objects.none()
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            'status': 'success',
+            'message': 'Completed orders retrieved successfully',
+            'response_code': status.HTTP_200_OK,
+            'data': serializer.data
+        })
 
 
 

@@ -35,6 +35,7 @@ urlpatterns = [
     path('request-return/', RequestReturnView.as_view(), name='request-return'),
     path('process-return/', ProcessReturnView.as_view(), name='process-return'),
     path('return-pending/', ReturnPendingView.as_view(), name='return-pending'),
+    path('completed-orders/',CompletedOrdersView.as_view(),name='completed-orders'),
 
 
     #################################      CARTS      ########################################################################
