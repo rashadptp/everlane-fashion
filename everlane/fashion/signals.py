@@ -110,7 +110,9 @@ def order_status_updated(sender, instance, created, **kwargs):
     if instance.payment_status == 'Completed':
         pass
     
-    if instance._old_order_status == 'Pending' and instance.order_status != 'Pending':
+  
+    if instance._old_order_status == 'Pending' and instance.order_status != 'Pending' or instance._old_order_status == 'Processing' and instance.order_status != 'Processing':
+   
         subject = f'Your order {instance.id} status has been updated'
         context = {
             'user': instance.user,
