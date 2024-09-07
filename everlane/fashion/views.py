@@ -42,6 +42,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from django.core.mail import send_mail
 import random
 import string
+from django.db import transaction
 from django.contrib.auth import get_user_model
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.authtoken.models import Token
@@ -1101,7 +1102,17 @@ class PlaceOrderView(APIView):
             order.pickup_location = pickup_location
             order.save()
             
-
+            with transaction.atomic():
+                for item in cart_items:
+                    if item.product_item.stock >= item.quantity:
+                        item.product_item.stock -= item.quantity
+                        item.product_item.save()
+                    else:
+                        return Response({
+                            'status': 'failed',
+                            'message': f'Not enough stock for product {item.product_item.product.name}',
+                            'response_code': status.HTTP_400_BAD_REQUEST
+                        }, status=status.HTTP_400_BAD_REQUEST)
             if payment_method == 'ONLINE':
             #payment by paypal   
                 PlaceOrderView.initialize_paypal()
@@ -1166,6 +1177,18 @@ class PlaceOrderView(APIView):
         if order_type == 'delivery':
             order.delivery_address = address
             order.save()
+
+            with transaction.atomic():
+                for item in cart_items:
+                    if item.product_item.stock >= item.quantity:
+                        item.product_item.stock -= item.quantity
+                        item.product_item.save()
+                    else:
+                        return Response({
+                            'status': 'failed',
+                            'message': f'Not enough stock for product {item.product_item.product.name}',
+                            'response_code': status.HTTP_400_BAD_REQUEST
+                        }, status=status.HTTP_400_BAD_REQUEST)
 
             if payment_method == 'ONLINE':
                 
