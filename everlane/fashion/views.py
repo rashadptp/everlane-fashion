@@ -2391,13 +2391,18 @@ class CompletedOrdersView(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response({
+        
+        paginator=Pagination()
+        page=paginator.paginate_queryset(queryset, request)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return paginator.get_paginated_response({
             'status': 'success',
             'message': 'Completed orders retrieved successfully',
             'response_code': status.HTTP_200_OK,
             'data': serializer.data
         })
+        
 
 
 
