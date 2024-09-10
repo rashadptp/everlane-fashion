@@ -31,7 +31,7 @@ def track_order_status_before_save(sender, instance, **kwargs):
 def order_status_updated(sender, instance, created, **kwargs):
     if instance._old_payment_status != 'Completed' and instance.payment_status == 'Completed':
         
-        subject = f'Your order {instance.id} placed successfully'
+        subject = f'Your order placed successfully'
         
         
         context = {
@@ -59,7 +59,7 @@ def order_status_updated(sender, instance, created, **kwargs):
         # Notification 
         recipient = instance.user
         verb = "Order placed"
-        description = f"Your order ID {instance.id} placed successfully. We will notify you of any further changes."
+        description = f"Your order has been placed successfully. We will notify you of any further changes."
         Notification.objects.create(recipient=recipient, verb=verb, description=description)
 
 
@@ -163,7 +163,7 @@ def send_approval_email(sender, instance, **kwargs):
         
         recipient = instance.order.user
         verb = f"Order item status updated to {instance.order_item_status}"
-        description = f"Your order item {instance.id} status has been updated to {instance.order_item_status}."
+        description = f"Your order item  status has been updated to {instance.order_item_status}."
         Notification.objects.create(recipient=recipient, verb=verb, description=description)
 
 
