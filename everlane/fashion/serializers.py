@@ -188,12 +188,13 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     invoice = InvoiceSerializer(read_only=True)
+    first_name = serializers.CharField(source='user.first_name', read_only=True)
     items = OrderItemSerializer(many=True, read_only=True)
     disaster_name = serializers.ReadOnlyField(source='disaster.name')
     pickup_location_address = serializers.ReadOnlyField(source='pickup_location.address')
     class Meta:
         model = Order
-        fields = ['id', 'order_code','user', 'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','order_status','items',
+        fields = ['id', 'order_code','user','first_name' ,'total_amount','is_active','is_deleted','created_on','is_completed', 'payment_method', 'payment_status','order_status','items',
                   'is_donated', 'disaster', 'disaster_name',
             'pickup_location', 'pickup_location_address', 'is_paid','delivery_address','invoice']
 

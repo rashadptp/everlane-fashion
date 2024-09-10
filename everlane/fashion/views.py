@@ -17,6 +17,7 @@ from io import BytesIO
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
+from django.http import FileResponse, HttpResponse
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from django.core.files.base import ContentFile
@@ -2181,8 +2182,8 @@ def generate_invoice_pdf(invoice):
   
     totals_data = [
         ['Subtotal', f"Rs. {invoice.total_amount:.2f}"],
-        ['Tax (5%)', f"Rs. {(invoice.total_amount * Decimal('0.05')).quantize(Decimal('0.01')):.2f}"],  
-        ['Total', f"Rs. {(invoice.total_amount+((invoice.total_amount * Decimal('0.05')).quantize(Decimal('0.01')))):.2f}"]
+        ['Tax (0%)', f"Rs. {(invoice.total_amount * Decimal('0.00')).quantize(Decimal('0.01')):.2f}"],  
+        ['Total', f"Rs. {(invoice.total_amount+((invoice.total_amount * Decimal('0.00')).quantize(Decimal('0.00')))):.2f}"]
     ]
     
     totals_table = Table(totals_data, colWidths=[3*inch, 1.5*inch])
@@ -2213,9 +2214,13 @@ def generate_invoice_pdf(invoice):
     
     
     buffer.seek(0)
-    pdf_file = ContentFile(buffer.getvalue())
+    pdf_file = ContentFile(buffer.getvalue(), name=file_name)
     
     invoice.pdf.save(file_name, pdf_file)
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{file_name}"'
+    
+    return response
 
 
 #execute payment
