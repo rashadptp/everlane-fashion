@@ -1487,8 +1487,7 @@ class UpdateOrderStatusView(APIView):
             'response_code': status.HTTP_200_OK,
             'data': OrderSerializer(order).data
         }, status=status.HTTP_200_OK)
-
-
+        
 #notification
 
 

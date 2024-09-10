@@ -78,10 +78,16 @@
     <div class="container">
         
         <div class="content">
-            <h1>Order Status Update</h1>
+            <h1>Order Placed Successfully</h1>
             <p>Dear {{ user.first_name }} {{ user.last_name }},</p>
-            <p>Your order with ID {{ order.id }} has been updated to {{ order.order_status }}.</p>
-            <p>We will keep you informed of any further updates regarding your order.</p>
+            <p>Thank you for your purchase! We are pleased to inform you that your payment for Order {{ order.order_code}}has been successfully processed.</p>
+            <p>Order Details:</p>
+            <p>Order CODE:{{ order.order_code }}</p>
+            <p>Payment Status: Completed</p>
+            <p>We will keep you informed of any updates regarding your order, including shipping and delivery information.
+            Should you have any questions or require further assistance, please do not hesitate to contact our customer support team</p>
+
+            
             <a href="{{ order_link }}" class="btn">View site</a>
             <div class="header">
             <img src="https://i.pinimg.com/564x/28/53/57/2853573ad164af2124c279e502ad87ca.jpg" alt="Company Logo">

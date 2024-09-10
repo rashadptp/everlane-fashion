@@ -78,9 +78,9 @@
     <div class="container">
         
         <div class="content">
-            <h1>Order Status Update</h1>
+            <h1>Order Item Status Update</h1>
             <p>Dear {{ user.first_name }} {{ user.last_name }},</p>
-            <p>Your order with ID {{ order.id }} has been updated to {{ order.order_status }}.</p>
+            <p>Your order with ID {{ order_item.id }} has been updated to {{ order_item.order_item_status }}.</p>
             <p>We will keep you informed of any further updates regarding your order.</p>
             <a href="{{ order_link }}" class="btn">View site</a>
             <div class="header">
