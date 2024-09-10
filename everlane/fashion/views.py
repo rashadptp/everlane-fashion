@@ -26,7 +26,6 @@ import tensorflow as tf
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image
 import numpy as np
-from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from django.core.files.base import ContentFile
@@ -203,65 +202,6 @@ class ProductListView(generics.ListAPIView):
             'data': product_data
         })
 
-
-
-
-#product detail
-# check item_serializer required or not
-
-#product list with product price  filter
-
-# class ProductListView(generics.ListAPIView):
-#     serializer_class = ProductSerializer
-
-#     def get_queryset(self):
-#         queryset = Product.objects.filter(is_active=True)
-
-#         # Filter by subcategory
-#         subcategory_id = self.request.query_params.get('subcategory', None)
-#         if subcategory_id is not None:
-#             queryset = queryset.filter(subcategory_id=subcategory_id)
-
-#         # Search by name or brand
-#         search_query = self.request.query_params.get('query', None)
-#         if search_query:
-#             queryset = queryset.filter(
-#                 Q(name__icontains=search_query) | Q(brand__icontains=search_query)
-#             )
-
-#         # Filter by price range
-#         min_price = self.request.query_params.get('min_price', None)
-#         max_price = self.request.query_params.get('max_price', None)
-#         if min_price is not None:
-#             queryset = queryset.filter(price__gte=min_price)
-#         if max_price is not None:
-#             queryset = queryset.filter(price__lte=max_price)
-
-#         # Filter by brand
-#         brand = self.request.query_params.get('brand', None)
-#         if brand:
-#             queryset = queryset.filter(brand__icontains=brand)
-
-#         return queryset
-
-#     def list(self, request, *args, **kwargs):
-#         products = self.get_queryset()
-#         product_data = []
-#         for product in products:
-#             product_serializer = self.get_serializer(product)
-#             items = ProductItem.objects.filter(product=product)
-#             item_serializer = ProductItemSerializer(items, many=True)
-#             product_data.append({
-#                 'product': product_serializer.data,
-#                 'items': item_serializer.data
-#             })
-
-#         return Response({
-#             'status': "success",
-#             'message': "Products retrieved successfully",
-#             'response_code': status.HTTP_200_OK,
-#             'data': product_data
-#         })
 
 
 class ProductDetailView(generics.RetrieveAPIView):
