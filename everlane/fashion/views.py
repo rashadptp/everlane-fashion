@@ -2243,7 +2243,7 @@ def generate_invoice_pdf(invoice):
     totals_data = [
         ['Subtotal', f"Rs. {invoice.total_amount:.2f}"],
         ['Tax (0%)', f"Rs. {(invoice.total_amount * Decimal('0.00')).quantize(Decimal('0.01')):.2f}"],  
-        ['Total', f"Rs. {(invoice.total_amount+((invoice.total_amount * Decimal('0.05')).quantize(Decimal('0.01')))):.2f}"]
+        ['Total', f"Rs. {(invoice.total_amount+((invoice.total_amount * Decimal('0.00')).quantize(Decimal('0.00')))):.2f}"]
     ]
     
     totals_table = Table(totals_data, colWidths=[3*inch, 1.5*inch])
