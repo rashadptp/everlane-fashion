@@ -1119,8 +1119,7 @@ class PlaceOrderView(APIView):
 
             # Ensure the donation doesn't exceed the disaster's requirement
             if (disaster.fulfilled_men_dresses + men_dresses > disaster.required_men_dresses or
-                disaster.fulfilled_women_dresses + women_dresses > disaster.required_women_dresses or
-                disaster.fulfilled_kids_dresses + kids_dresses > disaster.required_kids_dresses):
+                disaster.fulfilled_women_dresses + women_dresses > disaster.required_women_dresses):
                 return Response({
                     'status': 'failed',
                     'message': 'Donation exceeds the required dresses for this disaster',
