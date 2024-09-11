@@ -1128,8 +1128,8 @@ class PlaceOrderView(APIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
         
-            disaster.update_fulfillment(men_dresses, women_dresses,kids_dresses)
-            disaster.save()
+            # disaster.update_fulfillment(men_dresses, women_dresses,kids_dresses)
+            # disaster.save()
 
             if payment_method == 'ONLINE':
             #payment by paypal   
@@ -2271,6 +2271,11 @@ class ExecutePaymentView(APIView):
                 user = request.user
                 cart = Cart.objects.filter(user=user, is_active=True, is_deleted=False).first() 
                 cart_items = CartItem.objects.filter(cart=cart, is_active=True, is_deleted=False)
+
+                men_dresses = sum([item.quantity for item in cart_items if item.product_item.product.subcategory.category.name == 'Mens'])
+                women_dresses = sum([item.quantity for item in cart_items if item.product_item.product.subcategory.category.name == 'Woman'])
+                kids_dresses = 0
+
                 cart_items.delete()
                 cart.save()
                 order = Order.objects.get(paypal_payment_id=payment_id)
@@ -2279,7 +2284,10 @@ class ExecutePaymentView(APIView):
                 order.save()
 
                 
-
+                if order.is_donated and order.disaster:
+                    disaster = order.disaster
+                    disaster.update_fulfillment(men_dresses, women_dresses, kids_dresses)
+                    disaster.save()
                 
 
                 invoice_number = str(uuid.uuid4()).replace('-', '').upper()[:10]
