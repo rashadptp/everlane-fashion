@@ -1113,8 +1113,8 @@ class PlaceOrderView(APIView):
                             'response_code': status.HTTP_400_BAD_REQUEST
                         }, status=status.HTTP_400_BAD_REQUEST)
                     
-            men_dresses = sum([item.quantity for item in cart_items if item.product_item.product.subcategory.category.name == 'Men'])
-            women_dresses = sum([item.quantity for item in cart_items if item.product_item.product.subcategory.category.name == 'Women'])
+            men_dresses = sum([item.quantity for item in cart_items if item.product_item.product.subcategory.category.name == 'Mens'])
+            women_dresses = sum([item.quantity for item in cart_items if item.product_item.product.subcategory.category.name == 'Woman'])
             kids_dresses=0
             
 
@@ -1130,7 +1130,7 @@ class PlaceOrderView(APIView):
             # Update disaster's fulfilled dresses
             disaster.update_fulfillment(men_dresses, women_dresses,kids_dresses)
             disaster.save()
-            
+
             if payment_method == 'ONLINE':
             #payment by paypal   
                 PlaceOrderView.initialize_paypal()
