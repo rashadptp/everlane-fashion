@@ -1118,7 +1118,7 @@ class PlaceOrderView(APIView):
             kids_dresses=0
             
 
-            # Ensure the donation doesn't exceed the disaster's requirement
+            
             if (disaster.fulfilled_men_dresses + men_dresses > disaster.required_men_dresses or
                 disaster.fulfilled_women_dresses + women_dresses > disaster.required_women_dresses):
                 return Response({
@@ -1127,9 +1127,9 @@ class PlaceOrderView(APIView):
                     'response_code': status.HTTP_400_BAD_REQUEST
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            # Update disaster's fulfilled dresses
-            # disaster.update_fulfillment(men_dresses, women_dresses,kids_dresses)
-            # disaster.save()
+        
+            disaster.update_fulfillment(men_dresses, women_dresses,kids_dresses)
+            disaster.save()
 
             if payment_method == 'ONLINE':
             #payment by paypal   
@@ -2278,15 +2278,7 @@ class ExecutePaymentView(APIView):
                 order.is_completed = True
                 order.save()
 
-                if order.is_donated and order.disaster:
-                    disaster = order.disaster
-                    men_dresses = sum([item.quantity for item in cart_items if item.product_item.product.subcategory.category.name == 'Mens'])
-                    women_dresses = sum([item.quantity for item in cart_items if item.product_item.product.subcategory.category.name == 'Woman'])
-                    kids_dresses = sum([item.quantity for item in cart_items if item.product_item.product.subcategory.category.name == 'Kids'])
-                    
-                    disaster.update_fulfillment(men_dresses, women_dresses, kids_dresses)
-                    disaster.save()
-
+                
 
                 
 
