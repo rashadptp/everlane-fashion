@@ -1936,9 +1936,18 @@ class DressDonationCreateView(APIView):
             img_reshape = img_norm.reshape(1, 100, 100, 3)
 
             return img_reshape
-        except (UnidentifiedImageError, ValueError, KeyError, Exception) as e:
-            # Raise an exception for invalid or corrupted image
+        except ValueError as ve:
+            # Handle the error if the array cannot be reshaped
+            raise ValueError("Error reshaping the image: {}".format(str(ve)))
+
+        except UnidentifiedImageError:
+            # Handle the error if the image is invalid or corrupted
             raise ValueError("The uploaded image is not valid or is corrupted.")
+
+        except Exception as e:
+            # General exception handling for other unexpected errors
+            raise ValueError("An unexpected error occurred while processing the image: {}".format(str(e)))
+
 
 
     def check_quality(self, image_file):
