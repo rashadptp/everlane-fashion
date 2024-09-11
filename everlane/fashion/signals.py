@@ -37,7 +37,7 @@ def order_status_updated(sender, instance, created, **kwargs):
         context = {
             'user': instance.user,
             'order': instance,  
-            'order_link': f"https://your-site.com/orders/{instance.id}",  
+            'order_link': f"",  
         }
 
         
@@ -190,7 +190,7 @@ def send_approval_email(sender, instance, **kwargs):
         context = {
             'user': instance.user,
             'disaster': instance,
-            'order_link': 'https://yourwebsite.com/view-disaster', 
+            'order_link': "https://everlane-b23cf.web.app/main", 
         }
 
        

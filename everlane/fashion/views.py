@@ -25,7 +25,7 @@ from decimal import Decimal
 from django.db.models import F
 import tensorflow as tf
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import numpy as np
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
@@ -1915,23 +1915,31 @@ class DressDonationCreateView(APIView):
     
     def preprocess_image(self, image_file: InMemoryUploadedFile):
         """Preprocess the image for prediction."""
-        image = Image.open(image_file)
-        # image = image.resize((100,100))  
-        # image = np.array(image) / 255.0  
-        # image = np.expand_dims(image, axis=0)  
-        # return image
-        image_np = np.array(image)
-        
-        # Resize the image
-        img_resize = cv2.resize(image_np, (100, 100))
-        
-        # Normalize the image
-        img_norm = img_resize / 255.0
-        
-        # Reshape the image
-        img_reshape = img_norm.reshape(1, 100, 100, 3)
+        try:
+            image = Image.open(image_file)
+            # image = image.resize((100,100))  
+            # image = np.array(image) / 255.0  
+            # image = np.expand_dims(image, axis=0)  
+            # return image
+            image_np = np.array(image)
+            if image_np.shape[-1] == 4:
+                # Convert RGBA to RGB
+                image_np = cv2.cvtColor(image_np, cv2.COLOR_RGBA2RGB)
+            
+            # Resize the image
+            img_resize = cv2.resize(image_np, (100, 100))
+            
+            # Normalize the image
+            img_norm = img_resize / 255.0
+            
+            # Reshape the image
+            img_reshape = img_norm.reshape(1, 100, 100, 3)
 
-        return img_reshape
+            return img_reshape
+        except (UnidentifiedImageError, ValueError, KeyError, Exception) as e:
+            # Raise an exception for invalid or corrupted image
+            raise ValueError("The uploaded image is not valid or is corrupted.")
+
 
     def check_quality(self, image_file):
         """Check if the image is torn or dirty."""
