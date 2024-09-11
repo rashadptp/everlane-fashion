@@ -213,7 +213,7 @@ def send_approval_email(sender, instance, **kwargs):
        
         recipient = instance.user
         verb = f'Disaster "{instance.name}" Approved'
-        description = f'Your disaster "{instance.name}" has been approved. Description: {instance.description}.'
+        description = f'Your disaster "{instance.name}" has been approved.'
         Notification.objects.create(recipient=recipient, verb=verb, description=description)
 
 
