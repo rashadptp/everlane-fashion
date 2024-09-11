@@ -1129,7 +1129,8 @@ class PlaceOrderView(APIView):
 
             # Update disaster's fulfilled dresses
             disaster.update_fulfillment(men_dresses, women_dresses,kids_dresses)
-
+            disaster.save()
+            
             if payment_method == 'ONLINE':
             #payment by paypal   
                 PlaceOrderView.initialize_paypal()
@@ -2276,6 +2277,8 @@ class ExecutePaymentView(APIView):
                 order.payment_status = 'Completed'
                 order.is_completed = True
                 order.save()
+
+                
 
                 invoice_number = str(uuid.uuid4()).replace('-', '').upper()[:10]
                 invoice = Invoice.objects.create(
