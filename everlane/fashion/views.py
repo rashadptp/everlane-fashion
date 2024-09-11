@@ -1115,6 +1115,7 @@ class PlaceOrderView(APIView):
                     
             men_dresses = sum([item.quantity for item in cart_items if item.product_item.product.subcategory.category.name == 'Men'])
             women_dresses = sum([item.quantity for item in cart_items if item.product_item.product.subcategory.category.name == 'Women'])
+            kids_dresses=0
             
 
             # Ensure the donation doesn't exceed the disaster's requirement
@@ -1127,7 +1128,7 @@ class PlaceOrderView(APIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             # Update disaster's fulfilled dresses
-            disaster.update_fulfillment(men_dresses, women_dresses)
+            disaster.update_fulfillment(men_dresses, women_dresses,kids_dresses)
 
             if payment_method == 'ONLINE':
             #payment by paypal   
