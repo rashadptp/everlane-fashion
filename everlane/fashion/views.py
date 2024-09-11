@@ -1112,6 +1112,23 @@ class PlaceOrderView(APIView):
                             'message': f'Not enough stock for product {item.product_item.product.name}',
                             'response_code': status.HTTP_400_BAD_REQUEST
                         }, status=status.HTTP_400_BAD_REQUEST)
+                    
+            men_dresses = sum([item.quantity for item in cart_items if item.product_item.product.category == 'Men'])
+            women_dresses = sum([item.quantity for item in cart_items if item.product_item.product.category == 'Women'])
+            
+
+            # Ensure the donation doesn't exceed the disaster's requirement
+            if (disaster.fulfilled_men_dresses + men_dresses > disaster.required_men_dresses or
+                disaster.fulfilled_women_dresses + women_dresses > disaster.required_women_dresses or
+                disaster.fulfilled_kids_dresses + kids_dresses > disaster.required_kids_dresses):
+                return Response({
+                    'status': 'failed',
+                    'message': 'Donation exceeds the required dresses for this disaster',
+                    'response_code': status.HTTP_400_BAD_REQUEST
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Update disaster's fulfilled dresses
+            disaster.update_fulfillment(men_dresses, women_dresses, kids_dresses)
             if payment_method == 'ONLINE':
             #payment by paypal   
                 PlaceOrderView.initialize_paypal()
@@ -1917,13 +1934,9 @@ class DressDonationCreateView(APIView):
         """Preprocess the image for prediction."""
         try:
             image = Image.open(image_file)
-            # image = image.resize((100,100))  
-            # image = np.array(image) / 255.0  
-            # image = np.expand_dims(image, axis=0)  
-            # return image
+            
             image_np = np.array(image)
             if image_np.shape[-1] == 4:
-                # Convert RGBA to RGB
                 image_np = cv2.cvtColor(image_np, cv2.COLOR_RGBA2RGB)
             
             # Resize the image
