@@ -1127,7 +1127,7 @@ class PlaceOrderView(APIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             # Update disaster's fulfilled dresses
-            disaster.update_fulfillment(men_dresses, women_dresses, kids_dresses)
+            disaster.update_fulfillment(men_dresses, women_dresses)
             if payment_method == 'ONLINE':
             #payment by paypal   
                 PlaceOrderView.initialize_paypal()
